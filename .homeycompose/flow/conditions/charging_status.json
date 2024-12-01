@@ -1,0 +1,55 @@
+{
+  "id": "charging_status",
+  "title": {
+    "en": "Charging status !{{is|isn't}}"
+  },
+  "titleFormatted": {
+    "en": "Charging status !{{is|isn't}} [[status]]"
+  },
+  "hint": {
+    "en": "Check the vehicle's charging status"
+  },
+  "args": [
+    {
+      "name": "device",
+      "type": "device",
+      "filter": "driver_id=cars"
+    },
+    {
+      "name": "status",
+      "type": "dropdown",
+      "values": [
+        {
+          "id": "charging",
+          "title": {
+            "en": "Charging"
+          }
+        },
+        {
+          "id": "not_charging",
+          "title": {
+            "en": "Not Charging"
+          }
+        },
+        {
+          "id": "charging_complete",
+          "title": {
+            "en": "Charging Complete"
+          }
+        },
+        {
+          "id": "charging_scheduled",
+          "title": {
+            "en": "Scheduled"
+          }
+        },
+        {
+          "id": "charging_error",
+          "title": {
+            "en": "Error"
+          }
+        }
+      ]
+    }
+  ]
+}

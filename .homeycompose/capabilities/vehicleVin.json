@@ -1,0 +1,8 @@
+{
+    "type": "string",
+    "title": { "en": "Vehicle VIN" },
+    "getable": true,
+    "setable": false,
+    "icon": "assets/capabilities/vin.svg",
+    "uiComponent": "sensor"
+}

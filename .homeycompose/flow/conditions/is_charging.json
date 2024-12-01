@@ -1,0 +1,16 @@
+{
+  "id": "is_charging",
+  "title": {
+    "en": "Vehicle !{{is|isn't}} charging"
+  },
+  "hint": {
+    "en": "Check if the vehicle is currently charging"
+  },
+  "args": [
+    {
+      "name": "device",
+      "type": "device",
+      "filter": "driver_id=cars"
+    }
+  ]
+}

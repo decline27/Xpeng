@@ -1,0 +1,53 @@
+{
+  "id": "battery_level",
+  "title": {
+    "en": "Battery level !{{is|isn't}}"
+  },
+  "titleFormatted": {
+    "en": "Battery level !{{is|isn't}} [[comparison]] [[value]]%"
+  },
+  "hint": {
+    "en": "Compare the vehicle's battery level"
+  },
+  "args": [
+    {
+      "name": "device",
+      "type": "device",
+      "filter": "driver_id=cars"
+    },
+    {
+      "name": "comparison",
+      "type": "dropdown",
+      "values": [
+        {
+          "id": "greater",
+          "title": {
+            "en": "greater than"
+          }
+        },
+        {
+          "id": "lower",
+          "title": {
+            "en": "lower than"
+          }
+        },
+        {
+          "id": "equals",
+          "title": {
+            "en": "equal to"
+          }
+        }
+      ]
+    },
+    {
+      "name": "value",
+      "type": "number",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "title": {
+        "en": "Value"
+      }
+    }
+  ]
+}

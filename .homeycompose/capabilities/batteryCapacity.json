@@ -1,0 +1,9 @@
+{
+    "type": "number",
+    "title": { "en": "Battery Capacity" },
+    "units": "kWh",
+    "getable": true,
+    "setable": false,
+    "icon": "assets/capabilities/battery.svg",
+    "uiComponent": "sensor"
+}

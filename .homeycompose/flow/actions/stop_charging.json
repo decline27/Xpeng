@@ -1,0 +1,9 @@
+{
+  "title": {
+    "en": "Stop Charging"
+  },
+  "hint": {
+    "en": "Stop charging the vehicle"
+  },
+  "platforms": ["local"]
+}

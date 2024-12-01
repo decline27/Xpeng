@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="24" height="24" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg">
+    <!-- G6 SUV Silhouette -->
+    <path d="M3,12 L5,12 L6,10 L18,10 L19,12 L21,12 L21,14 L19,14 C19,15.1 18.1,16 17,16 C15.9,16 15,15.1 15,14 L9,14 C9,15.1 8.1,16 7,16 C5.9,16 5,15.1 5,14 L3,14 L3,12 Z" 
+          fill="none" stroke="currentColor" stroke-width="1.5"/>
+    <!-- Wheels -->
+    <circle cx="7" cy="14" r="2" fill="none" stroke="currentColor" stroke-width="1.5"/>
+    <circle cx="17" cy="14" r="2" fill="none" stroke="currentColor" stroke-width="1.5"/>
+    <!-- Roof line - G6's distinctive coupe-like roofline -->
+    <path d="M7,10 L9,7 L15,7 L17,10" 
+          fill="none" stroke="currentColor" stroke-width="1.5"/>
+    <!-- Front grill - XPeng's signature design -->
+    <path d="M6,10 L6.5,9 L8,9.5 L6.5,10" 
+          fill="none" stroke="currentColor" stroke-width="1.5"/>
+    <!-- Headlights -->
+    <path d="M6,9.5 L7,9.5" stroke="currentColor" stroke-width="1.5"/>
+    <!-- Windows -->
+    <path d="M9,7.5 L15,7.5" stroke="currentColor" stroke-width="1" stroke-dasharray="0.5,0.5"/>
+    <!-- XPeng logo suggestion -->
+    <path d="M11.5,8.5 L12.5,8.5" stroke="currentColor" stroke-width="1.5"/>
+</svg>

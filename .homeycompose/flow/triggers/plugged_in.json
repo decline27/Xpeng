@@ -1,0 +1,16 @@
+{
+  "id": "plugged_in",
+  "title": {
+    "en": "Vehicle was plugged in"
+  },
+  "hint": {
+    "en": "Triggered when the charging cable is connected"
+  },
+  "args": [
+    {
+      "name": "device",
+      "type": "device",
+      "filter": "driver_id=cars"
+    }
+  ]
+}

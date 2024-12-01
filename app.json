@@ -1,0 +1,838 @@
+{
+  "_comment": "This file is generated. Please edit .homeycompose/app.json instead.",
+  "id": "com.xpeng.car",
+  "version": "1.0.0",
+  "compatibility": ">=12.2.0",
+  "sdk": 3,
+  "platforms": [
+    "local"
+  ],
+  "name": {
+    "en": "XPENG Car Manager"
+  },
+  "description": {
+    "en": "Homey app for managing XPENG car models like G6, G9, and G7."
+  },
+  "category": [
+    "tools"
+  ],
+  "permissions": [],
+  "brandColor": "#A4CE4C",
+  "images": {
+    "small": "/assets/images/small.png",
+    "large": "/assets/images/large.png",
+    "xlarge": "/assets/images/xlarge.png"
+  },
+  "author": {
+    "name": "Kjetil Vetlejord",
+    "email": "decline27@gmail.com"
+  },
+  "flow": {
+    "triggers": [
+      {
+        "id": "battery_level_changed",
+        "title": {
+          "en": "Battery level changed"
+        },
+        "hint": {
+          "en": "Triggered when the vehicle's battery level changes"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=cars"
+          }
+        ],
+        "tokens": [
+          {
+            "name": "battery_level",
+            "type": "number",
+            "title": {
+              "en": "Battery Level"
+            },
+            "example": 75
+          }
+        ]
+      },
+      {
+        "id": "battery_low",
+        "title": {
+          "en": "Battery level is low"
+        },
+        "titleFormatted": {
+          "en": "Battery level drops below [[threshold]]%"
+        },
+        "hint": {
+          "en": "Triggered when battery level drops below specified threshold"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=cars"
+          },
+          {
+            "name": "threshold",
+            "type": "number",
+            "min": 1,
+            "max": 100,
+            "step": 1,
+            "title": {
+              "en": "Threshold"
+            },
+            "placeholder": {
+              "en": "20"
+            }
+          }
+        ],
+        "tokens": [
+          {
+            "name": "battery_level",
+            "type": "number",
+            "title": {
+              "en": "Battery Level"
+            },
+            "example": 15
+          }
+        ]
+      },
+      {
+        "id": "charging_started",
+        "title": {
+          "en": "Charging started"
+        },
+        "hint": {
+          "en": "Triggered when the vehicle starts charging"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=cars"
+          }
+        ]
+      },
+      {
+        "id": "charging_status_changed",
+        "title": {
+          "en": "Charging status changed"
+        },
+        "titleFormatted": {
+          "en": "Charging status changed to [[status]]"
+        },
+        "hint": {
+          "en": "Triggered when charging status changes to specified state"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=cars"
+          },
+          {
+            "name": "status",
+            "type": "dropdown",
+            "values": [
+              {
+                "id": "charging",
+                "title": {
+                  "en": "Charging"
+                }
+              },
+              {
+                "id": "not_charging",
+                "title": {
+                  "en": "Not Charging"
+                }
+              },
+              {
+                "id": "charging_complete",
+                "title": {
+                  "en": "Charging Complete"
+                }
+              },
+              {
+                "id": "charging_scheduled",
+                "title": {
+                  "en": "Scheduled"
+                }
+              },
+              {
+                "id": "charging_error",
+                "title": {
+                  "en": "Error"
+                }
+              }
+            ]
+          }
+        ],
+        "tokens": [
+          {
+            "name": "previous_status",
+            "type": "string",
+            "title": {
+              "en": "Previous Status"
+            },
+            "example": "not_charging"
+          },
+          {
+            "name": "current_status",
+            "type": "string",
+            "title": {
+              "en": "Current Status"
+            },
+            "example": "charging"
+          }
+        ]
+      },
+      {
+        "id": "charging_stopped",
+        "title": {
+          "en": "Charging stopped"
+        },
+        "hint": {
+          "en": "Triggered when the vehicle stops charging"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=cars"
+          }
+        ]
+      },
+      {
+        "id": "plugged_in",
+        "title": {
+          "en": "Vehicle was plugged in"
+        },
+        "hint": {
+          "en": "Triggered when the charging cable is connected"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=cars"
+          }
+        ]
+      },
+      {
+        "id": "range_low",
+        "title": {
+          "en": "Range is low"
+        },
+        "titleFormatted": {
+          "en": "Range drops below [[threshold]] km"
+        },
+        "hint": {
+          "en": "Triggered when remaining range drops below specified threshold"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=cars"
+          },
+          {
+            "name": "threshold",
+            "type": "number",
+            "min": 1,
+            "max": 1000,
+            "step": 1,
+            "title": {
+              "en": "Threshold"
+            },
+            "placeholder": {
+              "en": "50"
+            }
+          }
+        ],
+        "tokens": [
+          {
+            "name": "range",
+            "type": "number",
+            "title": {
+              "en": "Range"
+            },
+            "example": 45
+          }
+        ]
+      },
+      {
+        "id": "unplugged",
+        "title": {
+          "en": "Vehicle was unplugged"
+        },
+        "hint": {
+          "en": "Triggered when the charging cable is disconnected"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=cars"
+          }
+        ]
+      }
+    ],
+    "conditions": [
+      {
+        "id": "battery_level",
+        "title": {
+          "en": "Battery level !{{is|isn't}}"
+        },
+        "titleFormatted": {
+          "en": "Battery level !{{is|isn't}} [[comparison]] [[value]]%"
+        },
+        "hint": {
+          "en": "Compare the vehicle's battery level"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=cars"
+          },
+          {
+            "name": "comparison",
+            "type": "dropdown",
+            "values": [
+              {
+                "id": "greater",
+                "title": {
+                  "en": "greater than"
+                }
+              },
+              {
+                "id": "lower",
+                "title": {
+                  "en": "lower than"
+                }
+              },
+              {
+                "id": "equals",
+                "title": {
+                  "en": "equal to"
+                }
+              }
+            ]
+          },
+          {
+            "name": "value",
+            "type": "number",
+            "min": 0,
+            "max": 100,
+            "step": 1,
+            "title": {
+              "en": "Value"
+            }
+          }
+        ]
+      },
+      {
+        "id": "charging_status",
+        "title": {
+          "en": "Charging status !{{is|isn't}}"
+        },
+        "titleFormatted": {
+          "en": "Charging status !{{is|isn't}} [[status]]"
+        },
+        "hint": {
+          "en": "Check the vehicle's charging status"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=cars"
+          },
+          {
+            "name": "status",
+            "type": "dropdown",
+            "values": [
+              {
+                "id": "charging",
+                "title": {
+                  "en": "Charging"
+                }
+              },
+              {
+                "id": "not_charging",
+                "title": {
+                  "en": "Not Charging"
+                }
+              },
+              {
+                "id": "charging_complete",
+                "title": {
+                  "en": "Charging Complete"
+                }
+              },
+              {
+                "id": "charging_scheduled",
+                "title": {
+                  "en": "Scheduled"
+                }
+              },
+              {
+                "id": "charging_error",
+                "title": {
+                  "en": "Error"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "is_charging",
+        "title": {
+          "en": "Vehicle !{{is|isn't}} charging"
+        },
+        "hint": {
+          "en": "Check if the vehicle is currently charging"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=cars"
+          }
+        ]
+      },
+      {
+        "id": "plugged_in_status",
+        "title": {
+          "en": "Vehicle !{{is|isn't}} plugged in"
+        },
+        "hint": {
+          "en": "Check if the charging cable is connected to the vehicle"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=cars"
+          }
+        ]
+      },
+      {
+        "id": "range_check",
+        "title": {
+          "en": "Range !{{is|isn't}}"
+        },
+        "titleFormatted": {
+          "en": "Range !{{is|isn't}} [[comparison]] [[value]] km"
+        },
+        "hint": {
+          "en": "Compare the vehicle's remaining range"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=cars"
+          },
+          {
+            "name": "comparison",
+            "type": "dropdown",
+            "values": [
+              {
+                "id": "greater",
+                "title": {
+                  "en": "greater than"
+                }
+              },
+              {
+                "id": "lower",
+                "title": {
+                  "en": "lower than"
+                }
+              },
+              {
+                "id": "equals",
+                "title": {
+                  "en": "equal to"
+                }
+              }
+            ]
+          },
+          {
+            "name": "value",
+            "type": "number",
+            "min": 0,
+            "max": 1000,
+            "step": 1,
+            "title": {
+              "en": "Value"
+            }
+          }
+        ]
+      }
+    ],
+    "actions": [
+      {
+        "title": {
+          "en": "Set Smart Charging"
+        },
+        "titleFormatted": {
+          "en": "Set Smart Charging to [[enabled]]"
+        },
+        "hint": {
+          "en": "Enable or disable smart charging"
+        },
+        "args": [
+          {
+            "name": "enabled",
+            "type": "dropdown",
+            "title": {
+              "en": "State"
+            },
+            "values": [
+              {
+                "id": "true",
+                "title": {
+                  "en": "Enabled"
+                }
+              },
+              {
+                "id": "false",
+                "title": {
+                  "en": "Disabled"
+                }
+              }
+            ]
+          }
+        ],
+        "platforms": [
+          "local"
+        ],
+        "id": "set_smart_charging"
+      },
+      {
+        "title": {
+          "en": "Start Charging"
+        },
+        "hint": {
+          "en": "Start charging the vehicle if it is plugged in"
+        },
+        "platforms": [
+          "local"
+        ],
+        "id": "start_charging"
+      },
+      {
+        "title": {
+          "en": "Stop Charging"
+        },
+        "hint": {
+          "en": "Stop charging the vehicle"
+        },
+        "platforms": [
+          "local"
+        ],
+        "id": "stop_charging"
+      }
+    ]
+  },
+  "drivers": [
+    {
+      "name": {
+        "en": "XPENG Car"
+      },
+      "class": "car",
+      "capabilities": [
+        "batteryLevel",
+        "batteryCapacity",
+        "range",
+        "chargingStatus",
+        "chargingLimit",
+        "pluggedInStatus",
+        "powerDeliveryState",
+        "smartCharging",
+        "location",
+        "lastSeen",
+        "odometer",
+        "vehicleBrand",
+        "vehicleModel",
+        "vehicleYear",
+        "vehicleVin"
+      ],
+      "capabilitiesOptions": {
+        "batteryLevel": {
+          "title": {
+            "en": "Battery Level"
+          },
+          "uiComponent": "sensor",
+          "uiQuickAction": true,
+          "insights": true
+        }
+      },
+      "platforms": [
+        "local"
+      ],
+      "connectivity": [
+        "cloud"
+      ],
+      "images": {
+        "small": "/drivers/cars/assets/images/small.png",
+        "large": "/drivers/cars/assets/images/large.png"
+      },
+      "pair": [
+        {
+          "id": "list_devices",
+          "template": "list_devices",
+          "navigation": {
+            "next": "add_devices"
+          }
+        },
+        {
+          "id": "add_devices",
+          "template": "add_devices"
+        }
+      ],
+      "energy": {
+        "batteries": [
+          "INTERNAL"
+        ]
+      },
+      "id": "cars",
+      "settings": [
+        {
+          "type": "group",
+          "label": {
+            "en": "API Settings"
+          },
+          "children": [
+            {
+              "id": "clientId",
+              "type": "text",
+              "label": {
+                "en": "Client ID"
+              },
+              "value": "",
+              "hint": {
+                "en": "Enter your Enode API Client ID"
+              }
+            },
+            {
+              "id": "clientSecret",
+              "type": "password",
+              "label": {
+                "en": "Client Secret"
+              },
+              "value": "",
+              "hint": {
+                "en": "Enter your Enode API Client Secret"
+              }
+            }
+          ]
+        },
+        {
+          "type": "group",
+          "label": {
+            "en": "Update Settings"
+          },
+          "children": [
+            {
+              "id": "updateInterval",
+              "type": "number",
+              "label": {
+                "en": "Update Interval"
+              },
+              "value": 5,
+              "min": 1,
+              "max": 60,
+              "units": {
+                "en": "minutes"
+              },
+              "hint": {
+                "en": "How often to update vehicle data (1-60 minutes)"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "capabilities": {
+    "batteryCapacity": {
+      "type": "number",
+      "title": {
+        "en": "Battery Capacity"
+      },
+      "units": "kWh",
+      "getable": true,
+      "setable": false,
+      "icon": "assets/capabilities/battery.svg",
+      "uiComponent": "sensor"
+    },
+    "batteryLevel": {
+      "type": "string",
+      "title": {
+        "en": "Battery Level"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "icon": "/assets/battery.svg",
+      "insights": true,
+      "uiQuickAction": true,
+      "statusIndicator": true
+    },
+    "chargingLimit": {
+      "type": "number",
+      "title": {
+        "en": "Charging Limit"
+      },
+      "units": "%",
+      "getable": true,
+      "setable": true,
+      "min": 0,
+      "max": 100,
+      "icon": "assets/capabilities/charging.svg",
+      "uiComponent": "sensor"
+    },
+    "chargingStatus": {
+      "type": "string",
+      "title": {
+        "en": "Charging Status"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "icon": "/assets/charging.svg",
+      "insights": true,
+      "uiQuickAction": true,
+      "statusIndicator": true
+    },
+    "lastSeen": {
+      "type": "string",
+      "title": {
+        "en": "Last Seen"
+      },
+      "getable": true,
+      "setable": false,
+      "icon": "assets/capabilities/last-seen.svg",
+      "uiComponent": "sensor"
+    },
+    "location": {
+      "type": "string",
+      "title": {
+        "en": "Location"
+      },
+      "getable": true,
+      "setable": false,
+      "icon": "/assets/location.svg",
+      "uiComponent": "sensor",
+      "insights": false,
+      "uiQuickAction": true,
+      "statusIndicator": true
+    },
+    "odometer": {
+      "type": "number",
+      "title": {
+        "en": "Odometer"
+      },
+      "units": "km",
+      "getable": true,
+      "setable": false,
+      "decimals": 1,
+      "icon": "assets/capabilities/odometer.svg",
+      "uiComponent": "sensor"
+    },
+    "pluggedInStatus": {
+      "type": "boolean",
+      "title": {
+        "en": "Plugged In Status"
+      },
+      "getable": true,
+      "setable": false,
+      "title_true": {
+        "en": "Plugged In"
+      },
+      "title_false": {
+        "en": "Unplugged"
+      },
+      "icon": "assets/capabilities/charging.svg",
+      "uiComponent": "sensor"
+    },
+    "powerDeliveryState": {
+      "type": "string",
+      "title": {
+        "en": "Charging Power"
+      },
+      "getable": true,
+      "setable": false,
+      "icon": "/assets/power.svg",
+      "uiComponent": "sensor",
+      "insights": true,
+      "uiQuickAction": true,
+      "statusIndicator": true
+    },
+    "range": {
+      "type": "number",
+      "title": {
+        "en": "Range"
+      },
+      "units": "km",
+      "getable": true,
+      "setable": false,
+      "decimals": 1,
+      "icon": "assets/capabilities/range.svg",
+      "uiComponent": "sensor"
+    },
+    "smartCharging": {
+      "type": "boolean",
+      "title": {
+        "en": "Smart Charging"
+      },
+      "getable": true,
+      "setable": true,
+      "icon": "/assets/smart.svg",
+      "uiComponent": "toggle"
+    },
+    "vehicleBrand": {
+      "type": "string",
+      "title": {
+        "en": "Vehicle Brand"
+      },
+      "getable": true,
+      "setable": false,
+      "icon": "assets/capabilities/car.svg",
+      "uiComponent": "sensor"
+    },
+    "vehicleModel": {
+      "type": "string",
+      "title": {
+        "en": "Vehicle Model"
+      },
+      "getable": true,
+      "setable": false,
+      "icon": "assets/capabilities/car.svg",
+      "uiComponent": "sensor"
+    },
+    "vehicleVin": {
+      "type": "string",
+      "title": {
+        "en": "Vehicle VIN"
+      },
+      "getable": true,
+      "setable": false,
+      "icon": "assets/capabilities/vin.svg",
+      "uiComponent": "sensor"
+    },
+    "vehicleYear": {
+      "type": "number",
+      "title": {
+        "en": "Vehicle Year"
+      },
+      "getable": true,
+      "setable": false,
+      "icon": "assets/capabilities/car.svg",
+      "uiComponent": "sensor"
+    }
+  }
+}

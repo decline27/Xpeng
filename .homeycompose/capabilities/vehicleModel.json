@@ -1,0 +1,8 @@
+{
+    "type": "string",
+    "title": { "en": "Vehicle Model" },
+    "getable": true,
+    "setable": false,
+    "icon": "assets/capabilities/car.svg",
+    "uiComponent": "sensor"
+}

@@ -1,0 +1,16 @@
+{
+  "id": "charging_stopped",
+  "title": {
+    "en": "Charging stopped"
+  },
+  "hint": {
+    "en": "Triggered when the vehicle stops charging"
+  },
+  "args": [
+    {
+      "name": "device",
+      "type": "device",
+      "filter": "driver_id=cars"
+    }
+  ]
+}

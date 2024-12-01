@@ -1,0 +1,56 @@
+[
+  {
+    "type": "group",
+    "label": {
+      "en": "API Settings"
+    },
+    "children": [
+      {
+        "id": "clientId",
+        "type": "text",
+        "label": {
+          "en": "Client ID"
+        },
+        "value": "",
+        "hint": {
+          "en": "Enter your Enode API Client ID"
+        }
+      },
+      {
+        "id": "clientSecret",
+        "type": "password",
+        "label": {
+          "en": "Client Secret"
+        },
+        "value": "",
+        "hint": {
+          "en": "Enter your Enode API Client Secret"
+        }
+      }
+    ]
+  },
+  {
+    "type": "group",
+    "label": {
+      "en": "Update Settings"
+    },
+    "children": [
+      {
+        "id": "updateInterval",
+        "type": "number",
+        "label": {
+          "en": "Update Interval"
+        },
+        "value": 5,
+        "min": 1,
+        "max": 60,
+        "units": {
+          "en": "minutes"
+        },
+        "hint": {
+          "en": "How often to update vehicle data (1-60 minutes)"
+        }
+      }
+    ]
+  }
+]

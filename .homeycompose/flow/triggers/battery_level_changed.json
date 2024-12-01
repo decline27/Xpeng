@@ -1,0 +1,26 @@
+{
+  "id": "battery_level_changed",
+  "title": {
+    "en": "Battery level changed"
+  },
+  "hint": {
+    "en": "Triggered when the vehicle's battery level changes"
+  },
+  "args": [
+    {
+      "name": "device",
+      "type": "device",
+      "filter": "driver_id=cars"
+    }
+  ],
+  "tokens": [
+    {
+      "name": "battery_level",
+      "type": "number",
+      "title": {
+        "en": "Battery Level"
+      },
+      "example": 75
+    }
+  ]
+}

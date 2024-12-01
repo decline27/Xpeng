@@ -1,0 +1,11 @@
+{
+    "type": "string",
+    "title": { "en": "Charging Status" },
+    "getable": true,
+    "setable": false,
+    "uiComponent": "sensor",
+    "icon": "/assets/charging.svg",
+    "insights": true,
+    "uiQuickAction": true,
+    "statusIndicator": true
+}

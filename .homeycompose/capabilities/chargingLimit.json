@@ -1,0 +1,11 @@
+{
+    "type": "number",
+    "title": { "en": "Charging Limit" },
+    "units": "%",
+    "getable": true,
+    "setable": true,
+    "min": 0,
+    "max": 100,
+    "icon": "assets/capabilities/charging.svg",
+    "uiComponent": "sensor"
+}

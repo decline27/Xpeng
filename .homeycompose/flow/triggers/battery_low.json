@@ -1,0 +1,42 @@
+{
+  "id": "battery_low",
+  "title": {
+    "en": "Battery level is low"
+  },
+  "titleFormatted": {
+    "en": "Battery level drops below [[threshold]]%"
+  },
+  "hint": {
+    "en": "Triggered when battery level drops below specified threshold"
+  },
+  "args": [
+    {
+      "name": "device",
+      "type": "device",
+      "filter": "driver_id=cars"
+    },
+    {
+      "name": "threshold",
+      "type": "number",
+      "min": 1,
+      "max": 100,
+      "step": 1,
+      "title": {
+        "en": "Threshold"
+      },
+      "placeholder": {
+        "en": "20"
+      }
+    }
+  ],
+  "tokens": [
+    {
+      "name": "battery_level",
+      "type": "number",
+      "title": {
+        "en": "Battery Level"
+      },
+      "example": 15
+    }
+  ]
+}

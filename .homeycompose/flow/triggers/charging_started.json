@@ -1,0 +1,16 @@
+{
+  "id": "charging_started",
+  "title": {
+    "en": "Charging started"
+  },
+  "hint": {
+    "en": "Triggered when the vehicle starts charging"
+  },
+  "args": [
+    {
+      "name": "device",
+      "type": "device",
+      "filter": "driver_id=cars"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "id": "unplugged",
+  "title": {
+    "en": "Vehicle was unplugged"
+  },
+  "hint": {
+    "en": "Triggered when the charging cable is disconnected"
+  },
+  "args": [
+    {
+      "name": "device",
+      "type": "device",
+      "filter": "driver_id=cars"
+    }
+  ]
+}

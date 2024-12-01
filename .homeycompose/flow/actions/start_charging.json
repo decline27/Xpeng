@@ -1,0 +1,9 @@
+{
+  "title": {
+    "en": "Start Charging"
+  },
+  "hint": {
+    "en": "Start charging the vehicle if it is plugged in"
+  },
+  "platforms": ["local"]
+}

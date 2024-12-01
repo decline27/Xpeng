@@ -1,0 +1,10 @@
+{
+    "type": "boolean",
+    "title": { "en": "Plugged In Status" },
+    "getable": true,
+    "setable": false,
+    "title_true": { "en": "Plugged In" },
+    "title_false": { "en": "Unplugged" },
+    "icon": "assets/capabilities/charging.svg",
+    "uiComponent": "sensor"
+}

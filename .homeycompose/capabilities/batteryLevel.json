@@ -1,0 +1,13 @@
+{
+  "type": "string",
+  "title": {
+    "en": "Battery Level"
+  },
+  "getable": true,
+  "setable": false,
+  "uiComponent": "sensor",
+  "icon": "/assets/battery.svg",
+  "insights": true,
+  "uiQuickAction": true,
+  "statusIndicator": true
+}

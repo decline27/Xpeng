@@ -1,0 +1,61 @@
+{
+  "name": {
+    "en": "XPENG Car"
+  },
+  "class": "car",
+  "capabilities": [
+    "batteryLevel",
+    "batteryCapacity",
+    "range",
+    "chargingStatus",
+    "chargingLimit",
+    "pluggedInStatus",
+    "powerDeliveryState",
+    "smartCharging",
+    "location",
+    "lastSeen",
+    "odometer",
+    "vehicleBrand",
+    "vehicleModel",
+    "vehicleYear",
+    "vehicleVin"
+  ],
+  "capabilitiesOptions": {
+    "batteryLevel": {
+      "title": {
+        "en": "Battery Level"
+      },
+      "uiComponent": "sensor",
+      "uiQuickAction": true,
+      "insights": true
+    }
+  },
+  "platforms": [
+    "local"
+  ],
+  "connectivity": [
+    "cloud"
+  ],
+  "images": {
+    "small": "/drivers/cars/assets/images/small.png",
+    "large": "/drivers/cars/assets/images/large.png"
+  },
+  "pair": [
+    {
+      "id": "list_devices",
+      "template": "list_devices",
+      "navigation": {
+        "next": "add_devices"
+      }
+    },
+    {
+      "id": "add_devices",
+      "template": "add_devices"
+    }
+  ],
+  "energy": {
+    "batteries": [
+      "INTERNAL"
+    ]
+  }
+}

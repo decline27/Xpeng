@@ -1,0 +1,42 @@
+{
+  "id": "range_low",
+  "title": {
+    "en": "Range is low"
+  },
+  "titleFormatted": {
+    "en": "Range drops below [[threshold]] km"
+  },
+  "hint": {
+    "en": "Triggered when remaining range drops below specified threshold"
+  },
+  "args": [
+    {
+      "name": "device",
+      "type": "device",
+      "filter": "driver_id=cars"
+    },
+    {
+      "name": "threshold",
+      "type": "number",
+      "min": 1,
+      "max": 1000,
+      "step": 1,
+      "title": {
+        "en": "Threshold"
+      },
+      "placeholder": {
+        "en": "50"
+      }
+    }
+  ],
+  "tokens": [
+    {
+      "name": "range",
+      "type": "number",
+      "title": {
+        "en": "Range"
+      },
+      "example": 45
+    }
+  ]
+}

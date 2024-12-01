@@ -1,0 +1,323 @@
+{
+  "id": "com.xpeng.car",
+  "version": "1.0.0",
+  "compatibility": ">=12.2.0",
+  "sdk": 3,
+  "platforms": [
+    "local"
+  ],
+  "name": {
+    "en": "XPENG Car Manager"
+  },
+  "description": {
+    "en": "Homey app for managing XPENG car models like G6, G9, and G7."
+  },
+  "category": [
+    "tools"
+  ],
+  "permissions": [],
+  "brandColor": "#A4CE4C",
+  "images": {
+    "small": "/assets/images/small.png",
+    "large": "/assets/images/large.png",
+    "xlarge": "/assets/images/xlarge.png"
+  },
+  "author": {
+    "name": "Kjetil Vetlejord",
+    "email": "decline27@gmail.com"
+  },
+  "drivers": [
+    {
+      "id": "xpeng",
+      "name": {
+        "en": "XPENG"
+      },
+      "class": "car",
+      "capabilities": [
+        "batteryLevel",
+        "range",
+        "chargingStatus",
+        "pluggedInStatus",
+        "location",
+        "lastSeen",
+        "odometer",
+        "smartCharging",
+        "chargingLimit",
+        "powerDeliveryState",
+        "batteryCapacity",
+        "vehicleBrand",
+        "vehicleModel",
+        "vehicleYear",
+        "vehicleVin",
+        "doorLockStatus",
+        "frontLeftDoor",
+        "frontRightDoor",
+        "rearLeftDoor",
+        "rearRightDoor",
+        "trunkStatus"
+      ],
+      "images": {
+        "small": "/assets/images/newsmall.png",
+        "large": "/assets/images/newlarge.png"
+      },
+      "uiIndicator": ["batteryLevel"]
+    }
+  ],
+  "capabilities": {
+    "batteryLevel": {
+      "type": "number",
+      "title": {
+        "en": "Battery Level"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "icon": "/capabilities/icons/battery.svg",
+      "min": 0,
+      "max": 100,
+      "units": "%"
+    },
+    "range": {
+      "type": "number",
+      "title": {
+        "en": "Range"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "icon": "/capabilities/icons/range.svg",
+      "min": 0,
+      "units": "km"
+    },
+    "chargingStatus": {
+      "type": "boolean",
+      "title": {
+        "en": "Charging Status"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "icon": "/capabilities/icons/charging.svg"
+    },
+    "pluggedInStatus": {
+      "type": "boolean",
+      "title": {
+        "en": "Plugged In"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "icon": "/capabilities/icons/charging.svg"
+    },
+    "location": {
+      "type": "string",
+      "title": {
+        "en": "Location"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "icon": "/capabilities/icons/location.svg"
+    },
+    "lastSeen": {
+      "type": "string",
+      "title": {
+        "en": "Last Seen"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "icon": "/capabilities/icons/last-seen.svg"
+    },
+    "odometer": {
+      "type": "string",
+      "title": {
+        "en": "Odometer"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "icon": "/capabilities/icons/odometer.svg"
+    },
+    "smartCharging": {
+      "type": "boolean",
+      "title": {
+        "en": "Smart Charging"
+      },
+      "getable": true,
+      "setable": true,
+      "uiComponent": "toggle",
+      "icon": "/capabilities/icons/smart-charging.svg"
+    },
+    "chargingLimit": {
+      "type": "number",
+      "title": {
+        "en": "Charging Limit"
+      },
+      "getable": true,
+      "setable": true,
+      "uiComponent": "slider",
+      "icon": "/capabilities/icons/battery.svg",
+      "min": 0,
+      "max": 100,
+      "units": "%"
+    },
+    "powerDeliveryState": {
+      "type": "string",
+      "title": {
+        "en": "Power Delivery State"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "icon": "/capabilities/icons/power-delivery.svg"
+    },
+    "batteryCapacity": {
+      "type": "number",
+      "title": {
+        "en": "Battery Capacity"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "icon": "/capabilities/icons/battery.svg",
+      "units": "kWh"
+    },
+    "vehicleBrand": {
+      "type": "string",
+      "title": {
+        "en": "Vehicle Brand"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "icon": "/capabilities/icons/car.svg"
+    },
+    "vehicleModel": {
+      "type": "string",
+      "title": {
+        "en": "Vehicle Model"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "icon": "/capabilities/icons/car.svg"
+    },
+    "vehicleYear": {
+      "type": "string",
+      "title": {
+        "en": "Vehicle Year"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "icon": "/capabilities/icons/car.svg"
+    },
+    "vehicleVin": {
+      "type": "string",
+      "title": {
+        "en": "Vehicle VIN"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "icon": "/capabilities/icons/vin.svg"
+    },
+    "doorLockStatus": {
+      "type": "boolean",
+      "title": {
+        "en": "Door Lock Status"
+      },
+      "getable": true,
+      "setable": true,
+      "icon": "/assets/capabilities/door.svg",
+      "uiComponent": "toggle",
+      "title_true": {
+        "en": "Locked"
+      },
+      "title_false": {
+        "en": "Unlocked"
+      }
+    },
+    "frontLeftDoor": {
+      "type": "boolean",
+      "title": {
+        "en": "Front Left Door"
+      },
+      "getable": true,
+      "setable": false,
+      "icon": "/assets/capabilities/door.svg",
+      "uiComponent": "button",
+      "title_true": {
+        "en": "Open"
+      },
+      "title_false": {
+        "en": "Closed"
+      }
+    },
+    "frontRightDoor": {
+      "type": "boolean",
+      "title": {
+        "en": "Front Right Door"
+      },
+      "getable": true,
+      "setable": false,
+      "icon": "/assets/capabilities/door.svg",
+      "uiComponent": "button",
+      "title_true": {
+        "en": "Open"
+      },
+      "title_false": {
+        "en": "Closed"
+      }
+    },
+    "rearLeftDoor": {
+      "type": "boolean",
+      "title": {
+        "en": "Rear Left Door"
+      },
+      "getable": true,
+      "setable": false,
+      "icon": "/assets/capabilities/door.svg",
+      "uiComponent": "button",
+      "title_true": {
+        "en": "Open"
+      },
+      "title_false": {
+        "en": "Closed"
+      }
+    },
+    "rearRightDoor": {
+      "type": "boolean",
+      "title": {
+        "en": "Rear Right Door"
+      },
+      "getable": true,
+      "setable": false,
+      "icon": "/assets/capabilities/door.svg",
+      "uiComponent": "button",
+      "title_true": {
+        "en": "Open"
+      },
+      "title_false": {
+        "en": "Closed"
+      }
+    },
+    "trunkStatus": {
+      "type": "boolean",
+      "title": {
+        "en": "Trunk Status"
+      },
+      "getable": true,
+      "setable": false,
+      "icon": "/assets/capabilities/door.svg",
+      "uiComponent": "button",
+      "title_true": {
+        "en": "Open"
+      },
+      "title_false": {
+        "en": "Closed"
+      }
+    }
+  }
+}

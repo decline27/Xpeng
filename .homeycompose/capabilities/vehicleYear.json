@@ -1,0 +1,8 @@
+{
+    "type": "number",
+    "title": { "en": "Vehicle Year" },
+    "getable": true,
+    "setable": false,
+    "icon": "assets/capabilities/car.svg",
+    "uiComponent": "sensor"
+}
