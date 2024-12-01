@@ -47,13 +47,7 @@
         "vehicleBrand",
         "vehicleModel",
         "vehicleYear",
-        "vehicleVin",
-        "doorLockStatus",
-        "frontLeftDoor",
-        "frontRightDoor",
-        "rearLeftDoor",
-        "rearRightDoor",
-        "trunkStatus"
+        "vehicleVin"
       ],
       "images": {
         "small": "/assets/images/newsmall.png",
@@ -211,102 +205,6 @@
       "setable": false,
       "uiComponent": "sensor",
       "icon": "/capabilities/icons/vin.svg"
-    },
-    "doorLockStatus": {
-      "type": "boolean",
-      "title": {
-        "en": "Door Lock Status"
-      },
-      "getable": true,
-      "setable": true,
-      "icon": "/assets/capabilities/door.svg",
-      "uiComponent": "toggle",
-      "title_true": {
-        "en": "Locked"
-      },
-      "title_false": {
-        "en": "Unlocked"
-      }
-    },
-    "frontLeftDoor": {
-      "type": "boolean",
-      "title": {
-        "en": "Front Left Door"
-      },
-      "getable": true,
-      "setable": false,
-      "icon": "/assets/capabilities/door.svg",
-      "uiComponent": "button",
-      "title_true": {
-        "en": "Open"
-      },
-      "title_false": {
-        "en": "Closed"
-      }
-    },
-    "frontRightDoor": {
-      "type": "boolean",
-      "title": {
-        "en": "Front Right Door"
-      },
-      "getable": true,
-      "setable": false,
-      "icon": "/assets/capabilities/door.svg",
-      "uiComponent": "button",
-      "title_true": {
-        "en": "Open"
-      },
-      "title_false": {
-        "en": "Closed"
-      }
-    },
-    "rearLeftDoor": {
-      "type": "boolean",
-      "title": {
-        "en": "Rear Left Door"
-      },
-      "getable": true,
-      "setable": false,
-      "icon": "/assets/capabilities/door.svg",
-      "uiComponent": "button",
-      "title_true": {
-        "en": "Open"
-      },
-      "title_false": {
-        "en": "Closed"
-      }
-    },
-    "rearRightDoor": {
-      "type": "boolean",
-      "title": {
-        "en": "Rear Right Door"
-      },
-      "getable": true,
-      "setable": false,
-      "icon": "/assets/capabilities/door.svg",
-      "uiComponent": "button",
-      "title_true": {
-        "en": "Open"
-      },
-      "title_false": {
-        "en": "Closed"
-      }
-    },
-    "trunkStatus": {
-      "type": "boolean",
-      "title": {
-        "en": "Trunk Status"
-      },
-      "getable": true,
-      "setable": false,
-      "icon": "/assets/capabilities/door.svg",
-      "uiComponent": "button",
-      "title_true": {
-        "en": "Open"
-      },
-      "title_false": {
-        "en": "Closed"
-      }
     }
   }
 }

@@ -127,6 +127,8 @@ class XpengCarDevice extends Homey.Device {
                 batteryLevel: response.data?.[0]?.chargeState?.batteryLevel,
                 isCharging: response.data?.[0]?.chargeState?.isCharging,
                 isPluggedIn: response.data?.[0]?.chargeState?.isPluggedIn,
+                range: response.data?.[0]?.chargeState?.range,
+                powerDeliveryState: response.data?.[0]?.chargeState?.powerDeliveryState
               });
               
               if (!response.data || !response.data[0]) {
