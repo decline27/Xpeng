@@ -16,12 +16,6 @@ class XpengCarDriver extends Homey.Driver {
         const device = args.device;
         await device.onActionStopCharging();
       });
-
-    this.homey.flow.getActionCard('set_smart_charging')
-      .registerRunListener(async (args, state) => {
-        const device = args.device;
-        await device.onActionSetSmartCharging(args);
-      });
   }
 
   async onPair(session) {

@@ -39,7 +39,6 @@ class XpengCarDevice extends Homey.Device {
         'chargingLimit',
         'pluggedInStatus',
         'powerDeliveryState',
-        'smartCharging',
         'location',
         'lastSeen',
         'odometer',
@@ -128,7 +127,6 @@ class XpengCarDevice extends Homey.Device {
                 batteryLevel: response.data?.[0]?.chargeState?.batteryLevel,
                 isCharging: response.data?.[0]?.chargeState?.isCharging,
                 isPluggedIn: response.data?.[0]?.chargeState?.isPluggedIn,
-                smartChargingEnabled: response.data?.[0]?.smartChargingPolicy?.isEnabled
               });
               
               if (!response.data || !response.data[0]) {
@@ -144,7 +142,6 @@ class XpengCarDevice extends Homey.Device {
               vehicleData.information = vehicleData.information || {};
               vehicleData.location = vehicleData.location || {};
               vehicleData.odometer = vehicleData.odometer || {};
-              vehicleData.smartChargingPolicy = vehicleData.smartChargingPolicy || {};
 
               resolve(vehicleData);
             } catch (error) {
@@ -240,47 +237,6 @@ class XpengCarDevice extends Homey.Device {
     });
   }
 
-  // Function to set smart charging
-  async setSmartCharging(accessToken, vehicleId, enabled) {
-    const url = `https://enode-api.production.enode.io/vehicles/${vehicleId}/smart-charging`;
-
-    const options = {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-    };
-
-    const postData = JSON.stringify({
-      isEnabled: enabled,
-    });
-
-    return new Promise((resolve, reject) => {
-      const req = https.request(url, options, (res) => {
-        let data = '';
-        res.on('data', (chunk) => { data += chunk; });
-        res.on('end', () => {
-          if (res.statusCode === 200) {
-            this.log(`Successfully ${enabled ? 'enabled' : 'disabled'} smart charging`);
-            resolve(true);
-          } else {
-            this.error(`Failed to set smart charging: ${res.statusCode} ${res.statusMessage}`);
-            reject(new Error(`Failed to set smart charging: ${res.statusCode} ${res.statusMessage}`));
-          }
-        });
-      });
-
-      req.on('error', (error) => {
-        this.error('Error in setSmartCharging:', error);
-        reject(error);
-      });
-
-      req.write(postData);
-      req.end();
-    });
-  }
-
   // Main function to update vehicle data and set Homey device capabilities
   async updateVehicleData() {
     try {
@@ -368,7 +324,6 @@ class XpengCarDevice extends Homey.Device {
         location: locationData,
         lastSeen: lastSeenFormatted,
         odometer: vehicleData.odometer?.distance ? `${vehicleData.odometer.distance} km` : null,
-        smartCharging: vehicleData.smartChargingPolicy?.isEnabled,
         chargingLimit: vehicleData.chargeState?.chargeLimit,
         powerDeliveryState: formatPowerDelivery(
           vehicleData.chargeState?.powerDeliveryState,
@@ -393,7 +348,6 @@ class XpengCarDevice extends Homey.Device {
         await this.setCapabilityValue('location', finalData.location);
         await this.setCapabilityValue('lastSeen', finalData.lastSeen);
         await this.setCapabilityValue('odometer', finalData.odometer);
-        await this.setCapabilityValue('smartCharging', finalData.smartCharging);
         await this.setCapabilityValue('chargingLimit', finalData.chargingLimit);
         await this.setCapabilityValue('powerDeliveryState', finalData.powerDeliveryState);
         await this.setCapabilityValue('batteryCapacity', finalData.batteryCapacity);
@@ -455,28 +409,6 @@ class XpengCarDevice extends Homey.Device {
       await this.updateVehicleData(); // Update vehicle data after charging state change
     } catch (error) {
       this.error('Error in onActionStopCharging:', error);
-      throw error;
-    }
-  }
-
-  async onActionSetSmartCharging(args) {
-    try {
-      const accessToken = await this.getAccessToken(this.clientId, this.clientSecret);
-      if (!accessToken) {
-        throw new Error('Failed to get access token');
-      }
-
-      const vehicleData = await this.getVehicleData(accessToken);
-      if (!vehicleData) {
-        throw new Error('Failed to get vehicle data');
-      }
-
-      // Convert string 'true'/'false' to boolean
-      const enabled = args.enabled === 'true';
-      await this.setSmartCharging(accessToken, vehicleData.id, enabled);
-      await this.updateVehicleData(); // Update vehicle data after smart charging change
-    } catch (error) {
-      this.error('Error in onActionSetSmartCharging:', error);
       throw error;
     }
   }

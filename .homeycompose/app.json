@@ -41,7 +41,6 @@
         "location",
         "lastSeen",
         "odometer",
-        "smartCharging",
         "chargingLimit",
         "powerDeliveryState",
         "batteryCapacity",
@@ -138,16 +137,6 @@
       "setable": false,
       "uiComponent": "sensor",
       "icon": "/capabilities/icons/odometer.svg"
-    },
-    "smartCharging": {
-      "type": "boolean",
-      "title": {
-        "en": "Smart Charging"
-      },
-      "getable": true,
-      "setable": true,
-      "uiComponent": "toggle",
-      "icon": "/capabilities/icons/smart-charging.svg"
     },
     "chargingLimit": {
       "type": "number",

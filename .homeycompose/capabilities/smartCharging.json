@@ -1,8 +1,0 @@
-{
-    "type": "boolean",
-    "title": { "en": "Smart Charging" },
-    "getable": true,
-    "setable": true,
-    "icon": "/assets/smart.svg",
-    "uiComponent": "toggle"
-}

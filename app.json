@@ -475,44 +475,6 @@
     "actions": [
       {
         "title": {
-          "en": "Set Smart Charging"
-        },
-        "titleFormatted": {
-          "en": "Set Smart Charging to [[enabled]]"
-        },
-        "hint": {
-          "en": "Enable or disable smart charging"
-        },
-        "args": [
-          {
-            "name": "enabled",
-            "type": "dropdown",
-            "title": {
-              "en": "State"
-            },
-            "values": [
-              {
-                "id": "true",
-                "title": {
-                  "en": "Enabled"
-                }
-              },
-              {
-                "id": "false",
-                "title": {
-                  "en": "Disabled"
-                }
-              }
-            ]
-          }
-        ],
-        "platforms": [
-          "local"
-        ],
-        "id": "set_smart_charging"
-      },
-      {
-        "title": {
           "en": "Start Charging"
         },
         "hint": {
@@ -551,7 +513,6 @@
         "chargingLimit",
         "pluggedInStatus",
         "powerDeliveryState",
-        "smartCharging",
         "location",
         "lastSeen",
         "odometer",
@@ -783,16 +744,6 @@
       "decimals": 1,
       "icon": "assets/capabilities/range.svg",
       "uiComponent": "sensor"
-    },
-    "smartCharging": {
-      "type": "boolean",
-      "title": {
-        "en": "Smart Charging"
-      },
-      "getable": true,
-      "setable": true,
-      "icon": "/assets/smart.svg",
-      "uiComponent": "toggle"
     },
     "vehicleBrand": {
       "type": "string",
