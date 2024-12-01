@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Background -->
+    <rect width="512" height="512" fill="#0D47A1"/>
+    
+    <!-- Car Body -->
+    <path d="M56 256 L156 156 L356 156 L456 256 L456 356 L56 356 Z" fill="#FFFFFF"/>
+    
+    <!-- Windows -->
+    <path d="M176 176 L176 256 L336 256 L336 176 Z" fill="#90CAF9"/>
+    
+    <!-- Wheels -->
+    <circle cx="156" cy="356" r="50" fill="#424242"/>
+    <circle cx="356" cy="356" r="50" fill="#424242"/>
+    <circle cx="156" cy="356" r="20" fill="#BDBDBD"/>
+    <circle cx="356" cy="356" r="20" fill="#BDBDBD"/>
+    
+    <!-- Headlights -->
+    <rect x="76" y="236" width="40" height="20" rx="10" fill="#FFD600"/>
+    <rect x="396" y="236" width="40" height="20" rx="10" fill="#FFD600"/>
+    
+    <!-- Grill -->
+    <path d="M206 276 L306 276" stroke="#BDBDBD" stroke-width="4"/>
+    <path d="M206 286 L306 286" stroke="#BDBDBD" stroke-width="4"/>
+    <path d="M206 296 L306 296" stroke="#BDBDBD" stroke-width="4"/>
+</svg>

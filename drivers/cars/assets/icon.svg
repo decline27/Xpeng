@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Modern car silhouette -->
+    <path d="M456 280c0-8.8-7.2-16-16-16H72c-8.8 0-16 7.2-16 16v80c0 8.8 7.2 16 16 16h368c8.8 0 16-7.2 16-16v-80z" fill="#1E88E5"/>
+    <path d="M440 248H72c-17.7 0-32 14.3-32 32v80c0 17.7 14.3 32 32 32h368c17.7 0 32-14.3 32-32v-80c0-17.7-14.3-32-32-32zm-304 96H88v-48h48v48zm288 0h-48v-48h48v48z" fill="#0D47A1"/>
+    <!-- Wheels -->
+    <circle cx="136" cy="344" r="32" fill="#424242"/>
+    <circle cx="376" cy="344" r="32" fill="#424242"/>
+    <!-- Headlights -->
+    <path d="M88 264h48v16H88z" fill="#FFF176"/>
+    <path d="M376 264h48v16h-48z" fill="#FFF176"/>
+    <!-- Windows -->
+    <path d="M160 264h192v48H160z" fill="#90CAF9"/>
+</svg>

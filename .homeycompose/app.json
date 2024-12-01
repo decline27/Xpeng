@@ -10,7 +10,7 @@
     "en": "XPENG Car Manager"
   },
   "description": {
-    "en": "Homey app for managing XPENG car models like G6, G9, and G7."
+    "en": "Monitor your XPENG's battery level, charging status, and location in real-time. Get notifications about charging events and create automated flows based on your car's status."
   },
   "category": [
     "tools"

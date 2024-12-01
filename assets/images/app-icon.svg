@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Background -->
+    <rect width="1024" height="1024" fill="#1E88E5"/>
+    
+    <!-- Dashboard Circle -->
+    <circle cx="512" cy="512" r="400" fill="#FFFFFF" opacity="0.1"/>
+    <circle cx="512" cy="512" r="380" fill="#FFFFFF" opacity="0.05"/>
+    
+    <!-- Battery Indicator -->
+    <g transform="translate(362, 312)">
+        <!-- Battery Body -->
+        <rect x="0" y="0" width="300" height="150" rx="20" fill="#FFFFFF"/>
+        <!-- Battery Tip -->
+        <rect x="300" y="45" width="20" height="60" rx="5" fill="#FFFFFF"/>
+        <!-- Battery Level -->
+        <rect x="20" y="20" width="200" height="110" rx="10" fill="#4CAF50"/>
+        <!-- Battery Percentage -->
+        <text x="240" y="85" font-family="Arial" font-size="48" fill="#1E88E5" text-anchor="middle">85%</text>
+    </g>
+    
+    <!-- Location Pin -->
+    <g transform="translate(462, 512)">
+        <path d="M50 0C22.4 0 0 22.4 0 50C0 87.5 50 150 50 150C50 150 100 87.5 100 50C100 22.4 77.6 0 50 0ZM50 67.5C40.1 67.5 32.5 59.9 32.5 50C32.5 40.1 40.1 32.5 50 32.5C59.9 32.5 67.5 40.1 67.5 50C67.5 59.9 59.9 67.5 50 67.5Z" fill="#FF5252"/>
+    </g>
+    
+    <!-- Charging Symbol -->
+    <g transform="translate(462, 712)">
+        <path d="M50 0L0 60H40L10 100L100 40H60L90 0H50Z" fill="#FFD600"/>
+    </g>
+    
+    <!-- Connection Lines -->
+    <path d="M512 312 L512 262" stroke="#FFFFFF" stroke-width="4"/>
+    <path d="M512 762 L512 712" stroke="#FFFFFF" stroke-width="4"/>
+    <path d="M312 512 L262 512" stroke="#FFFFFF" stroke-width="4"/>
+    <path d="M762 512 L712 512" stroke="#FFFFFF" stroke-width="4"/>
+</svg>
