@@ -1,52 +1,44 @@
 # XPENG Car Manager for Homey
 
-Transform your smart home experience by connecting your XPENG electric vehicle to Homey. This app provides real-time monitoring and smart automation capabilities for your XPENG car.
+Transform your XPENG electric vehicle into an integral part of your smart home ecosystem. This app seamlessly connects your car with Homey, enabling intelligent automation and real-time monitoring that enhances both your driving and home automation experience.
 
-## Features
+## Key Features
 
-### Real-time Monitoring
-- Battery Level: Track your car's battery percentage
-- Charging Status: Know when your car is charging or plugged in
-- Power Delivery: Monitor charging power in real-time
-- Location: Keep track of your car's location
-- Vehicle Information: Access odometer, range, and other vehicle details
+### Comprehensive Vehicle Monitoring
+- **Battery Management**: Real-time battery level tracking with customizable alerts
+- **Charging Intelligence**: Monitor charging status, power delivery, and set charging notifications
+- **Location Awareness**: Keep track of your vehicle's location and create location-based automations
+- **Vehicle Analytics**: Access detailed information including range, odometer, and charging efficiency
 
-### Smart Triggers
-- Charging Events: Get notified when charging starts or stops
-- Battery Alerts: Set up low battery notifications
-- Plug Status: Know when your car is plugged in or unplugged
-- Range Monitoring: Get alerts when range is low
+### Smart Home Integration
+- **Automated Routines**: Create flows that react to your car's status (e.g., turn on home heating when car is approaching)
+- **Energy Management**: Optimize charging times based on your home's energy usage
+- **Intelligent Notifications**: Get alerts for critical events like low battery or completed charging
+- **Custom Triggers**: Build complex automations using multiple car-related conditions
 
-### Flow Capabilities
-Create smart automations based on your car's status:
-- Battery level conditions
-- Charging status checks
-- Location-based triggers
-- Range-based conditions
+### Charging Optimization
+- **Power Monitoring**: Track charging power and efficiency
+- **Status Tracking**: Know exactly when your car starts and stops charging
+- **Smart Alerts**: Get notified about charging events and battery levels
+- **Range Monitoring**: Stay informed about your vehicle's current range
 
-## Getting Started
+## Requirements
+- XPENG Electric Vehicle (Compatible with all models)
+- Enode API Access (Credentials required for setup)
+- Homey Pro
 
-1. Install the app on your Homey
-2. Add your XPENG car using your Enode API credentials
-3. Start monitoring your car and creating smart flows
+## Setup Guide
+1. Install the XPENG Car Manager app on your Homey
+2. Have your Enode API credentials ready (Client ID and Secret)
+3. Add your vehicle through the Homey app
+4. Configure your preferred monitoring settings and alerts
 
 ## Support
+For questions, feature requests, or support:
+- GitHub Issues: [Report a bug](https://github.com/decline27/Xpeng/issues)
+- Email: decline27@gmail.com
 
-### Supported Models
-- XPENG G6
-- XPENG G9
-- XPENG P7
-
-### Need Help?
-If you experience any issues or have questions, please visit the [Homey Community](https://community.homey.app) or create an issue on our [GitHub repository](https://github.com/decline27/Xpeng).
-
-## Version History
-
-### v1.0.0
-- Initial release
-- Real-time monitoring of vehicle status
-- Smart flow triggers and conditions
-- Location tracking
-
-## Privacy and Security
-This app uses the Enode API to securely connect to your XPENG vehicle. All communication is encrypted, and no sensitive data is stored on Homey.
+## Privacy & Security
+- All credentials are securely stored within Homey
+- No personal data is collected or stored outside your Homey
+- Communication with XPENG servers is encrypted

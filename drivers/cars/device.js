@@ -6,15 +6,24 @@ class XpengCarDevice extends Homey.Device {
   async onInit() {
     this.log(`Device initialized: ${this.getName()}`);
 
+    // Get device data
+    const deviceData = this.getData();
+    this.vehicleId = deviceData.id;
+    this.clientId = deviceData.clientId;
+    this.clientSecret = deviceData.clientSecret;
+
+    // Get store data
+    const store = this.getStore();
+    this.lastKnownLocation = store.lastKnownLocation;
+    this.lastSeenAt = store.lastSeenAt;
+
     // Retrieve settings
     const settings = this.getSettings();
     this.updateInterval = parseInt(settings.updateInterval) || 10;
-    this.clientId = settings.clientId;
-    this.clientSecret = settings.clientSecret;
 
-    // Check if essential settings are present
-    if (!this.clientId || !this.clientSecret || isNaN(this.updateInterval)) {
-      this.log("Please set clientId, clientSecret, and updateInterval in the app settings.");
+    // Check if essential data is present
+    if (!this.clientId || !this.clientSecret || !this.vehicleId || isNaN(this.updateInterval)) {
+      this.log("Missing required device data or settings");
       return;
     }
 
@@ -120,32 +129,28 @@ class XpengCarDevice extends Homey.Device {
           if (res.statusCode === 200) {
             try {
               const response = JSON.parse(data);
-              // Log only essential vehicle data
-              this.log('Vehicle data received:', {
-                brand: response.data?.[0]?.information?.brand,
-                model: response.data?.[0]?.information?.model,
-                batteryLevel: response.data?.[0]?.chargeState?.batteryLevel,
-                isCharging: response.data?.[0]?.chargeState?.isCharging,
-                isPluggedIn: response.data?.[0]?.chargeState?.isPluggedIn,
-                range: response.data?.[0]?.chargeState?.range,
-                powerDeliveryState: response.data?.[0]?.chargeState?.powerDeliveryState
-              });
+              // Find the specific vehicle for this device
+              const vehicle = response.data?.find(v => v.id === this.vehicleId);
               
-              if (!response.data || !response.data[0]) {
-                this.error('No vehicle data found in response');
+              if (!vehicle) {
+                this.error('Vehicle not found in response');
                 resolve(null);
                 return;
               }
 
-              const vehicleData = response.data[0];
-              
-              // Ensure all required properties exist
-              vehicleData.chargeState = vehicleData.chargeState || {};
-              vehicleData.information = vehicleData.information || {};
-              vehicleData.location = vehicleData.location || {};
-              vehicleData.odometer = vehicleData.odometer || {};
+              // Log only essential vehicle data
+              this.log('Vehicle data received:', {
+                id: vehicle.id,
+                brand: vehicle.information?.brand,
+                model: vehicle.information?.model,
+                batteryLevel: vehicle.chargeState?.batteryLevel,
+                isCharging: vehicle.chargeState?.isCharging,
+                isPluggedIn: vehicle.chargeState?.isPluggedIn,
+                range: vehicle.chargeState?.range,
+                powerDeliveryState: vehicle.chargeState?.powerDeliveryState
+              });
 
-              resolve(vehicleData);
+              resolve(vehicle);
             } catch (error) {
               this.error('Error parsing vehicle data:', error);
               reject(error);
@@ -242,17 +247,8 @@ class XpengCarDevice extends Homey.Device {
   // Main function to update vehicle data and set Homey device capabilities
   async updateVehicleData() {
     try {
-      const settings = this.getSettings();
-      const clientId = settings.clientId;
-      const clientSecret = settings.clientSecret;
-
-      if (!clientId || !clientSecret) {
-        this.error('Client ID or Client Secret not set');
-        return;
-      }
-
       // Get access token
-      const accessToken = await this.getAccessToken(clientId, clientSecret);
+      const accessToken = await this.getAccessToken(this.clientId, this.clientSecret);
       if (!accessToken) {
         this.error('Failed to get access token');
         return;
@@ -417,12 +413,10 @@ class XpengCarDevice extends Homey.Device {
 
   // Device#onSettings to handle changes in settings
   async onSettings({ oldSettings, newSettings, changedKeys }) {
-    if (changedKeys.includes('clientId') || changedKeys.includes('clientSecret') || changedKeys.includes('updateInterval')) {
+    if (changedKeys.includes('updateInterval')) {
       // Update settings and clear interval if necessary
       clearInterval(this.pollingInterval);
       this.updateInterval = parseInt(newSettings.updateInterval) || 10;
-      this.clientId = newSettings.clientId;
-      this.clientSecret = newSettings.clientSecret;
 
       // Restart data fetching with the new interval
       this.pollingInterval = setInterval(() => this.updateVehicleData(), this.updateInterval * 60 * 1000);

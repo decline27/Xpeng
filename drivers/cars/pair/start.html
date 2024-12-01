@@ -1,0 +1,38 @@
+<!-- Pair template -->
+<div class="homey-form-group">
+    <h1 class="homey-title" data-i18n="pair.start.title">Enter your Enode API credentials</h1>
+    <p class="homey-subtitle" data-i18n="pair.start.subtitle">Please enter your Enode API Client ID and Client Secret</p>
+
+    <div class="homey-form-group">
+        <label class="homey-form-label" for="clientId">Client ID</label>
+        <input class="homey-form-input" id="clientId" type="text" placeholder="Enter Client ID" />
+    </div>
+
+    <div class="homey-form-group">
+        <label class="homey-form-label" for="clientSecret">Client Secret</label>
+        <input class="homey-form-input" id="clientSecret" type="password" placeholder="Enter Client Secret" />
+    </div>
+
+    <button id="submit" class="homey-button-primary">Connect</button>
+</div>
+
+<script type="text/javascript">
+Homey.setTitle('Configure Enode API');
+
+document.getElementById('submit').addEventListener('click', async () => {
+    const clientId = document.getElementById('clientId').value;
+    const clientSecret = document.getElementById('clientSecret').value;
+
+    if (!clientId || !clientSecret) {
+        Homey.alert('Please enter both Client ID and Client Secret');
+        return;
+    }
+
+    try {
+        await Homey.emit('validate', { clientId, clientSecret });
+        Homey.showView('list_devices');
+    } catch (error) {
+        Homey.alert(error.message || 'Invalid credentials');
+    }
+});
+</script>

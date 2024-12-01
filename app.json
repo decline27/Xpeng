@@ -11,7 +11,7 @@
     "en": "XPENG Car Manager"
   },
   "description": {
-    "en": "Monitor your XPENG's battery level, charging status, and location in real-time. Get notifications about charging events and create automated flows based on your car's status."
+    "en": "Take control of your electric vehicle experience with real-time monitoring and smart automation. Track battery levels, manage charging sessions, and create location-based automations to seamlessly integrate your XPENG with your smart home."
   },
   "category": [
     "tools"
@@ -501,10 +501,11 @@
   },
   "drivers": [
     {
+      "id": "cars",
       "name": {
         "en": "XPENG Car"
       },
-      "class": "car",
+      "class": "other",
       "capabilities": [
         "batteryLevel",
         "batteryCapacity",
@@ -521,16 +522,6 @@
         "vehicleYear",
         "vehicleVin"
       ],
-      "capabilitiesOptions": {
-        "batteryLevel": {
-          "title": {
-            "en": "Battery Level"
-          },
-          "uiComponent": "sensor",
-          "uiQuickAction": true,
-          "insights": true
-        }
-      },
       "platforms": [
         "local"
       ],
@@ -542,6 +533,12 @@
         "large": "/drivers/cars/assets/images/large.png"
       },
       "pair": [
+        {
+          "id": "start",
+          "navigation": {
+            "next": "list_devices"
+          }
+        },
         {
           "id": "list_devices",
           "template": "list_devices",
@@ -559,38 +556,7 @@
           "INTERNAL"
         ]
       },
-      "id": "cars",
       "settings": [
-        {
-          "type": "group",
-          "label": {
-            "en": "API Settings"
-          },
-          "children": [
-            {
-              "id": "clientId",
-              "type": "text",
-              "label": {
-                "en": "Client ID"
-              },
-              "value": "",
-              "hint": {
-                "en": "Enter your Enode API Client ID"
-              }
-            },
-            {
-              "id": "clientSecret",
-              "type": "password",
-              "label": {
-                "en": "Client Secret"
-              },
-              "value": "",
-              "hint": {
-                "en": "Enter your Enode API Client Secret"
-              }
-            }
-          ]
-        },
         {
           "type": "group",
           "label": {
@@ -603,7 +569,7 @@
               "label": {
                 "en": "Update Interval"
               },
-              "value": 5,
+              "value": 10,
               "min": 1,
               "max": 60,
               "units": {
