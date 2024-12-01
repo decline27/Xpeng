@@ -1,6 +1,6 @@
 {
   "id": "com.xpeng.car",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "compatibility": ">=12.2.0",
   "sdk": 3,
   "platforms": [
@@ -53,7 +53,9 @@
         "small": "/assets/images/newsmall.png",
         "large": "/assets/images/newlarge.png"
       },
-      "uiIndicator": ["batteryLevel"]
+      "uiIndicator": [
+        "batteryLevel"
+      ]
     }
   ],
   "capabilities": {
