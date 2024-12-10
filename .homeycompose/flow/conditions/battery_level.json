@@ -18,6 +18,9 @@
     {
       "name": "comparison",
       "type": "dropdown",
+      "title": {
+        "en": "Comparison"
+      },
       "values": [
         {
           "id": "greater",

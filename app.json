@@ -27,6 +27,12 @@
     "name": "Kjetil Vetlejord",
     "email": "decline27@gmail.com"
   },
+  "support": "mailto:decline27@gmail.com",
+  "homepage": "https://github.com/decline27/Xpeng",
+  "bugs": {
+    "url": "https://github.com/decline27/Xpeng/issues"
+  },
+  "source": "https://github.com/decline27/Xpeng",
   "flow": {
     "triggers": [
       {
@@ -133,6 +139,9 @@
           {
             "name": "status",
             "type": "dropdown",
+            "title": {
+              "en": "Status"
+            },
             "values": [
               {
                 "id": "charging",
@@ -225,6 +234,10 @@
           {
             "name": "comparison",
             "type": "dropdown",
+            "title": {
+              "en": "Movement",
+              "no": "Bevegelse"
+            },
             "values": [
               {
                 "id": "enters",
@@ -251,7 +264,11 @@
             },
             "min": -90,
             "max": 90,
-            "step": 0.000001
+            "step": 0.000001,
+            "placeholder": {
+              "en": "60.123456",
+              "no": "60.123456"
+            }
           },
           {
             "name": "longitude",
@@ -262,7 +279,11 @@
             },
             "min": -180,
             "max": 180,
-            "step": 0.000001
+            "step": 0.000001,
+            "placeholder": {
+              "en": "10.123456",
+              "no": "10.123456"
+            }
           },
           {
             "name": "radius",
@@ -275,6 +296,17 @@
             "max": 1000,
             "step": 10,
             "default": 100
+          }
+        ],
+        "tokens": [
+          {
+            "name": "distance",
+            "type": "number",
+            "title": {
+              "en": "Distance",
+              "no": "Avstand"
+            },
+            "example": 50
           }
         ]
       },
@@ -374,6 +406,9 @@
           {
             "name": "comparison",
             "type": "dropdown",
+            "title": {
+              "en": "Comparison"
+            },
             "values": [
               {
                 "id": "greater",
@@ -427,6 +462,9 @@
           {
             "name": "status",
             "type": "dropdown",
+            "title": {
+              "en": "Status"
+            },
             "values": [
               {
                 "id": "charging",
@@ -507,7 +545,11 @@
             },
             "min": -90,
             "max": 90,
-            "step": 0.000001
+            "step": 0.000001,
+            "placeholder": {
+              "en": "60.123456",
+              "no": "60.123456"
+            }
           },
           {
             "name": "longitude",
@@ -518,7 +560,11 @@
             },
             "min": -180,
             "max": 180,
-            "step": 0.000001
+            "step": 0.000001,
+            "placeholder": {
+              "en": "10.123456",
+              "no": "10.123456"
+            }
           },
           {
             "name": "radius",
@@ -570,6 +616,9 @@
           {
             "name": "comparison",
             "type": "dropdown",
+            "title": {
+              "en": "Comparison"
+            },
             "values": [
               {
                 "id": "greater",

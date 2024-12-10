@@ -26,6 +26,12 @@
     "name": "Kjetil Vetlejord",
     "email": "decline27@gmail.com"
   },
+  "support": "mailto:decline27@gmail.com",
+  "homepage": "https://github.com/decline27/Xpeng",
+  "bugs": {
+    "url": "https://github.com/decline27/Xpeng/issues"
+  },
+  "source": "https://github.com/decline27/Xpeng",
   "drivers": [
     {
       "id": "xpeng",

@@ -21,6 +21,10 @@
     {
       "name": "comparison",
       "type": "dropdown",
+      "title": {
+        "en": "Movement",
+        "no": "Bevegelse"
+      },
       "values": [
         {
           "id": "enters",

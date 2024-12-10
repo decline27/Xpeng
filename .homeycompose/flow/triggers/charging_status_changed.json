@@ -18,6 +18,9 @@
     {
       "name": "status",
       "type": "dropdown",
+      "title": {
+        "en": "Status"
+      },
       "values": [
         {
           "id": "charging",
