@@ -25,5 +25,8 @@
   },
   "1.2.9": {
     "en": "new url to community page"
+  },
+  "1.2.10": {
+    "en": "URL to the homey forum"
   }
 }
