@@ -1,38 +1,74 @@
 <!-- Pair template -->
 <div class="homey-form-group">
-    <h1 class="homey-title" data-i18n="pair.start.title">Enter your Enode API credentials</h1>
-    <p class="homey-subtitle" data-i18n="pair.start.subtitle">Please enter your Enode API Client ID and Client Secret</p>
+    <h1 class="homey-title" data-i18n="pair.start.title">Connect Your Vehicle</h1>
+    <p class="homey-subtitle" data-i18n="pair.start.subtitle">Enter your Enode credentials to connect your vehicle</p>
 
     <div class="homey-form-group">
-        <label class="homey-form-label" for="clientId">Client ID</label>
-        <input class="homey-form-input" id="clientId" type="text" placeholder="Enter Client ID" />
+        <label class="homey-form-label" for="clientId">Enode Client ID</label>
+        <input class="homey-form-input" id="clientId" type="text" placeholder="Enter your Enode Client ID" />
     </div>
 
     <div class="homey-form-group">
-        <label class="homey-form-label" for="clientSecret">Client Secret</label>
-        <input class="homey-form-input" id="clientSecret" type="password" placeholder="Enter Client Secret" />
+        <label class="homey-form-label" for="clientSecret">Enode Client Secret</label>
+        <input class="homey-form-input" id="clientSecret" type="password" placeholder="Enter your Enode Client Secret" />
     </div>
 
-    <button id="submit" class="homey-button-primary">Connect</button>
+    <div id="loading" style="display: none;">
+        <p>Generating link...</p>
+    </div>
+
+    <div id="error" style="display: none; color: red;">
+    </div>
+
+    <div id="link-container" style="display: none;">
+        <p>Click the button below to open Enode's connection page in your browser:</p>
+        <a id="enode-link" class="homey-button-primary" target="_blank" rel="noopener noreferrer">
+            Connect Vehicle
+        </a>
+        <p style="margin-top: 20px;">After connecting your vehicle, click continue:</p>
+        <button id="continue" class="homey-button-primary">Continue</button>
+    </div>
+
+    <button id="start-link" class="homey-button-primary">Generate Connection Link</button>
 </div>
 
 <script type="text/javascript">
-Homey.setTitle('Configure Enode API');
+Homey.setTitle('Connect Your Vehicle');
 
-document.getElementById('submit').addEventListener('click', async () => {
+document.getElementById('start-link').addEventListener('click', async () => {
     const clientId = document.getElementById('clientId').value;
     const clientSecret = document.getElementById('clientSecret').value;
 
     if (!clientId || !clientSecret) {
-        Homey.alert('Please enter both Client ID and Client Secret');
+        document.getElementById('error').style.display = 'block';
+        document.getElementById('error').textContent = 'Please enter both Client ID and Client Secret';
         return;
     }
 
     try {
-        await Homey.emit('validate', { clientId, clientSecret });
-        Homey.showView('list_devices');
+        document.getElementById('loading').style.display = 'block';
+        document.getElementById('start-link').style.display = 'none';
+        document.getElementById('error').style.display = 'none';
+
+        // Store credentials in driver settings
+        await Homey.emit('save_credentials', { clientId, clientSecret });
+        
+        const result = await Homey.emit('get_link');
+        
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('link-container').style.display = 'block';
+        
+        const enodeLink = document.getElementById('enode-link');
+        enodeLink.href = result.linkUrl;
     } catch (error) {
-        Homey.alert(error.message || 'Invalid credentials');
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('error').style.display = 'block';
+        document.getElementById('error').textContent = error.message || 'Failed to generate link';
+        document.getElementById('start-link').style.display = 'block';
     }
+});
+
+document.getElementById('continue').addEventListener('click', () => {
+    Homey.showView('list_devices');
 });
 </script>
