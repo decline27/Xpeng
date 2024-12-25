@@ -1,6 +1,6 @@
 {
   "id": "com.xpeng.car",
-  "version": "1.2.6",
+  "version": "1.2.10",
   "compatibility": ">=12.2.0",
   "sdk": 3,
   "platforms": [
@@ -26,6 +26,7 @@
     "name": "Kjetil Vetlejord",
     "email": "decline27@gmail.com"
   },
+  "communityTopicId": 123375,
   "support": "mailto:decline27@gmail.com",
   "homepage": "https://github.com/decline27/Xpeng",
   "bugs": {
