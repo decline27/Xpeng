@@ -28,5 +28,8 @@
   },
   "1.2.10": {
     "en": "URL to the homey forum"
+  },
+  "1.2.11": {
+    "en": "new flow to add the car to your enode acount"
   }
 }
