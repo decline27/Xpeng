@@ -28,10 +28,13 @@ Transform your XPENG electric vehicle into an integral part of your smart home e
 - Homey Pro
 
 ## Setup Guide
-1. Install the XPENG Car Manager app on your Homey
-2. Have your Enode API credentials ready (Client ID and Secret)
-3. Add your vehicle through the Homey app
-4. Configure your preferred monitoring settings and alerts
+1. Create an Enode developer account at https://www.enode.io/
+2. Request production access from Enode for your developer account
+3. Create a new application in your Enode developer dashboard
+4. Get your Client ID and Client Secret from the Enode dashboard
+5. Install the XPENG Car Manager app on your Homey
+6. Add your vehicle through the Homey app
+7. Configure your preferred monitoring settings and alerts
 
 ## Support
 For questions, feature requests, or support:
