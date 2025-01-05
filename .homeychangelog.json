@@ -31,5 +31,8 @@
   },
   "1.2.11": {
     "en": "new flow to add the car to your enode acount"
+  },
+  "1.2.12": {
+    "en": "updated enode flow"
   }
 }
