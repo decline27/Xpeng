@@ -1,7 +1,29 @@
 <!-- Pair template -->
+<style>
+    .existing-credentials {
+        background-color: #e8f5e9;
+        padding: 10px;
+        border-radius: 4px;
+        margin-bottom: 15px;
+        display: none;
+    }
+    .debug-info {
+        margin-top: 20px;
+        padding: 10px;
+        background-color: #f5f5f5;
+        border-radius: 4px;
+        font-size: 0.8em;
+        display: none;
+    }
+</style>
+
 <div class="homey-form-group">
     <h1 class="homey-title" data-i18n="pair.start.title">Connect Your Vehicle</h1>
     <p class="homey-subtitle" data-i18n="pair.start.subtitle">Enter your Enode credentials to connect your vehicle</p>
+
+    <div class="existing-credentials" id="existing_credentials">
+        <p><strong>Existing credentials found!</strong> You can use these or enter new ones.</p>
+    </div>
 
     <div class="homey-form-group">
         <label class="homey-form-label" for="clientId">Enode Client ID</label>
@@ -35,9 +57,27 @@
 <script type="text/javascript">
 Homey.setTitle('Connect Your Vehicle');
 
+// Load stored credentials when page loads
+async function loadStoredCredentials() {
+    try {
+        const credentials = await Homey.emit('get_stored_credentials');
+        
+        if (credentials && credentials.clientId && credentials.clientSecret) {
+            document.getElementById('clientId').value = credentials.clientId;
+            document.getElementById('clientSecret').value = credentials.clientSecret;
+            document.getElementById('existing_credentials').style.display = 'block';
+        }
+    } catch (error) {
+        console.error('Error loading credentials:', error);
+    }
+}
+
+// Load credentials immediately
+loadStoredCredentials();
+
 document.getElementById('start-link').addEventListener('click', async () => {
-    const clientId = document.getElementById('clientId').value;
-    const clientSecret = document.getElementById('clientSecret').value;
+    const clientId = document.getElementById('clientId').value.trim();
+    const clientSecret = document.getElementById('clientSecret').value.trim();
 
     if (!clientId || !clientSecret) {
         document.getElementById('error').style.display = 'block';

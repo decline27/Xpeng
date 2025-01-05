@@ -6,9 +6,14 @@ class XpengDriver extends Homey.Driver {
     this.log('XPeng Driver has been initialized');
     this.enodeApi = new EnodeAPI(this.homey);
     
-    // Initialize driver storage
-    this.clientId = null;
-    this.clientSecret = null;
+    // Initialize driver storage and log current values
+    this.clientId = this.homey.settings.get('enode_client_id');
+    this.clientSecret = this.homey.settings.get('enode_client_secret');
+    
+    this.log('Current stored credentials status:', {
+      hasClientId: !!this.clientId,
+      hasClientSecret: !!this.clientSecret
+    });
 
     // Register Flow Actions
     this.homey.flow.getActionCard('start_charging')
@@ -25,14 +30,68 @@ class XpengDriver extends Homey.Driver {
   }
 
   async onPair(session) {
+    let savedCredentials = false;
+
+    // Handler to get stored credentials
+    session.setHandler('get_stored_credentials', async () => {
+      const storedClientId = this.homey.settings.get('enode_client_id');
+      const storedClientSecret = this.homey.settings.get('enode_client_secret');
+      
+      this.log('Retrieving stored credentials:', {
+        hasClientId: !!storedClientId,
+        hasClientSecret: !!storedClientSecret
+      });
+      
+      return {
+        clientId: storedClientId || '',
+        clientSecret: storedClientSecret || ''
+      };
+    });
+
     session.setHandler('save_credentials', async (data) => {
-      this.clientId = data.clientId;
-      this.clientSecret = data.clientSecret;
-      return true;
+      try {
+        this.log('Attempting to save new credentials');
+        
+        this.clientId = data.clientId;
+        this.clientSecret = data.clientSecret;
+        
+        // Validate credentials before saving
+        await this.enodeApi.getAccessToken(this.clientId, this.clientSecret);
+        
+        // Store credentials in Homey settings
+        await this.homey.settings.set('enode_client_id', this.clientId);
+        await this.homey.settings.set('enode_client_secret', this.clientSecret);
+        
+        // Verify storage
+        const verifyClientId = this.homey.settings.get('enode_client_id');
+        const verifyClientSecret = this.homey.settings.get('enode_client_secret');
+        
+        this.log('Credentials saved successfully:', {
+          clientIdSaved: !!verifyClientId,
+          clientSecretSaved: !!verifyClientSecret
+        });
+        
+        savedCredentials = true;
+        return true;
+      } catch (error) {
+        this.error('Failed to save credentials:', error);
+        throw new Error('Invalid credentials. Please check and try again.');
+      }
     });
 
     session.setHandler('get_link', async () => {
       try {
+        if (!savedCredentials && !this.clientId && !this.clientSecret) {
+          // Try to get credentials from settings if not saved in current session
+          this.clientId = this.homey.settings.get('enode_client_id');
+          this.clientSecret = this.homey.settings.get('enode_client_secret');
+          
+          this.log('Retrieved credentials for link generation:', {
+            hasClientId: !!this.clientId,
+            hasClientSecret: !!this.clientSecret
+          });
+        }
+
         if (!this.clientId || !this.clientSecret) {
           throw new Error('Credentials not set');
         }
@@ -48,6 +107,17 @@ class XpengDriver extends Homey.Driver {
 
     session.setHandler('list_devices', async () => {
       try {
+        if (!savedCredentials && !this.clientId && !this.clientSecret) {
+          // Try to get credentials from settings if not saved in current session
+          this.clientId = this.homey.settings.get('enode_client_id');
+          this.clientSecret = this.homey.settings.get('enode_client_secret');
+          
+          this.log('Retrieved credentials for device listing:', {
+            hasClientId: !!this.clientId,
+            hasClientSecret: !!this.clientSecret
+          });
+        }
+
         if (!this.clientId || !this.clientSecret) {
           throw new Error('Credentials not set');
         }
@@ -63,9 +133,7 @@ class XpengDriver extends Homey.Driver {
         return vehicles.map(vehicle => ({
           name: vehicle.name || 'XPENG Vehicle',
           data: {
-            id: vehicle.id,
-            clientId: this.clientId,
-            clientSecret: this.clientSecret
+            id: vehicle.id
           },
           store: {
             vehicleInfo: vehicle
@@ -84,6 +152,22 @@ class XpengDriver extends Homey.Driver {
         throw new Error('Failed to list devices: ' + error.message);
       }
     });
+  }
+
+  // Method to get stored credentials
+  getStoredCredentials() {
+    const clientId = this.homey.settings.get('enode_client_id');
+    const clientSecret = this.homey.settings.get('enode_client_secret');
+    
+    this.log('Getting stored credentials:', {
+      hasClientId: !!clientId,
+      hasClientSecret: !!clientSecret
+    });
+    
+    return {
+      clientId,
+      clientSecret
+    };
   }
 }
 
