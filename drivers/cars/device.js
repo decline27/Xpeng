@@ -1,28 +1,21 @@
 const Homey = require('homey');
-const https = require('https');
-const querystring = require('querystring');
+const EnodeAPI = require('../../lib/enode-api');
 
 class XpengCarDevice extends Homey.Device {
   async onInit() {
-    this.log(`Device initialized: ${this.getName()}`);
+    this.log('XPeng device has been initialized');
+    this.enodeApi = new EnodeAPI(this.homey);
 
     // Get device data
     const deviceData = this.getData();
     this.vehicleId = deviceData.id;
-    this.clientId = deviceData.clientId;
-    this.clientSecret = deviceData.clientSecret;
-
-    // Get store data
-    const store = this.getStore();
-    this.lastKnownLocation = store.lastKnownLocation;
-    this.lastSeenAt = store.lastSeenAt;
 
     // Retrieve settings
     const settings = this.getSettings();
     this.updateInterval = parseInt(settings.updateInterval) || 10;
 
     // Check if essential data is present
-    if (!this.clientId || !this.clientSecret || !this.vehicleId || isNaN(this.updateInterval)) {
+    if (!this.vehicleId || isNaN(this.updateInterval)) {
       this.log("Missing required device data or settings");
       return;
     }
@@ -30,11 +23,13 @@ class XpengCarDevice extends Homey.Device {
     // Register capabilities
     await this.registerCapabilities();
 
-    // Initial data fetch
-    await this.updateVehicleData();
+    // Set up polling interval for vehicle data
+    this.pollingInterval = this.homey.setInterval(() => {
+      this.pollVehicleData();
+    }, this.updateInterval * 60 * 1000); // Poll every updateInterval minutes
 
-    // Set up periodic updates based on updateInterval
-    this.pollingInterval = setInterval(() => this.updateVehicleData(), this.updateInterval * 60 * 1000);
+    // Initial poll
+    await this.pollVehicleData();
   }
 
   // Register all capabilities
@@ -70,199 +65,28 @@ class XpengCarDevice extends Homey.Device {
     }
   }
 
-  // Function to retrieve access token
-  async getAccessToken(clientId, clientSecret) {
-    const url = 'https://oauth.production.enode.io/oauth2/token';
-    const postData = querystring.stringify({ grant_type: 'client_credentials' });
-    const authHeader = 'Basic ' + Buffer.from(clientId + ':' + clientSecret).toString('base64');
-
-    const options = {
-      method: 'POST',
-      headers: {
-        'Authorization': authHeader,
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Content-Length': Buffer.byteLength(postData),
-      },
-    };
-
-    return new Promise((resolve, reject) => {
-      const req = https.request(url, options, (res) => {
-        let data = '';
-        res.on('data', (chunk) => { data += chunk; });
-        res.on('end', () => {
-          if (res.statusCode === 200) {
-            const response = JSON.parse(data);
-            resolve(response.access_token);
-          } else {
-            this.error(`Failed to get access token: ${res.statusCode} ${res.statusMessage}`);
-            reject(new Error(`Failed to get access token: ${res.statusCode} ${res.statusMessage}`));
-          }
-        });
-      });
-
-      req.on('error', (error) => {
-        this.error("Error in getAccessToken:", error);
-        reject(error);
-      });
-
-      req.write(postData);
-      req.end();
-    });
+  async onDeleted() {
+    // Clean up polling interval
+    if (this.pollingInterval) {
+      this.homey.clearInterval(this.pollingInterval);
+    }
   }
 
-  // Function to retrieve vehicle data using the access token
-  async getVehicleData(accessToken) {
-    const url = 'https://enode-api.production.enode.io/vehicles';
-
-    const options = {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-      },
-    };
-
-    return new Promise((resolve, reject) => {
-      const req = https.request(url, options, (res) => {
-        let data = '';
-        res.on('data', (chunk) => { data += chunk; });
-        res.on('end', () => {
-          if (res.statusCode === 200) {
-            try {
-              const response = JSON.parse(data);
-              // Find the specific vehicle for this device
-              const vehicle = response.data?.find(v => v.id === this.vehicleId);
-              
-              if (!vehicle) {
-                this.error('Vehicle not found in response');
-                resolve(null);
-                return;
-              }
-
-              // Log only essential vehicle data
-              this.log('Vehicle data received:', {
-                id: vehicle.id,
-                brand: vehicle.information?.brand,
-                model: vehicle.information?.model,
-                batteryLevel: vehicle.chargeState?.batteryLevel,
-                isCharging: vehicle.chargeState?.isCharging,
-                isPluggedIn: vehicle.chargeState?.isPluggedIn,
-                range: vehicle.chargeState?.range,
-                powerDeliveryState: vehicle.chargeState?.powerDeliveryState
-              });
-
-              resolve(vehicle);
-            } catch (error) {
-              this.error('Error parsing vehicle data:', error);
-              reject(error);
-            }
-          } else if (res.statusCode === 429) {
-            this.error('Rate limit exceeded when getting vehicle data');
-            reject(new Error('Rate limit exceeded'));
-          } else {
-            this.error(`Failed to get vehicle data: ${res.statusCode} ${res.statusMessage}`);
-            reject(new Error(`Failed to get vehicle data: ${res.statusCode} ${res.statusMessage}`));
-          }
-        });
-      });
-
-      req.on('error', (error) => {
-        this.error("Error in getVehicleData:", error);
-        reject(error);
-      });
-
-      req.end();
-    });
-  }
-
-  // Function to start charging
-  async startCharging(accessToken, vehicleId) {
-    const url = `https://enode-api.production.enode.io/vehicles/${vehicleId}/charging/start`;
-
-    const options = {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-      },
-    };
-
-    return new Promise((resolve, reject) => {
-      const req = https.request(url, options, (res) => {
-        let data = '';
-        res.on('data', (chunk) => { data += chunk; });
-        res.on('end', () => {
-          if (res.statusCode === 200) {
-            this.log('Successfully started charging');
-            resolve(true);
-          } else {
-            this.error(`Failed to start charging: ${res.statusCode} ${res.statusMessage}`);
-            reject(new Error(`Failed to start charging: ${res.statusCode} ${res.statusMessage}`));
-          }
-        });
-      });
-
-      req.on('error', (error) => {
-        this.error('Error in startCharging:', error);
-        reject(error);
-      });
-
-      req.end();
-    });
-  }
-
-  // Function to stop charging
-  async stopCharging(accessToken, vehicleId) {
-    const url = `https://enode-api.production.enode.io/vehicles/${vehicleId}/charging/stop`;
-
-    const options = {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-      },
-    };
-
-    return new Promise((resolve, reject) => {
-      const req = https.request(url, options, (res) => {
-        let data = '';
-        res.on('data', (chunk) => { data += chunk; });
-        res.on('end', () => {
-          if (res.statusCode === 200) {
-            this.log('Successfully stopped charging');
-            resolve(true);
-          } else {
-            this.error(`Failed to stop charging: ${res.statusCode} ${res.statusMessage}`);
-            reject(new Error(`Failed to stop charging: ${res.statusCode} ${res.statusMessage}`));
-          }
-        });
-      });
-
-      req.on('error', (error) => {
-        this.error('Error in stopCharging:', error);
-        reject(error);
-      });
-
-      req.end();
-    });
-  }
-
-  // Main function to update vehicle data and set Homey device capabilities
-  async updateVehicleData() {
+  async pollVehicleData() {
     try {
-      // Get access token
-      const accessToken = await this.getAccessToken(this.clientId, this.clientSecret);
-      if (!accessToken) {
-        this.error('Failed to get access token');
+      const driver = this.driver;
+      const { clientId, clientSecret } = driver.getStoredCredentials();
+      
+      if (!clientId || !clientSecret) {
+        this.error('Missing credentials');
         return;
       }
 
-      // Get vehicle data
-      const vehicleData = await this.getVehicleData(accessToken);
-      if (!vehicleData) {
-        this.error('No vehicle data received');
-        return;
-      }
+      const vehicleId = this.getData().id;
+      const data = await this.enodeApi.getVehicleData(clientId, clientSecret, vehicleId);
 
       // Process `lastSeen` to date, hour, and minute only
-      const lastSeenDate = vehicleData.lastSeen ? new Date(vehicleData.lastSeen) : null;
+      const lastSeenDate = data.lastSeen ? new Date(data.lastSeen) : null;
       const lastSeenFormatted = lastSeenDate 
           ? `${lastSeenDate.toISOString().slice(0, 16).replace('T', ' ')}` 
           : "Not Available";
@@ -285,15 +109,15 @@ class XpengCarDevice extends Homey.Device {
       };
 
       // Get location data
-      const locationData = vehicleData.location 
-          ? formatLocation(vehicleData.location)
+      const locationData = data.location 
+          ? formatLocation(data.location)
           : "Not Available";
 
       // Format charging status
       const getChargingStatus = (isCharging, isPluggedIn, chargeLimit) => {
         if (!isPluggedIn) return 'Not Connected';
         if (isCharging) return 'Charging';
-        if (chargeLimit && vehicleData.chargeState?.batteryLevel >= chargeLimit) return 'Charge Complete';
+        if (chargeLimit && data.chargeState?.batteryLevel >= chargeLimit) return 'Charge Complete';
         return 'Connected';
       };
 
@@ -311,27 +135,27 @@ class XpengCarDevice extends Homey.Device {
 
       // Extract and set data to capabilities with proper types
       const finalData = {
-        batteryLevel: vehicleData.chargeState?.batteryLevel ? `${vehicleData.chargeState.batteryLevel}%` : 'Unknown',
-        range: vehicleData.chargeState?.range,
+        batteryLevel: data.chargeState?.batteryLevel ? `${data.chargeState.batteryLevel}%` : 'Unknown',
+        range: data.chargeState?.range,
         chargingStatus: getChargingStatus(
-          vehicleData.chargeState?.isCharging,
-          vehicleData.chargeState?.isPluggedIn,
-          vehicleData.chargeState?.chargeLimit
+          data.chargeState?.isCharging,
+          data.chargeState?.isPluggedIn,
+          data.chargeState?.chargeLimit
         ),
-        pluggedInStatus: vehicleData.chargeState?.isPluggedIn,
+        pluggedInStatus: data.chargeState?.isPluggedIn,
         location: locationData,
         lastSeen: lastSeenFormatted,
-        odometer: vehicleData.odometer?.distance ? `${vehicleData.odometer.distance} km` : null,
-        chargingLimit: vehicleData.chargeState?.chargeLimit,
+        odometer: data.odometer?.distance ? `${data.odometer.distance} km` : null,
+        chargingLimit: data.chargeState?.chargeLimit,
         powerDeliveryState: formatPowerDelivery(
-          vehicleData.chargeState?.powerDeliveryState,
-          vehicleData.chargeState?.isCharging
+          data.chargeState?.powerDeliveryState,
+          data.chargeState?.isCharging
         ),
-        batteryCapacity: vehicleData.chargeState?.batteryCapacity,
-        vehicleBrand: vehicleData.information?.brand,
-        vehicleModel: vehicleData.information?.model || this.getData().id.toUpperCase(),
-        vehicleYear: vehicleData.information?.year,
-        vehicleVin: vehicleData.information?.vin
+        batteryCapacity: data.chargeState?.batteryCapacity,
+        vehicleBrand: data.information?.brand,
+        vehicleModel: data.information?.model || this.getData().id.toUpperCase(),
+        vehicleYear: data.information?.year,
+        vehicleVin: data.information?.vin
       };
 
       // Log available capabilities from API
@@ -357,56 +181,42 @@ class XpengCarDevice extends Homey.Device {
         this.error('Error setting capabilities:', error);
       }
     } catch (error) {
-      if (error.message === 'Rate limit exceeded') {
-        this.log('Rate limit reached, will retry on next update interval');
-      } else {
-        this.error("Error during updateVehicleData execution:", error);
-      }
+      this.error('Failed to poll vehicle data:', error);
     }
   }
 
-  // Flow action handlers
-  async onActionStartCharging() {
+  async startCharging() {
     try {
-      const accessToken = await this.getAccessToken(this.clientId, this.clientSecret);
-      if (!accessToken) {
-        throw new Error('Failed to get access token');
+      const driver = this.driver;
+      const { clientId, clientSecret } = driver.getStoredCredentials();
+      
+      if (!clientId || !clientSecret) {
+        throw new Error('Missing credentials');
       }
 
-      const vehicleData = await this.getVehicleData(accessToken);
-      if (!vehicleData) {
-        throw new Error('Failed to get vehicle data');
-      }
-
-      // Check if the vehicle is plugged in
-      if (!vehicleData.chargeState?.isPluggedIn) {
-        throw new Error('Vehicle is not plugged in');
-      }
-
-      await this.startCharging(accessToken, vehicleData.id);
-      await this.updateVehicleData(); // Update vehicle data after charging state change
+      const vehicleId = this.getData().id;
+      await this.enodeApi.startCharging(clientId, clientSecret, vehicleId);
+      await this.pollVehicleData(); // Update device status
     } catch (error) {
-      this.error('Error in onActionStartCharging:', error);
+      this.error('Failed to start charging:', error);
       throw error;
     }
   }
 
-  async onActionStopCharging() {
+  async stopCharging() {
     try {
-      const accessToken = await this.getAccessToken(this.clientId, this.clientSecret);
-      if (!accessToken) {
-        throw new Error('Failed to get access token');
+      const driver = this.driver;
+      const { clientId, clientSecret } = driver.getStoredCredentials();
+      
+      if (!clientId || !clientSecret) {
+        throw new Error('Missing credentials');
       }
 
-      const vehicleData = await this.getVehicleData(accessToken);
-      if (!vehicleData) {
-        throw new Error('Failed to get vehicle data');
-      }
-
-      await this.stopCharging(accessToken, vehicleData.id);
-      await this.updateVehicleData(); // Update vehicle data after charging state change
+      const vehicleId = this.getData().id;
+      await this.enodeApi.stopCharging(clientId, clientSecret, vehicleId);
+      await this.pollVehicleData(); // Update device status
     } catch (error) {
-      this.error('Error in onActionStopCharging:', error);
+      this.error('Failed to stop charging:', error);
       throw error;
     }
   }
@@ -415,17 +225,15 @@ class XpengCarDevice extends Homey.Device {
   async onSettings({ oldSettings, newSettings, changedKeys }) {
     if (changedKeys.includes('updateInterval')) {
       // Update settings and clear interval if necessary
-      clearInterval(this.pollingInterval);
+      this.homey.clearInterval(this.pollingInterval);
       this.updateInterval = parseInt(newSettings.updateInterval) || 10;
 
       // Restart data fetching with the new interval
-      this.pollingInterval = setInterval(() => this.updateVehicleData(), this.updateInterval * 60 * 1000);
-      await this.updateVehicleData();
+      this.pollingInterval = this.homey.setInterval(() => {
+        this.pollVehicleData();
+      }, this.updateInterval * 60 * 1000);
+      await this.pollVehicleData();
     }
-  }
-
-  async onDeleted() {
-    clearInterval(this.pollingInterval);
   }
 }
 
