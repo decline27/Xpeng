@@ -764,6 +764,29 @@
           ]
         }
       ]
+    },
+    {
+      "id": "xpeng",
+      "name": {
+        "en": "XPENG Car"
+      },
+      "class": "other",
+      "capabilities": [
+        "batteryLevel",
+        "batteryCapacity",
+        "range",
+        "chargingStatus",
+        "chargingLimit",
+        "pluggedInStatus",
+        "powerDeliveryState",
+        "location",
+        "lastSeen",
+        "odometer",
+        "vehicleBrand",
+        "vehicleModel",
+        "vehicleYear",
+        "vehicleVin"
+      ]
     }
   ],
   "capabilities": {
