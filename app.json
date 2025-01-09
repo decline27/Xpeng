@@ -787,6 +787,9 @@
         "vehicleYear",
         "vehicleVin"
       ],
+      "platforms": [
+        "local"
+      ],
       "images": {
         "small": "/drivers/xpeng/assets/images/small.png",
         "large": "/drivers/xpeng/assets/images/large.png"
