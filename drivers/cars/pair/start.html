@@ -7,13 +7,22 @@
         margin-bottom: 15px;
         display: none;
     }
-    .debug-info {
-        margin-top: 20px;
+    .error-message {
+        color: #d32f2f;
+        background-color: #ffebee;
         padding: 10px;
-        background-color: #f5f5f5;
         border-radius: 4px;
-        font-size: 0.8em;
+        margin-bottom: 15px;
         display: none;
+    }
+    .loading-spinner {
+        display: none;
+        text-align: center;
+        margin: 20px 0;
+    }
+    .link-container {
+        display: none;
+        margin: 20px 0;
     }
 </style>
 
@@ -25,6 +34,8 @@
         <p><strong>Existing credentials found!</strong> You can use these or enter new ones.</p>
     </div>
 
+    <div class="error-message" id="error"></div>
+
     <div class="homey-form-group">
         <label class="homey-form-label" for="clientId">Enode Client ID</label>
         <input class="homey-form-input" id="clientId" type="text" placeholder="Enter your Enode Client ID" />
@@ -35,14 +46,16 @@
         <input class="homey-form-input" id="clientSecret" type="password" placeholder="Enter your Enode Client Secret" />
     </div>
 
-    <div id="loading" style="display: none;">
+    <div class="loading-spinner" id="loading">
+        <div class="homey-loading">
+            <div class="homey-loading-circle"></div>
+            <div class="homey-loading-circle"></div>
+            <div class="homey-loading-circle"></div>
+        </div>
         <p>Generating link...</p>
     </div>
 
-    <div id="error" style="display: none; color: red;">
-    </div>
-
-    <div id="link-container" style="display: none;">
+    <div class="link-container" id="link-container">
         <p>Click the button below to open Enode's connection page in your browser:</p>
         <a id="enode-link" class="homey-button-primary" target="_blank" rel="noopener noreferrer">
             Connect Vehicle
@@ -69,7 +82,22 @@ async function loadStoredCredentials() {
         }
     } catch (error) {
         console.error('Error loading credentials:', error);
+        showError('Failed to load existing credentials');
     }
+}
+
+function showError(message) {
+    const errorElement = document.getElementById('error');
+    errorElement.textContent = message;
+    errorElement.style.display = 'block';
+    setTimeout(() => {
+        errorElement.style.display = 'none';
+    }, 5000);
+}
+
+function showLoading(show) {
+    document.getElementById('loading').style.display = show ? 'block' : 'none';
+    document.getElementById('start-link').style.display = show ? 'none' : 'block';
 }
 
 // Load credentials immediately
@@ -80,14 +108,12 @@ document.getElementById('start-link').addEventListener('click', async () => {
     const clientSecret = document.getElementById('clientSecret').value.trim();
 
     if (!clientId || !clientSecret) {
-        document.getElementById('error').style.display = 'block';
-        document.getElementById('error').textContent = 'Please enter both Client ID and Client Secret';
+        showError('Please enter both Client ID and Client Secret');
         return;
     }
 
     try {
-        document.getElementById('loading').style.display = 'block';
-        document.getElementById('start-link').style.display = 'none';
+        showLoading(true);
         document.getElementById('error').style.display = 'none';
 
         // Store credentials in driver settings
@@ -95,16 +121,14 @@ document.getElementById('start-link').addEventListener('click', async () => {
         
         const result = await Homey.emit('get_link');
         
-        document.getElementById('loading').style.display = 'none';
+        showLoading(false);
         document.getElementById('link-container').style.display = 'block';
         
         const enodeLink = document.getElementById('enode-link');
         enodeLink.href = result.linkUrl;
     } catch (error) {
-        document.getElementById('loading').style.display = 'none';
-        document.getElementById('error').style.display = 'block';
-        document.getElementById('error').textContent = error.message || 'Failed to generate link';
-        document.getElementById('start-link').style.display = 'block';
+        showLoading(false);
+        showError(error.message || 'Failed to generate link');
     }
 });
 
