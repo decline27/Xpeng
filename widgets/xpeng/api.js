@@ -18,7 +18,7 @@ module.exports = {
         pluggedInStatus: await device.getCapabilityValue('pluggedInStatus'),
         location: await device.getCapabilityValue('location'),
         lastSeen: await device.getCapabilityValue('lastSeen'),
-        odometer: await device.getCapabilityValue('odometer'),
+        powerDeliveryState: await device.getCapabilityValue('powerDeliveryState'),
         vehicleModel: await device.getCapabilityValue('vehicleModel')
       };
 

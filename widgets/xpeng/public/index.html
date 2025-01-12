@@ -17,6 +17,10 @@
         padding: var(--homey-su-2);
       }
 
+      .info-card.full-width {
+        grid-column: 1 / -1;
+      }
+
       .info-card-title {
         color: var(--homey-color-text-subtle);
         font-size: 12px;
@@ -55,6 +59,23 @@
         text-align: center;
         padding: var(--homey-su-4);
       }
+
+      .location-link {
+        color: var(--homey-color-primary);
+        text-decoration: none;
+      }
+
+      .location-link:hover {
+        text-decoration: underline;
+      }
+
+      .charging-power {
+        color: var(--homey-color-green);
+      }
+
+      .charging-power.discharging {
+        color: var(--homey-color-orange);
+      }
     </style>
   </head>
 
@@ -87,8 +108,15 @@
         </div>
 
         <div class="info-card">
-          <div class="info-card-title">Odometer</div>
-          <div class="info-card-value" id="odometer">--</div>
+          <div class="info-card-title">Charging Power</div>
+          <div class="info-card-value">
+            <span id="charging-power" class="charging-power">--</span>
+          </div>
+        </div>
+
+        <div class="info-card full-width">
+          <div class="info-card-title">Location</div>
+          <div class="info-card-value" id="location">--</div>
         </div>
       </div>
     </div>
@@ -125,6 +153,30 @@
           return date.toLocaleTimeString();
         }
 
+        function formatChargingPower(power) {
+          if (!power) return '--';
+          const powerValue = parseFloat(power);
+          if (isNaN(powerValue)) return '--';
+          
+          const powerElement = document.getElementById('charging-power');
+          powerElement.classList.remove('charging', 'discharging');
+          
+          if (powerValue > 0) {
+            powerElement.classList.add('charging');
+            return `+${powerValue.toFixed(1)} kW`;
+          } else if (powerValue < 0) {
+            powerElement.classList.add('discharging');
+            return `${powerValue.toFixed(1)} kW`;
+          }
+          return '0 kW';
+        }
+
+        function createLocationLink(location) {
+          if (!location || !location.latitude || !location.longitude) return '--';
+          const mapUrl = `https://www.google.com/maps?q=${location.latitude},${location.longitude}`;
+          return `<a href="#" class="location-link" onclick="Homey.popup('${mapUrl}'); return false;">View on Map</a>`;
+        }
+
         function updateVehicleData() {
           Homey.api('GET', '/vehicle-data')
             .then(data => {
@@ -136,15 +188,19 @@
               hideError();
 
               // Update battery and range
-              document.getElementById('battery-percentage').textContent = `${Math.round(data.batteryLevel)}%`;
-              document.getElementById('battery-level-fill').style.width = `${data.batteryLevel}%`;
-              document.getElementById('range').textContent = `${Math.round(data.range)} km`;
+              const batteryLevel = parseFloat(data.batteryLevel) || 0;
+              document.getElementById('battery-percentage').textContent = `${Math.round(batteryLevel)}%`;
+              document.getElementById('battery-level-fill').style.width = `${batteryLevel}%`;
+              document.getElementById('range').textContent = `${Math.round(parseFloat(data.range) || 0)} km`;
 
               // Update status cards
               document.getElementById('charging-status').textContent = data.chargingStatus || '--';
               document.getElementById('plugged-status').textContent = data.pluggedInStatus ? 'Yes' : 'No';
               document.getElementById('last-seen').textContent = formatLastSeen(data.lastSeen);
-              document.getElementById('odometer').textContent = `${Math.round(data.odometer)} km`;
+              document.getElementById('charging-power').textContent = formatChargingPower(data.powerDeliveryState);
+              
+              // Update location
+              document.getElementById('location').innerHTML = createLocationLink(data.location);
             })
             .catch(error => {
               showError(error.message || 'Failed to fetch vehicle data');
