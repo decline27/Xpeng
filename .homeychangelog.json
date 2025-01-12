@@ -40,5 +40,8 @@
   },
   "1.2.14": {
     "en": "Added widget for Homey Dashboard"
+  },
+  "1.2.15": {
+    "en": "Added dashboard widget"
   }
 }
