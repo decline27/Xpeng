@@ -37,5 +37,8 @@
   },
   "1.2.13": {
     "en": "link to the forum page"
+  },
+  "1.2.14": {
+    "en": "Added widget for Homey Dashboard"
   }
 }
