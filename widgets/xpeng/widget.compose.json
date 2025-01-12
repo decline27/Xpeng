@@ -2,7 +2,7 @@
   "name": {
     "en": "Xpeng Vehicle Status"
   },
-  "height": 300,
+  "height": 250,
   "settings": [
     {
       "id": "refresh_interval",
