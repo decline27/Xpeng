@@ -766,6 +766,40 @@
       ]
     }
   ],
+  "widgets": {
+    "xpeng": {
+      "name": {
+        "en": "Xpeng Vehicle Status"
+      },
+      "height": 300,
+      "settings": [
+        {
+          "id": "refresh_interval",
+          "type": "number",
+          "label": {
+            "en": "Refresh Interval"
+          },
+          "value": 5,
+          "min": 1,
+          "max": 60,
+          "units": {
+            "en": "minutes"
+          }
+        }
+      ],
+      "api": {
+        "getVehicleData": {
+          "method": "GET",
+          "path": "/vehicle-data"
+        },
+        "updateVehicleData": {
+          "method": "POST",
+          "path": "/update-data"
+        }
+      },
+      "id": "xpeng"
+    }
+  },
   "capabilities": {
     "batteryCapacity": {
       "type": "number",

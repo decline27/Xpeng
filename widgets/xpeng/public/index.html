@@ -1,0 +1,169 @@
+<html>
+  <head>
+    <style>
+      .widget-container {
+        padding: var(--homey-su-2);
+      }
+
+      .vehicle-info {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--homey-su-2);
+      }
+
+      .info-card {
+        background: var(--homey-color-ui-surface-secondary);
+        border-radius: var(--homey-border-radius);
+        padding: var(--homey-su-2);
+      }
+
+      .info-card-title {
+        color: var(--homey-color-text-subtle);
+        font-size: 12px;
+        margin-bottom: var(--homey-su-1);
+      }
+
+      .info-card-value {
+        color: var(--homey-color-text);
+        font-size: 16px;
+        font-weight: 500;
+      }
+
+      .battery-section {
+        grid-column: 1 / -1;
+        display: flex;
+        align-items: center;
+        gap: var(--homey-su-2);
+      }
+
+      .battery-level {
+        flex: 1;
+        height: 8px;
+        background: var(--homey-color-ui-surface-secondary);
+        border-radius: 4px;
+        overflow: hidden;
+      }
+
+      .battery-level-fill {
+        height: 100%;
+        background: var(--homey-color-green);
+        transition: width 0.3s ease;
+      }
+
+      .error-message {
+        color: var(--homey-color-error);
+        text-align: center;
+        padding: var(--homey-su-4);
+      }
+    </style>
+  </head>
+
+  <body class="homey-widget">
+    <div class="widget-container">
+      <div id="error-container" style="display: none;" class="error-message"></div>
+      
+      <div id="vehicle-container" class="vehicle-info">
+        <div class="battery-section">
+          <div class="info-card-value" id="battery-percentage">--</div>
+          <div class="battery-level">
+            <div class="battery-level-fill" id="battery-level-fill" style="width: 0%"></div>
+          </div>
+          <div class="info-card-value" id="range">-- km</div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-card-title">Charging Status</div>
+          <div class="info-card-value" id="charging-status">--</div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-card-title">Plugged In</div>
+          <div class="info-card-value" id="plugged-status">--</div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-card-title">Last Updated</div>
+          <div class="info-card-value" id="last-seen">--</div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-card-title">Odometer</div>
+          <div class="info-card-value" id="odometer">--</div>
+        </div>
+      </div>
+    </div>
+
+    <script type="text/javascript">
+      function onHomeyReady(Homey) {
+        // Initialize widget
+        Homey.ready();
+
+        let updateInterval;
+        const settings = Homey.getSettings();
+        const refreshRate = (settings.refresh_interval || 5) * 60 * 1000; // Convert to milliseconds
+
+        function showError(message) {
+          const errorContainer = document.getElementById('error-container');
+          const vehicleContainer = document.getElementById('vehicle-container');
+          
+          errorContainer.textContent = message;
+          errorContainer.style.display = 'block';
+          vehicleContainer.style.display = 'none';
+        }
+
+        function hideError() {
+          const errorContainer = document.getElementById('error-container');
+          const vehicleContainer = document.getElementById('vehicle-container');
+          
+          errorContainer.style.display = 'none';
+          vehicleContainer.style.display = 'grid';
+        }
+
+        function formatLastSeen(timestamp) {
+          if (!timestamp) return '--';
+          const date = new Date(timestamp);
+          return date.toLocaleTimeString();
+        }
+
+        function updateVehicleData() {
+          Homey.api('GET', '/vehicle-data')
+            .then(data => {
+              if (data.error) {
+                showError(data.error);
+                return;
+              }
+
+              hideError();
+
+              // Update battery and range
+              document.getElementById('battery-percentage').textContent = `${Math.round(data.batteryLevel)}%`;
+              document.getElementById('battery-level-fill').style.width = `${data.batteryLevel}%`;
+              document.getElementById('range').textContent = `${Math.round(data.range)} km`;
+
+              // Update status cards
+              document.getElementById('charging-status').textContent = data.chargingStatus || '--';
+              document.getElementById('plugged-status').textContent = data.pluggedInStatus ? 'Yes' : 'No';
+              document.getElementById('last-seen').textContent = formatLastSeen(data.lastSeen);
+              document.getElementById('odometer').textContent = `${Math.round(data.odometer)} km`;
+            })
+            .catch(error => {
+              showError(error.message || 'Failed to fetch vehicle data');
+            });
+        }
+
+        // Initial update
+        updateVehicleData();
+
+        // Set up periodic updates
+        updateInterval = setInterval(updateVehicleData, refreshRate);
+
+        // Clean up on widget removal
+        window.addEventListener('beforeunload', () => {
+          if (updateInterval) {
+            clearInterval(updateInterval);
+          }
+        });
+      }
+    </script>
+  </body>
+</html>
