@@ -1,6 +1,6 @@
 {
   "id": "com.xpeng.car",
-  "version": "1.2.22",
+  "version": "1.2.23",
   "compatibility": ">=12.2.0",
   "sdk": 3,
   "platforms": [
