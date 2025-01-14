@@ -52,5 +52,8 @@
   },
   "1.2.18": {
     "en": "Added gps cordinates to adress in widget"
+  },
+  "1.2.19": {
+    "en": "GPS to adress in widget"
   }
 }
