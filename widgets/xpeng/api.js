@@ -2,8 +2,26 @@
 
 const fetch = require('node-fetch');
 
+function parseLocationString(locationStr) {
+  try {
+    // Extract coordinates from the parentheses
+    const match = locationStr.match(/\(([-\d.]+),([-\d.]+)\)/);
+    if (match) {
+      return {
+        latitude: parseFloat(match[1]),
+        longitude: parseFloat(match[2])
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error('Error parsing location string:', error);
+    return null;
+  }
+}
+
 async function getAddressFromCoordinates(lat, lon) {
   try {
+    console.log('Attempting to get address for coordinates:', { lat, lon });
     const response = await fetch(
       `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`,
       {
@@ -13,6 +31,7 @@ async function getAddressFromCoordinates(lat, lon) {
       }
     );
     const data = await response.json();
+    console.log('Nominatim response:', data);
     
     if (data.error) {
       return null;
@@ -45,11 +64,20 @@ module.exports = {
       }
 
       const device = devices[0]; // Get the first vehicle
-      const location = await device.getCapabilityValue('location');
+      const locationString = await device.getCapabilityValue('location');
+      console.log('Raw location data from device:', locationString);
+
+      let location = null;
       let address = null;
 
-      if (location && location.latitude && location.longitude) {
-        address = await getAddressFromCoordinates(location.latitude, location.longitude);
+      if (typeof locationString === 'string') {
+        location = parseLocationString(locationString);
+        console.log('Parsed location:', location);
+
+        if (location) {
+          address = await getAddressFromCoordinates(location.latitude, location.longitude);
+          console.log('Retrieved address:', address);
+        }
       }
 
       const data = {
@@ -64,8 +92,10 @@ module.exports = {
         vehicleModel: await device.getCapabilityValue('vehicleModel')
       };
 
+      console.log('Final data being sent to frontend:', JSON.stringify(data, null, 2));
       return data;
     } catch (error) {
+      console.error('Error in getVehicleData:', error);
       return { error: error.message };
     }
   },
