@@ -49,5 +49,8 @@
   },
   "1.2.17": {
     "en": "New widget preview images"
+  },
+  "1.2.18": {
+    "en": "Added gps cordinates to adress in widget"
   }
 }
