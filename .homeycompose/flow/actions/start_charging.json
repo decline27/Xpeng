@@ -5,5 +5,12 @@
   "hint": {
     "en": "Start charging the vehicle if it is plugged in"
   },
+  "args": [
+    {
+      "name": "device",
+      "type": "device",
+      "filter": "driver_id=cars"
+    }
+  ],
   "platforms": ["local"]
 }
