@@ -80,15 +80,24 @@ class XpengCarDevice extends Homey.Device {
   async pollVehicleData() {
     try {
       const driver = this.driver;
-      const { clientId, clientSecret } = driver.getStoredCredentials();
-      
-      if (!clientId || !clientSecret) {
-        this.error('Missing credentials');
-        return;
+      if (!driver) {
+        throw new Error('Driver not initialized');
       }
 
-      const vehicleId = this.getData().id;
+      const { clientId, clientSecret } = driver.getStoredCredentials();
+      if (!clientId || !clientSecret) {
+        throw new Error('Missing API credentials');
+      }
+
+      const vehicleId = this.getData()?.id;
+      if (!vehicleId) {
+        throw new Error('Missing vehicle ID');
+      }
+
       const data = await this.enodeApi.getVehicleData(clientId, clientSecret, vehicleId);
+      if (!data) {
+        throw new Error('No data received from API');
+      }
 
       // Check if static data needs updating
       if (this.vehicleStore.needsStaticUpdate(data)) {
@@ -99,6 +108,10 @@ class XpengCarDevice extends Homey.Device {
       const staticData = this.vehicleStore.getStaticData();
       const dynamicData = this.vehicleStore.processDynamicData(data);
 
+      if (!staticData || !dynamicData) {
+        throw new Error('Failed to process vehicle data');
+      }
+
       // Combine static and dynamic data
       const finalData = {
         ...staticData,
@@ -106,17 +119,34 @@ class XpengCarDevice extends Homey.Device {
       };
 
       // Set capabilities
-      try {
-        for (const [capability, value] of Object.entries(finalData)) {
-          if (value !== undefined && value !== null) {
+      let updatedCapabilities = 0;
+      const failedCapabilities = [];
+
+      for (const [capability, value] of Object.entries(finalData)) {
+        if (value !== undefined && value !== null) {
+          try {
             await this.setCapabilityValue(capability, value);
+            updatedCapabilities++;
+          } catch (error) {
+            failedCapabilities.push(capability);
+            this.error(`Failed to set capability ${capability}:`, error.message);
           }
         }
-      } catch (error) {
-        this.error('Error setting capabilities:', error);
       }
+
+      this.log(`Updated ${updatedCapabilities} capabilities successfully`);
+      if (failedCapabilities.length > 0) {
+        this.error(`Failed to update capabilities: ${failedCapabilities.join(', ')}`);
+      }
+
     } catch (error) {
-      this.error('Failed to poll vehicle data:', error);
+      this.error('Failed to poll vehicle data:', error.message);
+      // Set device unavailable if we have critical errors
+      if (error.message.includes('Missing API credentials') || 
+          error.message.includes('Missing vehicle ID') ||
+          error.message.includes('Driver not initialized')) {
+        await this.setUnavailable(error.message);
+      }
     }
   }
 
