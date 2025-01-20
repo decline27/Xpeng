@@ -79,5 +79,8 @@
   },
   "1.2.27": {
     "en": "bug fix"
+  },
+  "1.2.28": {
+    "en": "Better error handeling"
   }
 }
