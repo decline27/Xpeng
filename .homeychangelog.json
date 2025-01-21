@@ -85,5 +85,8 @@
   },
   "1.2.29": {
     "en": "error handeling"
+  },
+  "1.2.30": {
+    "en": "fixed bugs in flows"
   }
 }

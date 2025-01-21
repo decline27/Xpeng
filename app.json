@@ -1,7 +1,7 @@
 {
   "_comment": "This file is generated. Please edit .homeycompose/app.json instead.",
   "id": "com.xpeng.car",
-  "version": "1.2.29",
+  "version": "1.2.30",
   "compatibility": ">=12.2.0",
   "sdk": 3,
   "platforms": [
@@ -657,6 +657,25 @@
     "actions": [
       {
         "title": {
+          "en": "Refresh Vehicle Data"
+        },
+        "hint": {
+          "en": "Force an immediate refresh of vehicle data"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=cars"
+          }
+        ],
+        "platforms": [
+          "local"
+        ],
+        "id": "refresh_data"
+      },
+      {
+        "title": {
           "en": "Start Charging"
         },
         "hint": {
@@ -681,6 +700,13 @@
         "hint": {
           "en": "Stop charging the vehicle"
         },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=cars"
+          }
+        ],
         "platforms": [
           "local"
         ],
@@ -759,13 +785,13 @@
                 "en": "Update Interval"
               },
               "value": 10,
-              "min": 1,
+              "min": 10,
               "max": 60,
               "units": {
                 "en": "minutes"
               },
               "hint": {
-                "en": "How often to update vehicle data (1-60 minutes)"
+                "en": "How often to update vehicle data (10-60 minutes)"
               }
             }
           ]
@@ -886,12 +912,14 @@
       "title": {
         "en": "Odometer"
       },
-      "units": "km",
       "getable": true,
       "setable": false,
-      "decimals": 1,
-      "icon": "assets/capabilities/odometer.svg",
-      "uiComponent": "sensor"
+      "uiComponent": "sensor",
+      "icon": "/assets/capabilities/odometer.svg",
+      "min": 0,
+      "units": {
+        "en": "km"
+      }
     },
     "pluggedInStatus": {
       "type": "boolean",
