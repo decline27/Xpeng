@@ -1,9 +1,9 @@
 {
   "title": {
-    "en": "Stop Charging"
+    "en": "Refresh Vehicle Data"
   },
   "hint": {
-    "en": "Stop charging the vehicle"
+    "en": "Force an immediate refresh of vehicle data"
   },
   "args": [
     {

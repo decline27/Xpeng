@@ -12,13 +12,13 @@
           "en": "Update Interval"
         },
         "value": 10,
-        "min": 1,
+        "min": 10,
         "max": 60,
         "units": {
           "en": "minutes"
         },
         "hint": {
-          "en": "How often to update vehicle data (1-60 minutes)"
+          "en": "How often to update vehicle data (10-60 minutes)"
         }
       }
     ]

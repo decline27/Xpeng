@@ -24,8 +24,65 @@ class XpengDriver extends Homey.Driver {
 
     this.homey.flow.getActionCard('stop_charging')
       .registerRunListener(async (args, state) => {
+        try {
+          this.log('Stop charging flow triggered with args:', {
+            deviceId: args.device?.id,
+            deviceName: args.device?.getName(),
+            hasDevice: !!args.device,
+            hasStopCharging: typeof args.device?.stopCharging === 'function'
+          });
+
+          const device = args.device;
+          if (!device) {
+            throw new Error('No device provided to stop charging flow');
+          }
+
+          if (typeof device.stopCharging !== 'function') {
+            this.error('Device missing stopCharging method:', {
+              deviceId: device.id,
+              deviceName: device.getName(),
+              deviceClass: device.constructor.name,
+              deviceMethods: Object.getOwnPropertyNames(Object.getPrototypeOf(device))
+            });
+            throw new Error('Device does not support stop charging');
+          }
+
+          await device.stopCharging();
+        } catch (error) {
+          this.error('Stop charging flow failed:', error);
+          throw error; // Re-throw to show error in flow
+        }
+      });
+
+    this.homey.flow.getActionCard('refresh_data')
+      .registerRunListener(async (args, state) => {
+        try {
+          this.log('Refresh data flow triggered with args:', {
+            deviceId: args.device?.id,
+            deviceName: args.device?.getName(),
+            hasDevice: !!args.device
+          });
+
+          const device = args.device;
+          if (!device) {
+            throw new Error('No device provided to refresh flow');
+          }
+
+          const success = await device.refreshData();
+          if (!success) {
+            throw new Error('Failed to refresh device data');
+          }
+        } catch (error) {
+          this.error('Refresh data flow failed:', error);
+          throw error;
+        }
+      });
+
+    // Register Flow Conditions
+    this.homey.flow.getConditionCard('plugged_in_status')
+      .registerRunListener(async (args, state) => {
         const device = args.device;
-        await device.stopCharging();
+        return device.getCapabilityValue('pluggedInStatus');
       });
   }
 
@@ -129,11 +186,15 @@ class XpengDriver extends Homey.Driver {
           throw new Error('No vehicles found. Please make sure you have completed the connection process in your browser.');
         }
 
+        // Log found vehicles for debugging
+        this.log('Found vehicles:', vehicles.map(v => ({ id: v.id, name: v.name })));
+
         // Map vehicles to Homey device format
         return vehicles.map(vehicle => ({
-          name: vehicle.name || 'XPENG Vehicle',
+          name: vehicle.name || `XPENG ${vehicle.model || 'Vehicle'}`,
           data: {
-            id: vehicle.id
+            id: vehicle.id,
+            vehicleId: vehicle.id  // Store the ID in both places for backward compatibility
           },
           store: {
             vehicleInfo: vehicle
@@ -144,7 +205,15 @@ class XpengDriver extends Homey.Driver {
             'chargingStatus',
             'pluggedInStatus',
             'range',
-            'location'
+            'location',
+            'lastSeen',
+            'odometer',
+            'vehicleBrand',
+            'vehicleModel',
+            'vehicleYear',
+            'vehicleVin',
+            'chargingLimit',
+            'powerDeliveryState'
           ]
         }));
       } catch (error) {
@@ -154,7 +223,6 @@ class XpengDriver extends Homey.Driver {
     });
   }
 
-  // Method to get stored credentials
   getStoredCredentials() {
     const clientId = this.homey.settings.get('enode_client_id');
     const clientSecret = this.homey.settings.get('enode_client_secret');
@@ -164,11 +232,9 @@ class XpengDriver extends Homey.Driver {
       hasClientSecret: !!clientSecret
     });
     
-    return {
-      clientId,
-      clientSecret
-    };
+    return { clientId, clientSecret };
   }
+
 }
 
 module.exports = XpengDriver;
