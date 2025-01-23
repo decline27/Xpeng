@@ -1,6 +1,10 @@
 <html>
   <head>
     <style>
+      :root {
+        --widget-size: 2;
+      }
+
       .widget-container {
         padding: var(--homey-su-2);
       }
@@ -76,11 +80,112 @@
       .charging-power.discharging {
         color: var(--homey-color-orange);
       }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding: var(--homey-widget-padding);
+        font-family: var(--homey-font-family);
+        color: var(--homey-text-color);
+        background: var(--homey-background);
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .container {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: var(--homey-widget-padding);
+      }
+
+      .info-container {
+        display: flex;
+        flex-direction: column;
+        gap: calc(var(--homey-widget-padding) * 0.75);
+      }
+
+      .info-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: var(--homey-font-size);
+      }
+
+      .info-row i {
+        width: 20px;
+        text-align: center;
+        color: var(--homey-text-color);
+      }
+
+      .location {
+        font-size: var(--homey-font-size-small);
+        color: var(--homey-text-dimmed);
+      }
+
+      .charging-button {
+        margin-top: var(--homey-widget-padding);
+        padding: var(--homey-widget-padding);
+        border-radius: var(--homey-border-radius);
+        border: none;
+        background: var(--homey-button-primary-background);
+        color: var(--homey-button-primary-text-color);
+        font-weight: 500;
+        cursor: pointer;
+        transition: opacity 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+
+      .charging-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        background: var(--homey-button-disabled-background);
+        color: var(--homey-button-disabled-text-color);
+      }
+
+      .charging-button i {
+        font-size: var(--homey-font-size);
+      }
+
+      /* Size-specific styles using Homey's classes */
+      :root[data-homey-widget-size="1"] .info-row:nth-child(n+4) {
+        display: none;
+      }
+
+      :root[data-homey-widget-size="3"] .container {
+        gap: calc(var(--homey-widget-padding) * 1.5);
+      }
+
+      .error-message {
+        color: var(--homey-color-error);
+        font-size: var(--homey-font-size-small);
+        padding: var(--homey-widget-padding);
+        border-radius: var(--homey-border-radius);
+        background: var(--homey-color-error-light);
+        margin-bottom: var(--homey-widget-padding);
+      }
+
+      /* Dark mode adjustments */
+      @media (prefers-color-scheme: dark) {
+        .charging-button:disabled {
+          background-color: var(--disabled-background-dark, #333);
+          color: var(--disabled-text-dark, #999);
+          border-color: var(--disabled-color-dark, #444);
+        }
+      }
     </style>
   </head>
 
   <body class="homey-widget">
-    <div class="widget-container">
+    <div class="container">
       <div id="error-container" style="display: none;" class="error-message"></div>
       
       <div id="vehicle-container" class="vehicle-info">
@@ -123,6 +228,11 @@
           </div>
         </div>
       </div>
+      
+      <button id="startCharging" class="charging-button" disabled>
+        <i class="fas fa-bolt"></i>
+        Start Charging
+      </button>
     </div>
 
     <script type="text/javascript">

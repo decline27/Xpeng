@@ -802,7 +802,7 @@
   "widgets": {
     "xpeng": {
       "name": {
-        "en": "Xpeng Vehicle Status"
+        "en": "XPENG Status"
       },
       "height": 250,
       "settings": [
@@ -810,7 +810,7 @@
           "id": "refresh_interval",
           "type": "number",
           "label": {
-            "en": "Refresh Interval"
+            "en": "Refresh interval"
           },
           "value": 5,
           "min": 1,
