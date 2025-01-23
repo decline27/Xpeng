@@ -88,5 +88,8 @@
   },
   "1.2.30": {
     "en": "fixed bugs in flows"
+  },
+  "1.2.31": {
+    "en": "Charging button on the widget"
   }
 }
