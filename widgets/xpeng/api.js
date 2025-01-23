@@ -116,5 +116,56 @@ module.exports = {
     } catch (error) {
       return { error: error.message };
     }
+  },
+
+  async startCharging({ homey, deviceId }) {
+    try {
+      console.log('Starting charging flow...');
+      
+      // Trigger the start charging flow
+      await homey.flow.triggerFlow({
+        id: 'start_charging',
+        args: {
+          device: deviceId
+        }
+      });
+      
+      console.log('Charging flow triggered successfully');
+      
+      return { success: true };
+    } catch (error) {
+      console.error('Failed to start charging:', error);
+      return { error: error.message };
+    }
+  },
+
+  async initWidget({ homey }) {
+    try {
+      const settings = await homey.get('settings');
+      console.log('Widget settings:', settings);
+      
+      // Apply size from settings
+      if (settings && settings.size) {
+        document.documentElement.style.setProperty('--widget-size', settings.size);
+        console.log('Applied widget size:', settings.size);
+      }
+      
+      // Start data updates
+      await updateData();
+      startPolling();
+    } catch (error) {
+      console.error('Failed to initialize widget:', error);
+      showError('Failed to initialize: ' + error.message);
+    }
+  },
+
+  async handleSettingsChanged({ homey }) {
+    Homey.on('settings.changed', async (settings) => {
+      console.log('Settings changed:', settings);
+      if (settings.size) {
+        document.documentElement.style.setProperty('--widget-size', settings.size);
+        console.log('Updated widget size:', settings.size);
+      }
+    });
   }
 };
