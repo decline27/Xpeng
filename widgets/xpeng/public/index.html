@@ -329,6 +329,11 @@
               document.getElementById('last-seen').textContent = formatLastSeen(data.lastSeen);
               document.getElementById('charging-power').textContent = formatChargingPower(data.powerDeliveryState);
               
+              // Update charging button state
+              const startChargingButton = document.getElementById('startCharging');
+              const canStartCharging = data.pluggedInStatus && data.chargingStatus !== 'charging';
+              startChargingButton.disabled = !canStartCharging;
+              
               // Update location
               createLocationDisplay(data.location, data.address);
             })
@@ -339,6 +344,25 @@
 
         // Initial update
         updateVehicleData();
+
+        // Set up start charging button handler
+        const startChargingButton = document.getElementById('startCharging');
+        startChargingButton.onclick = () => {
+          startChargingButton.disabled = true;  // Disable button while request is in progress
+          Homey.api('POST', '/start-charging')
+            .then(response => {
+              if (response.error) {
+                showError(response.error);
+              } else {
+                // Update data after starting charging
+                setTimeout(updateVehicleData, 10000);  // Wait 10 seconds for status to update
+              }
+            })
+            .catch(error => {
+              showError(error.message || 'Failed to start charging');
+              startChargingButton.disabled = false;  // Re-enable button on error
+            });
+        };
 
         // Set up periodic updates
         updateInterval = setInterval(updateVehicleData, refreshRate);

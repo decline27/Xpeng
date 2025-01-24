@@ -191,6 +191,46 @@ class XpengCarDevice extends Homey.Device {
         ...dynamicData
       };
 
+      // Store the complete data in cache
+      this.vehicleStore.setCachedData({
+        batteryLevel: finalData.batteryLevel,
+        range: finalData.range,
+        chargingStatus: finalData.chargingStatus,
+        pluggedInStatus: finalData.pluggedInStatus,
+        location: finalData.location,
+        lastSeen: finalData.lastSeen,
+        powerDeliveryState: finalData.powerDeliveryState,
+        vehicleModel: finalData.vehicleModel,
+        timestamp: now
+      });
+
+      // Update capabilities
+      await this.updateCapabilities(finalData);
+
+      return true;
+    } catch (error) {
+      this.error('Failed to poll vehicle data:', error);
+      throw error;
+    }
+  }
+
+  async getCachedVehicleData() {
+    try {
+      const cachedData = this.vehicleStore.getCachedData();
+      if (!cachedData) {
+        // If no cached data, force a poll
+        await this.pollVehicleData();
+        return this.vehicleStore.getCachedData();
+      }
+      return cachedData;
+    } catch (error) {
+      this.error('Failed to get cached vehicle data:', error);
+      throw error;
+    }
+  }
+
+  async updateCapabilities(data) {
+    try {
       // Set capabilities
       let updatedCapabilities = 0;
       const failedCapabilities = [];
@@ -203,7 +243,7 @@ class XpengCarDevice extends Homey.Device {
         chargeLimit: data.chargeState?.chargeLimit
       });
 
-      for (const [capability, value] of Object.entries(finalData)) {
+      for (const [capability, value] of Object.entries(data)) {
         if (value !== undefined && value !== null) {
           try {
             await this.setCapabilityValue(capability, value);
@@ -224,13 +264,7 @@ class XpengCarDevice extends Homey.Device {
       await this.setAvailable();
 
     } catch (error) {
-      this.error('Failed to poll vehicle data:', error.message);
-      // Set device unavailable if we have critical errors
-      if (error.message.includes('Missing API credentials') || 
-          error.message.includes('Missing vehicle ID') ||
-          error.message.includes('Driver not initialized')) {
-        await this.setUnavailable(error.message);
-      }
+      this.error('Failed to update capabilities:', error);
     }
   }
 

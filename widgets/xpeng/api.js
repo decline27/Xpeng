@@ -63,15 +63,21 @@ module.exports = {
         return { error: 'No Xpeng vehicle found' };
       }
 
-      const device = devices[0]; // Get the first vehicle
-      const locationString = await device.getCapabilityValue('location');
-      console.log('Raw location data from device:', locationString);
+      const device = devices[0];
+      
+      // Get cached data from device
+      const data = await device.getCachedVehicleData();
+      
+      if (!data) {
+        return { error: 'No vehicle data available' };
+      }
 
+      // Parse location if it exists
       let location = null;
       let address = null;
 
-      if (typeof locationString === 'string') {
-        location = parseLocationString(locationString);
+      if (data.location && typeof data.location === 'string') {
+        location = parseLocationString(data.location);
         console.log('Parsed location:', location);
 
         if (location) {
@@ -80,20 +86,14 @@ module.exports = {
         }
       }
 
-      const data = {
-        batteryLevel: await device.getCapabilityValue('batteryLevel'),
-        range: await device.getCapabilityValue('range'),
-        chargingStatus: await device.getCapabilityValue('chargingStatus'),
-        pluggedInStatus: await device.getCapabilityValue('pluggedInStatus'),
+      const finalData = {
+        ...data,
         location,
-        address,
-        lastSeen: await device.getCapabilityValue('lastSeen'),
-        powerDeliveryState: await device.getCapabilityValue('powerDeliveryState'),
-        vehicleModel: await device.getCapabilityValue('vehicleModel')
+        address
       };
 
-      console.log('Final data being sent to frontend:', JSON.stringify(data, null, 2));
-      return data;
+      console.log('Final data being sent to frontend:', JSON.stringify(finalData, null, 2));
+      return finalData;
     } catch (error) {
       console.error('Error in getVehicleData:', error);
       return { error: error.message };
@@ -118,20 +118,24 @@ module.exports = {
     }
   },
 
-  async startCharging({ homey, deviceId }) {
+  async startCharging({ homey }) {
     try {
-      console.log('Starting charging flow...');
+      console.log('Starting charging...');
       
-      // Trigger the start charging flow
-      await homey.flow.triggerFlow({
-        id: 'start_charging',
-        args: {
-          device: deviceId
-        }
-      });
+      // Get the driver and device
+      const driver = await homey.drivers.getDriver('cars');
+      const devices = await driver.getDevices();
       
-      console.log('Charging flow triggered successfully');
+      if (devices.length === 0) {
+        return { error: 'No Xpeng vehicle found' };
+      }
+
+      const device = devices[0];
       
+      // Call the device's startCharging method directly
+      await device.startCharging();
+      
+      console.log('Charging started successfully');
       return { success: true };
     } catch (error) {
       console.error('Failed to start charging:', error);

@@ -26,6 +26,10 @@
     "updateVehicleData": {
       "method": "POST",
       "path": "/update-data"
+    },
+    "startCharging": {
+      "method": "POST",
+      "path": "/start-charging"
     }
   }
 }
