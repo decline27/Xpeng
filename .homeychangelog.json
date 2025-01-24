@@ -91,5 +91,8 @@
   },
   "1.2.31": {
     "en": "Charging button on the widget"
+  },
+  "1.2.32": {
+    "en": "fixed the start charging button on the widget"
   }
 }
