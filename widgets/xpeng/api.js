@@ -2,9 +2,18 @@
 
 const fetch = require('node-fetch');
 
+// --- Smart polling configuration ---
+const MIN_POLL_INTERVAL = 7 * 60 * 1000; // 7 minutes in ms (~9 requests per hour)
+let lastPollTimestamp = 0;
+let pollInProgress = false;
+let lastSuccessfulData = null; // store the last known good data
+
+/**
+ * parseLocationString
+ * Extracts coordinates from a string like "(12.3456, -65.4321)".
+ */
 function parseLocationString(locationStr) {
   try {
-    // Extract coordinates from the parentheses, e.g., "(12.3456, -65.4321)"
     const match = locationStr.match(/\(([-\d.]+),([-\d.]+)\)/);
     if (match) {
       return {
@@ -19,6 +28,10 @@ function parseLocationString(locationStr) {
   }
 }
 
+/**
+ * getAddressFromCoordinates
+ * Retrieves a human‐readable address from latitude and longitude using OpenStreetMap’s Nominatim.
+ */
 async function getAddressFromCoordinates(lat, lon) {
   try {
     console.log('Attempting to get address for coordinates:', { lat, lon });
@@ -37,7 +50,6 @@ async function getAddressFromCoordinates(lat, lon) {
       return null;
     }
 
-    // Format the address in a readable way
     const address = data.address;
     const parts = [];
     if (address.road) parts.push(address.road);
@@ -53,6 +65,12 @@ async function getAddressFromCoordinates(lat, lon) {
 }
 
 module.exports = {
+  /**
+   * getVehicleData
+   * This endpoint returns cached vehicle data.
+   * It smartly polls the enode API if enough time has passed.
+   * If a poll returns empty or errors occur, it falls back to the last successful data.
+   */
   async getVehicleData({ homey }) {
     try {
       const driver = await homey.drivers.getDriver('cars');
@@ -61,10 +79,43 @@ module.exports = {
       if (devices.length === 0) {
         return { error: 'No Xpeng vehicle found' };
       }
-
       const device = devices[0];
-      // Get cached data from the device
-      const data = await device.getCachedVehicleData();
+
+      // --- Smart Polling Logic ---
+      if (!pollInProgress && (Date.now() - lastPollTimestamp >= MIN_POLL_INTERVAL)) {
+        pollInProgress = true;
+        try {
+          console.log('Polling enode API for new vehicle data...');
+          await device.pollVehicleData();
+          // After polling, attempt to get new data:
+          const newData = await device.getCachedVehicleData();
+          // Check if newData is valid (non-empty)
+          if (newData && Object.keys(newData).length > 0) {
+            lastPollTimestamp = Date.now();
+            lastSuccessfulData = newData;
+            console.log('Poll completed with new data at', new Date(lastPollTimestamp));
+          } else {
+            console.error('Poll returned empty data, using previous successful data');
+            // Do not update lastPollTimestamp so we can try polling again soon.
+          }
+        } catch (pollErr) {
+          console.error('Error polling enode API:', pollErr);
+          // In case of error, we do not update the timestamp and will use the last successful data.
+        }
+        pollInProgress = false;
+      }
+      // -------------------------
+
+      // Always retrieve the (possibly updated) cached data
+      let data = await device.getCachedVehicleData();
+      // If data is empty but we have a previously successful poll, use that instead.
+      if (!data || Object.keys(data).length === 0) {
+        console.warn('Current cached data is empty; falling back to last successful data.');
+        data = lastSuccessfulData;
+      } else {
+        // Update our lastSuccessfulData if current data is valid.
+        lastSuccessfulData = data;
+      }
       
       if (!data) {
         return { error: 'No vehicle data available' };
@@ -92,6 +143,10 @@ module.exports = {
       return finalData;
     } catch (error) {
       console.error('Error in getVehicleData:', error);
+      // In case of error, return the last successful data if available.
+      if (lastSuccessfulData) {
+        return lastSuccessfulData;
+      }
       return { error: error.message };
     }
   },
@@ -105,6 +160,12 @@ module.exports = {
       }
       const device = devices[0];
       await device.pollVehicleData();
+      // After a manual poll, update the timestamp and cache.
+      lastPollTimestamp = Date.now();
+      const newData = await device.getCachedVehicleData();
+      if (newData && Object.keys(newData).length > 0) {
+        lastSuccessfulData = newData;
+      }
       return { success: true };
     } catch (error) {
       return { error: error.message };
@@ -120,7 +181,6 @@ module.exports = {
         return { error: 'No Xpeng vehicle found' };
       }
       const device = devices[0];
-      // Call the device's startCharging method
       await device.startCharging();
       console.log('Charging started successfully');
       return { success: true };
@@ -139,7 +199,6 @@ module.exports = {
         return { error: 'No Xpeng vehicle found' };
       }
       const device = devices[0];
-      // Call the device's stopCharging method (ensure your device supports this)
       await device.stopCharging();
       console.log('Charging stopped successfully');
       return { success: true };
@@ -179,11 +238,10 @@ module.exports = {
 
 // ==================================================================
 // Client-side helper functions for the widget.
-// (Ensure these are integrated into your widget's front-end code as needed.)
+// (Integrate these as needed in your widget's front‑end.)
 // ==================================================================
 
 function updateData() {
-  // Example client-side function: fetch new data and update UI.
   console.log('updateData: Fetching vehicle data...');
 }
 
