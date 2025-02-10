@@ -129,7 +129,6 @@
       }
 
       .charging-button {
-        margin-top: var(--homey-widget-padding);
         padding: var(--homey-widget-padding);
         border-radius: var(--homey-border-radius);
         border: none;
@@ -155,7 +154,12 @@
         font-size: var(--homey-font-size);
       }
 
-      /* Size-specific styles using Homey's classes */
+      .charging-buttons {
+        display: flex;
+        gap: 10px;
+        margin-top: var(--homey-widget-padding);
+      }
+
       :root[data-homey-widget-size="1"] .info-row:nth-child(n+4) {
         display: none;
       }
@@ -173,7 +177,6 @@
         margin-bottom: var(--homey-widget-padding);
       }
 
-      /* Dark mode adjustments */
       @media (prefers-color-scheme: dark) {
         .charging-button:disabled {
           background-color: var(--disabled-background-dark, #333);
@@ -229,25 +232,29 @@
         </div>
       </div>
       
-      <button id="startCharging" class="charging-button" disabled>
-        <i class="fas fa-bolt"></i>
-        Start Charging
-      </button>
+      <div class="charging-buttons">
+        <button id="startCharging" class="charging-button" disabled>
+          <i class="fas fa-bolt"></i>
+          Start Charging
+        </button>
+        <button id="stopCharging" class="charging-button" disabled>
+          <i class="fas fa-stop"></i>
+          Stop Charging
+        </button>
+      </div>
     </div>
 
     <script type="text/javascript">
       function onHomeyReady(Homey) {
-        // Initialize widget
+        // Signal that the widget is ready
         Homey.ready();
 
-        let updateInterval;
         const settings = Homey.getSettings();
-        const refreshRate = (settings.refresh_interval || 5) * 60 * 1000; // Convert to milliseconds
+        const refreshRate = (settings.refresh_interval || 5) * 60 * 1000; // Convert minutes to ms
 
         function showError(message) {
           const errorContainer = document.getElementById('error-container');
           const vehicleContainer = document.getElementById('vehicle-container');
-          
           errorContainer.textContent = message;
           errorContainer.style.display = 'block';
           vehicleContainer.style.display = 'none';
@@ -256,7 +263,6 @@
         function hideError() {
           const errorContainer = document.getElementById('error-container');
           const vehicleContainer = document.getElementById('vehicle-container');
-          
           errorContainer.style.display = 'none';
           vehicleContainer.style.display = 'grid';
         }
@@ -271,10 +277,8 @@
           if (!power) return '--';
           const powerValue = parseFloat(power);
           if (isNaN(powerValue)) return '--';
-          
           const powerElement = document.getElementById('charging-power');
           powerElement.classList.remove('charging', 'discharging');
-          
           if (powerValue > 0) {
             powerElement.classList.add('charging');
             return `+${powerValue.toFixed(1)} kW`;
@@ -288,17 +292,12 @@
         function createLocationDisplay(location, address) {
           const addressElement = document.getElementById('address');
           const mapLink = document.getElementById('map-link');
-          
           if (!location || !location.latitude || !location.longitude) {
             addressElement.textContent = '--';
             mapLink.style.display = 'none';
             return;
           }
-
-          // Display address if available, otherwise show coordinates
           addressElement.textContent = address || `${location.latitude.toFixed(6)}, ${location.longitude.toFixed(6)}`;
-          
-          // Set up map link
           const mapUrl = `https://www.google.com/maps?q=${location.latitude},${location.longitude}`;
           mapLink.style.display = 'inline';
           mapLink.onclick = (e) => {
@@ -314,10 +313,9 @@
                 showError(data.error);
                 return;
               }
-
               hideError();
 
-              // Update battery and range
+              // Update battery info and range
               const batteryLevel = parseFloat(data.batteryLevel) || 0;
               document.getElementById('battery-percentage').textContent = `${Math.round(batteryLevel)}%`;
               document.getElementById('battery-level-fill').style.width = `${batteryLevel}%`;
@@ -328,13 +326,15 @@
               document.getElementById('plugged-status').textContent = data.pluggedInStatus ? 'Yes' : 'No';
               document.getElementById('last-seen').textContent = formatLastSeen(data.lastSeen);
               document.getElementById('charging-power').textContent = formatChargingPower(data.powerDeliveryState);
-              
-              // Update charging button state
+
+              // Update charging buttons based on status
               const startChargingButton = document.getElementById('startCharging');
+              const stopChargingButton = document.getElementById('stopCharging');
               const canStartCharging = data.pluggedInStatus && data.chargingStatus !== 'charging';
               startChargingButton.disabled = !canStartCharging;
-              
-              // Update location
+              stopChargingButton.disabled = data.chargingStatus !== 'charging';
+
+              // Update location info
               createLocationDisplay(data.location, data.address);
             })
             .catch(error => {
@@ -345,29 +345,46 @@
         // Initial update
         updateVehicleData();
 
-        // Set up start charging button handler
+        // Set up start charging button
         const startChargingButton = document.getElementById('startCharging');
         startChargingButton.onclick = () => {
-          startChargingButton.disabled = true;  // Disable button while request is in progress
+          startChargingButton.disabled = true; // Prevent multiple clicks
           Homey.api('POST', '/start-charging')
             .then(response => {
               if (response.error) {
                 showError(response.error);
               } else {
-                // Update data after starting charging
-                setTimeout(updateVehicleData, 10000);  // Wait 10 seconds for status to update
+                // Wait a bit before refreshing to allow state change
+                setTimeout(updateVehicleData, 10000);
               }
             })
             .catch(error => {
               showError(error.message || 'Failed to start charging');
-              startChargingButton.disabled = false;  // Re-enable button on error
+              startChargingButton.disabled = false;
+            });
+        };
+
+        // Set up stop charging button
+        const stopChargingButton = document.getElementById('stopCharging');
+        stopChargingButton.onclick = () => {
+          stopChargingButton.disabled = true;
+          Homey.api('POST', '/stop-charging')
+            .then(response => {
+              if (response.error) {
+                showError(response.error);
+              } else {
+                setTimeout(updateVehicleData, 10000);
+              }
+            })
+            .catch(error => {
+              showError(error.message || 'Failed to stop charging');
+              stopChargingButton.disabled = false;
             });
         };
 
         // Set up periodic updates
-        updateInterval = setInterval(updateVehicleData, refreshRate);
+        const updateInterval = setInterval(updateVehicleData, refreshRate);
 
-        // Clean up on widget removal
         window.addEventListener('beforeunload', () => {
           if (updateInterval) {
             clearInterval(updateInterval);

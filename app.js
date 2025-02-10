@@ -19,9 +19,8 @@ module.exports = class XPengApp extends Homey.App {
       hasClientSecret: !!currentClientSecret
     });
 
-    // Initialize or update settings
+    // Initialize settings if not set already
     try {
-      // Only set if not already set
       if (currentClientId === null || currentClientId === undefined) {
         this.log('Initializing enode_client_id setting');
         await this.homey.settings.set('enode_client_id', '');
