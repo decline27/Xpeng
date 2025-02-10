@@ -30,6 +30,10 @@
     "startCharging": {
       "method": "POST",
       "path": "/start-charging"
+    },
+    "stopCharging": {
+      "method": "POST",
+      "path": "/stop-charging"
     }
   }
 }

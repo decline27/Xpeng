@@ -4,7 +4,7 @@ const fetch = require('node-fetch');
 
 function parseLocationString(locationStr) {
   try {
-    // Extract coordinates from the parentheses
+    // Extract coordinates from the parentheses, e.g., "(12.3456, -65.4321)"
     const match = locationStr.match(/\(([-\d.]+),([-\d.]+)\)/);
     if (match) {
       return {
@@ -40,7 +40,6 @@ async function getAddressFromCoordinates(lat, lon) {
     // Format the address in a readable way
     const address = data.address;
     const parts = [];
-    
     if (address.road) parts.push(address.road);
     if (address.house_number) parts.push(address.house_number);
     if (address.postcode) parts.push(address.postcode);
@@ -64,22 +63,19 @@ module.exports = {
       }
 
       const device = devices[0];
-      
-      // Get cached data from device
+      // Get cached data from the device
       const data = await device.getCachedVehicleData();
       
       if (!data) {
         return { error: 'No vehicle data available' };
       }
 
-      // Parse location if it exists
+      // Parse location if provided
       let location = null;
       let address = null;
-
       if (data.location && typeof data.location === 'string') {
         location = parseLocationString(data.location);
         console.log('Parsed location:', location);
-
         if (location) {
           address = await getAddressFromCoordinates(location.latitude, location.longitude);
           console.log('Retrieved address:', address);
@@ -104,14 +100,11 @@ module.exports = {
     try {
       const driver = await homey.drivers.getDriver('cars');
       const devices = await driver.getDevices();
-      
       if (devices.length === 0) {
         return { error: 'No Xpeng vehicle found' };
       }
-
       const device = devices[0];
       await device.pollVehicleData();
-      
       return { success: true };
     } catch (error) {
       return { error: error.message };
@@ -121,24 +114,37 @@ module.exports = {
   async startCharging({ homey }) {
     try {
       console.log('Starting charging...');
-      
-      // Get the driver and device
       const driver = await homey.drivers.getDriver('cars');
       const devices = await driver.getDevices();
-      
       if (devices.length === 0) {
         return { error: 'No Xpeng vehicle found' };
       }
-
       const device = devices[0];
-      
-      // Call the device's startCharging method directly
+      // Call the device's startCharging method
       await device.startCharging();
-      
       console.log('Charging started successfully');
       return { success: true };
     } catch (error) {
       console.error('Failed to start charging:', error);
+      return { error: error.message };
+    }
+  },
+
+  async stopCharging({ homey }) {
+    try {
+      console.log('Stopping charging...');
+      const driver = await homey.drivers.getDriver('cars');
+      const devices = await driver.getDevices();
+      if (devices.length === 0) {
+        return { error: 'No Xpeng vehicle found' };
+      }
+      const device = devices[0];
+      // Call the device's stopCharging method (ensure your device supports this)
+      await device.stopCharging();
+      console.log('Charging stopped successfully');
+      return { success: true };
+    } catch (error) {
+      console.error('Failed to stop charging:', error);
       return { error: error.message };
     }
   },
@@ -148,28 +154,41 @@ module.exports = {
       const settings = await homey.get('settings');
       console.log('Widget settings:', settings);
       
-      // Apply size from settings
-      if (settings && settings.size) {
-        document.documentElement.style.setProperty('--widget-size', settings.size);
-        console.log('Applied widget size:', settings.size);
-      }
-      
-      // Start data updates
-      await updateData();
-      startPolling();
+      // Use the refresh_interval setting (in minutes)
+      const refreshInterval = settings.refresh_interval || 5;
+      updateData();
+      startPolling(refreshInterval);
     } catch (error) {
       console.error('Failed to initialize widget:', error);
-      showError('Failed to initialize: ' + error.message);
+      if (typeof showError === 'function') {
+        showError('Failed to initialize: ' + error.message);
+      }
     }
   },
 
   async handleSettingsChanged({ homey }) {
     Homey.on('settings.changed', async (settings) => {
       console.log('Settings changed:', settings);
-      if (settings.size) {
-        document.documentElement.style.setProperty('--widget-size', settings.size);
-        console.log('Updated widget size:', settings.size);
+      if (settings.refresh_interval) {
+        console.log('Refresh interval updated:', settings.refresh_interval);
+        // Optionally, update your polling interval here.
       }
     });
   }
 };
+
+// ==================================================================
+// Client-side helper functions for the widget.
+// (Ensure these are integrated into your widget's front-end code as needed.)
+// ==================================================================
+
+function updateData() {
+  // Example client-side function: fetch new data and update UI.
+  console.log('updateData: Fetching vehicle data...');
+}
+
+function startPolling(refreshInterval) {
+  const intervalMs = refreshInterval * 60 * 1000; // convert minutes to ms
+  console.log(`Starting polling every ${intervalMs} ms`);
+  setInterval(updateData, intervalMs);
+}
