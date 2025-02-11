@@ -1,0 +1,23 @@
+{
+    "name": "Battery Alert Flow",
+    "description": "Triggers when the battery sensor detects a low level and sends an alert.",
+    "trigger": {
+        "device": "battery_sensor",
+        "capability": "battery_level",
+        "operator": "below_threshold",
+        "value": 20
+    },
+    "conditions": [
+        {
+            "condition": "is_critical",
+            "operator": "equals",
+            "value": true
+        }
+    ],
+    "actions": [
+        {
+            "action": "send_notification",
+            "message": "Battery level is low. Please check your device."
+        }
+    ]
+}

@@ -1,11 +1,14 @@
 {
-    "type": "string",
-    "title": { "en": "Charging Power" },
-    "getable": true,
-    "setable": false,
-    "icon": "/assets/power.svg",
-    "uiComponent": "sensor",
-    "insights": true,
-    "uiQuickAction": true,
-    "statusIndicator": true
+  "id": "powerDeliveryState",
+  "title": "Power Delivery State",
+  "type": "string",
+  "getable": true,
+  "setable": false,
+  "options": {
+    "choices": [
+      "UNPLUGGED",
+      "CHARGING",
+      "CHARGED"
+    ]
+  }
 }

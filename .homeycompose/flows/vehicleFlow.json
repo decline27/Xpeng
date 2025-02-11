@@ -1,0 +1,22 @@
+{
+    "name": "Vehicle Status Update Flow",
+    "description": "Triggers when the vehicle status changes and logs the current status.",
+    "trigger": {
+        "device": "vehicle",
+        "capability": "vehicle_status",
+        "operator": "changed"
+    },
+    "conditions": [
+        {
+            "condition": "status_equals",
+            "operator": "equals",
+            "value": "active"
+        }
+    ],
+    "actions": [
+        {
+            "action": "log",
+            "message": "Vehicle status changed to active."
+        }
+    ]
+}

@@ -43,20 +43,21 @@ async function getAddressFromCoordinates(lat, lon) {
         }
       }
     );
+    if (!response.ok) {
+      console.error('Network response was not ok:', response.statusText);
+      return null;
+    }
     const data = await response.json();
     console.log('Nominatim response:', data);
-    
     if (data.error) {
       return null;
     }
-
     const address = data.address;
     const parts = [];
     if (address.road) parts.push(address.road);
     if (address.house_number) parts.push(address.house_number);
     if (address.postcode) parts.push(address.postcode);
     if (address.city) parts.push(address.city);
-    
     return parts.join(', ');
   } catch (error) {
     console.error('Error getting address:', error);
@@ -87,38 +88,40 @@ module.exports = {
         try {
           console.log('Polling enode API for new vehicle data...');
           await device.pollVehicleData();
-          // After polling, attempt to get new data:
           const newData = await device.getCachedVehicleData();
-          // Check if newData is valid (non-empty)
           if (newData && Object.keys(newData).length > 0) {
             lastPollTimestamp = Date.now();
             lastSuccessfulData = newData;
             console.log('Poll completed with new data at', new Date(lastPollTimestamp));
           } else {
             console.error('Poll returned empty data, using previous successful data');
-            // Do not update lastPollTimestamp so we can try polling again soon.
           }
         } catch (pollErr) {
           console.error('Error polling enode API:', pollErr);
-          // In case of error, we do not update the timestamp and will use the last successful data.
+          // If error indicates rate limiting, extend the poll delay.
+          if (pollErr.message && pollErr.message.includes('429')) {
+            console.warn('Rate limit reached. Extending next poll delay.');
+            // Delay next poll attempt by the usual interval.
+            lastPollTimestamp = Date.now() + MIN_POLL_INTERVAL;
+          }
+          // Let the fallback logic run.
+        } finally {
+          pollInProgress = false;
         }
-        pollInProgress = false;
       }
       // -------------------------
-
-      // Always retrieve the (possibly updated) cached data
+      
+      // Retrieve the possibly updated cached data
       let data = await device.getCachedVehicleData();
-      // If data is empty but we have a previously successful poll, use that instead.
       if (!data || Object.keys(data).length === 0) {
         console.warn('Current cached data is empty; falling back to last successful data.');
-        data = lastSuccessfulData;
+        data = lastSuccessfulData || { error: 'No vehicle data available' };
       } else {
-        // Update our lastSuccessfulData if current data is valid.
         lastSuccessfulData = data;
       }
       
-      if (!data) {
-        return { error: 'No vehicle data available' };
+      if (!data || (data.error && data.error === 'No vehicle data available')) {
+        return data;
       }
 
       // Parse location if provided
@@ -128,6 +131,7 @@ module.exports = {
         location = parseLocationString(data.location);
         console.log('Parsed location:', location);
         if (location) {
+          console.log('Initiating getAddressFromCoordinates with lat:', location.latitude, 'lon:', location.longitude);
           address = await getAddressFromCoordinates(location.latitude, location.longitude);
           console.log('Retrieved address:', address);
         }
@@ -143,11 +147,8 @@ module.exports = {
       return finalData;
     } catch (error) {
       console.error('Error in getVehicleData:', error);
-      // In case of error, return the last successful data if available.
-      if (lastSuccessfulData) {
-        return lastSuccessfulData;
-      }
-      return { error: error.message };
+      // Always fallback to lastSuccessfulData if available.
+      return lastSuccessfulData || { error: error.message };
     }
   },
 
@@ -226,7 +227,8 @@ module.exports = {
   },
 
   async handleSettingsChanged({ homey }) {
-    Homey.on('settings.changed', async (settings) => {
+    // Update: use the Homey instance's settings event listener instead of global Homey.
+    homey.settings.on('changed', async (settings) => {
       console.log('Settings changed:', settings);
       if (settings.refresh_interval) {
         console.log('Refresh interval updated:', settings.refresh_interval);
@@ -241,8 +243,21 @@ module.exports = {
 // (Integrate these as needed in your widget's front‑end.)
 // ==================================================================
 
-function updateData() {
+async function updateData() {
   console.log('updateData: Fetching vehicle data...');
+  try {
+    // Ensure the URL is correct. Update '/apps/xpeng/api/getVehicleData' if needed.
+    const response = await fetch('/apps/xpeng/api/getVehicleData'); 
+    if (!response.ok) {
+      console.error('updateData: Network response error:', response.statusText);
+      return;
+    }
+    const data = await response.json();
+    console.log('Vehicle data fetched:', data);
+    // TODO: Update widget UI with fetched data.
+  } catch (error) {
+    console.error('Error fetching vehicle data:', error);
+  }
 }
 
 function startPolling(refreshInterval) {
