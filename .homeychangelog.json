@@ -100,5 +100,8 @@
   },
   "1.2.34": {
     "en": "Better API integration from Enode"
+  },
+  "1.2.35": {
+    "en": "Code refactoring"
   }
 }
