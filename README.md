@@ -36,6 +36,34 @@ Transform your XPENG electric vehicle into an integral part of your smart home e
 6. Add your vehicle through the Homey app
 7. Configure your preferred monitoring settings and alerts
 
+## Project Improvements and Setup
+
+### Naming and Schema Conventions
+- Use consistent properties such as "readable" and "writable" in configuration files.
+- Validate JSON configurations against a JSON schema where applicable.
+
+### Code Quality
+- Linting is enforced via ESLint. Run `npm run lint` to check for style issues.
+- Code formatting is standardized with Prettier.
+
+### Testing and CI
+- Unit and integration tests are set up using Jest.
+- Use `npm run test` for local testing.
+- CI is configured to run linting and tests on each commit.
+
+### Development Workflow
+- Follow commit message guidelines and code review processes.
+
+## Contribution Guidelines
+- Fork the repository and create a feature branch.
+- Follow the ESLint and Prettier code style guidelines.
+- Submit pull requests with a clear description of your changes.
+
+## Troubleshooting & FAQ
+- Verify Node version (>=12.0.0).
+- Run `npm run lint` and `npm run test` before pushing code.
+- Report issues via [GitHub Issues](https://github.com/decline27/Xpeng/issues).
+
 ## Support
 For questions, feature requests, or support:
 - GitHub Issues: [Report a bug](https://github.com/decline27/Xpeng/issues)

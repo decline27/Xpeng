@@ -946,17 +946,18 @@
       "uiComponent": "sensor"
     },
     "powerDeliveryState": {
+      "id": "powerDeliveryState",
+      "title": "Power Delivery State",
       "type": "string",
-      "title": {
-        "en": "Charging Power"
-      },
       "getable": true,
       "setable": false,
-      "icon": "/assets/power.svg",
-      "uiComponent": "sensor",
-      "insights": true,
-      "uiQuickAction": true,
-      "statusIndicator": true
+      "options": {
+        "choices": [
+          "UNPLUGGED",
+          "CHARGING",
+          "CHARGED"
+        ]
+      }
     },
     "range": {
       "type": "number",
@@ -1005,10 +1006,13 @@
       "title": {
         "en": "Vehicle Year"
       },
+      "readable": true,
+      "writable": false,
       "getable": true,
       "setable": false,
-      "icon": "assets/capabilities/car.svg",
-      "uiComponent": "sensor"
+      "icon": "/assets/capabilities/car.svg",
+      "uiComponent": "sensor",
+      "description": "Represents the manufacturing year of the vehicle."
     }
   }
 }

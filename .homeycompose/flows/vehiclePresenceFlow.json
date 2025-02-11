@@ -1,0 +1,22 @@
+{
+    "name": "Vehicle Presence Detection Flow",
+    "description": "Triggers when the presence sensor detects the vehicle nearby and registers its arrival.",
+    "trigger": {
+        "device": "presence_sensor",
+        "capability": "presence_detected",
+        "operator": "changed"
+    },
+    "conditions": [
+        {
+            "condition": "time_constraint",
+            "operator": "after",
+            "value": "06:00"
+        }
+    ],
+    "actions": [
+        {
+            "action": "update_status",
+            "status": "present"
+        }
+    ]
+}
