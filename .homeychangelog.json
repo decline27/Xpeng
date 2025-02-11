@@ -97,5 +97,8 @@
   },
   "1.2.33": {
     "en": "New start stop button on the widget"
+  },
+  "1.2.34": {
+    "en": "Better API integration from Enode"
   }
 }
