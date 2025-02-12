@@ -21,25 +21,11 @@ module.exports = class XPengApp extends Homey.App {
         hasClientSecret: !!currentClientSecret
       });
 
-      // Initialize settings if not set already
+      // Initialize settings if not set already using SettingsManager
       try {
-        if (currentClientId == null) {
-          this.log('Initializing enode_client_id setting');
-          await this.homey.settings.set('enode_client_id', '');
-        }
-        
-        if (currentClientSecret == null) {
-          this.log('Initializing enode_client_secret setting');
-          await this.homey.settings.set('enode_client_secret', '');
-        }
-
-        // Verify settings after initialization
-        this.log('Settings verification:', {
-          clientIdInitialized: this.homey.settings.get('enode_client_id') != null,
-          clientSecretInitialized: this.homey.settings.get('enode_client_secret') != null
-        });
+        await SettingsManager.initializeSettings(this.homey, Logger);
       } catch (settingsError) {
-        this.error('Error initializing settings:', settingsError);
+        Logger.error('Error initializing settings:', settingsError);
       }
 
       Logger.log('XPENG app initialized');
