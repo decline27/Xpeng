@@ -1,20 +1,37 @@
-name: Publish Homey App
+name: Homey App Publication Pipeline
 on:
   workflow_dispatch:
 
 jobs:
-  main:
-    name: Publish Homey App
-    runs-on: ubuntu-latest
+  publish-homey-app:
+    name: Publish to Homey App Store
+    runs-on: ubuntu-24.04-latest  # More specific runner version
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4  # Pinned to latest stable version
 
-      - name: Publish Homey App
-        uses: athombv/github-action-homey-app-publish@master
-        id: publish
+      - name: Publish Application
+        uses: athombv/github-action-homey-app-publish@master  # Using master branch; update to stable release if available
+        id: publish-step
         with:
           personal_access_token: ${{ secrets.HOMEY_PAT }}
+        timeout-minutes: 5  # Add execution timeout
+        continue-on-error: false  # Ensure strict failure mode
 
-      - name: URL
+      - name: Generate Management URL
+        if: ${{ success() }}
         run: |
-          echo "Manage your app at ${{ steps.publish.outputs.url }}." >> $GITHUB_STEP_SUMMARY
+          echo "Application successfully published!" >> $GITHUB_STEP_SUMMARY
+          echo "Manage your app at ${{ steps.publish-step.outputs.url }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: Failure Notification
+        if: ${{ failure() }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: "❌ Publication failed in workflow ${{ github.workflow }}"
+            })
