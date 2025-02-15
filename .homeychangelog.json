@@ -106,5 +106,8 @@
   },
   "1.2.36": {
     "en": "Refactoring the code"
+  },
+  "1.2.37": {
+    "en": "fixed the start and stop charging button on the widget"
   }
 }
