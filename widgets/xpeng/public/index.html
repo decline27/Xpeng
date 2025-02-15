@@ -330,9 +330,9 @@
               // Update charging buttons based on status
               const startChargingButton = document.getElementById('startCharging');
               const stopChargingButton = document.getElementById('stopCharging');
-              const canStartCharging = data.pluggedInStatus && data.chargingStatus !== 'charging';
-              startChargingButton.disabled = !canStartCharging;
-              stopChargingButton.disabled = data.chargingStatus !== 'charging';
+              const chargingActive = data.chargingStatus === 'charging' || data.chargingStatus === 'active';
+              startChargingButton.disabled = chargingActive || !data.pluggedInStatus;
+              stopChargingButton.disabled = !chargingActive;
 
               // Update location info
               createLocationDisplay(data.location, data.address);
