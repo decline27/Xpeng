@@ -1,13 +1,10 @@
 'use strict';
 
 const Homey = require('homey');
-const Logger = require('./lib/logger'); // new logging module
+const Logger = require('./lib/logger');
+const SettingsManager = require('./lib/settingsManager');
 
 module.exports = class XPengApp extends Homey.App {
-
-  /**
-   * onInit is called when the app is initialized.
-   */
   async onInit() {
     try {
       this.log('XPeng Car Manager is running...');

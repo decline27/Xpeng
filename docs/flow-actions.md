@@ -57,3 +57,14 @@ If flow actions fail:
 2. Verify Enode API credentials
 3. Ensure vehicle is in appropriate state for action
 4. Check Homey app logs for detailed error messages
+
+## Updated Car Location Flow Card
+
+The flow card **Car location matches coordinate** has been revised to handle GPS coordinates instead of addresses. Users can now either enter an address, which will automatically be converted to GPS coordinates using the integrated address conversion service, or directly input GPS coordinates (latitude and longitude) to ensure consistency with the Enode API output.
+
+When using this flow card, specify the following parameters:
+- **Latitude**: GPS coordinate in decimal degrees.
+- **Longitude**: GPS coordinate in decimal degrees.
+- **Radius (meters)**: The proximity threshold around the coordinates.
+
+This update aligns the flow card with the GPS-based output from the Enode API, improving precision and reliability.

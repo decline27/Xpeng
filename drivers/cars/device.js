@@ -1,6 +1,7 @@
 const Homey = require('homey');
 const EnodeAPI = require('../../lib/enode-api');
 const VehicleStore = require('../../lib/vehicle-store');
+const LocationService = require('../../lib/location-service');
 
 class XpengCarDevice extends Homey.Device {
   async onInit() {
@@ -121,96 +122,81 @@ class XpengCarDevice extends Homey.Device {
 
   async pollVehicleData() {
     try {
-      const driver = this.driver;
-      if (!driver) {
-        throw new Error('Driver not initialized');
-      }
-
-      const { clientId, clientSecret } = driver.getStoredCredentials();
+      const { clientId, clientSecret } = this.driver.getStoredCredentials();
       if (!clientId || !clientSecret) {
         throw new Error('Missing API credentials');
       }
 
-      // Use the stored vehicle ID
-      const vehicleId = this.vehicleId;
-      if (!vehicleId) {
-        throw new Error('Missing vehicle ID');
-      }
-
-      this.log('Polling data for vehicle:', vehicleId);
-
-      // Only use refresh-hint if:
-      // 1. Car is charging (we want accurate charging status)
-      // 2. Car was recently unplugged (catch status changes)
-      // 3. We haven't gotten data in a while (>30 min)
-      let useRefresh = false;
-      const lastDataUpdate = this.getStoreValue('lastDataUpdate');
-      const isCharging = this.getCapabilityValue('chargingStatus');
-      const wasPluggedIn = this.getStoreValue('wasPluggedIn');
-      const now = Date.now();
-
-      if (isCharging || 
-          (wasPluggedIn && !this.getCapabilityValue('pluggedInStatus')) ||
-          !lastDataUpdate || 
-          (now - lastDataUpdate > 30 * 60 * 1000)) {
-        useRefresh = true;
-      }
-
-      // Get data with or without refresh
       let data;
-      if (useRefresh) {
-        data = await this.enodeApi.refreshVehicleData(clientId, clientSecret, vehicleId, 2000);
-      } else {
-        data = await this.enodeApi.getVehicleData(clientId, clientSecret, vehicleId);
+      let usedCache = false;
+
+      // First try to get regular data
+      try {
+        data = await this.enodeApi.getVehicleData(clientId, clientSecret, this.vehicleId);
+      } catch (error) {
+        this.log('Regular data fetch failed:', error.message);
       }
 
+      // If no data and should refresh, try refresh
+      if (!data && this.shouldRefreshData()) {
+        try {
+          data = await this.enodeApi.refreshVehicleData(
+            clientId, 
+            clientSecret, 
+            this.vehicleId, 
+            2000
+          );
+        } catch (error) {
+          if (error.code === 429) {
+            this.log('Rate limit hit for refresh-hint, will use cache');
+          } else {
+            this.error('Refresh attempt failed:', error.message);
+          }
+        }
+      }
+
+      // If still no data, try cache
       if (!data) {
-        throw new Error('No data received from API');
+        data = this.vehicleStore.getCachedData();
+        if (data && this.vehicleStore.isCacheValid()) {
+          this.log('Using valid cached data');
+          usedCache = true;
+        } else if (data) {
+          this.log('Using stale cached data as last resort');
+          usedCache = true;
+        } else {
+          this.log('No cached data available');
+          return false;
+        }
       }
 
-      // Store current plugged in status for next comparison
-      this.setStoreValue('wasPluggedIn', data.chargeState?.isPluggedIn || false);
-      this.setStoreValue('lastDataUpdate', now);
-
-      // Check if static data needs updating
-      if (this.vehicleStore.needsStaticUpdate(data)) {
-        await this.vehicleStore.storeStaticData(data);
-      }
-
-      // Get static and dynamic data
-      const staticData = this.vehicleStore.getStaticData();
-      const dynamicData = this.vehicleStore.processDynamicData(data);
-
-      if (!staticData || !dynamicData) {
-        throw new Error('Failed to process vehicle data');
-      }
-
-      // Combine static and dynamic data
+      // Update device state
       const finalData = {
-        ...staticData,
-        ...dynamicData
+        ...this.vehicleStore.getStaticData(),
+        ...this.vehicleStore.processDynamicData(data)
       };
 
-      // Store the complete data in cache
-      this.vehicleStore.setCachedData({
-        batteryLevel: finalData.batteryLevel,
-        range: finalData.range,
-        chargingStatus: finalData.chargingStatus,
-        pluggedInStatus: finalData.pluggedInStatus,
-        location: finalData.location,
-        lastSeen: finalData.lastSeen,
-        powerDeliveryState: finalData.powerDeliveryState,
-        vehicleModel: finalData.vehicleModel,
-        timestamp: now
-      });
+      // Only update cache if we got fresh data
+      if (!usedCache) {
+        await this.vehicleStore.setCachedData(finalData);
+      }
 
       // Update capabilities
       await this.updateCapabilities(finalData);
 
       return true;
     } catch (error) {
-      this.error('Failed to poll vehicle data:', error);
-      throw error;
+      this.error('Error in pollVehicleData:', error.message);
+      
+      // Last resort - try to use any cached data
+      const cachedData = this.vehicleStore.getCachedData();
+      if (cachedData) {
+        this.log('Using cached data after error');
+        await this.updateCapabilities(cachedData);
+        return true;
+      }
+      
+      return false;
     }
   }
 
@@ -231,40 +217,75 @@ class XpengCarDevice extends Homey.Device {
 
   async updateCapabilities(data) {
     try {
-      // Set capabilities
-      let updatedCapabilities = 0;
-      const failedCapabilities = [];
+      // Store previous values for comparison
+      const prevBatteryLevel = this.getCapabilityValue('batteryLevel');
+      const prevChargingStatus = this.getCapabilityValue('chargingStatus');
+      const prevPluggedStatus = this.getCapabilityValue('pluggedInStatus');
+      const prevLocation = this.getCapabilityValue('location');
+      const prevRange = this.getCapabilityValue('range');
 
-      // Log the charge state for debugging
-      this.log('Processing charge state:', {
-        isPluggedIn: data.chargeState?.isPluggedIn,
-        isCharging: data.chargeState?.isCharging,
-        batteryLevel: data.chargeState?.batteryLevel,
-        chargeLimit: data.chargeState?.chargeLimit
-      });
+      // Update capabilities with new values
+      await this.setCapabilityValue('batteryLevel', data.batteryLevel);
+      await this.setCapabilityValue('range', data.range);
+      await this.setCapabilityValue('chargingStatus', data.chargingStatus);
+      await this.setCapabilityValue('pluggedInStatus', data.pluggedInStatus);
+      await this.setCapabilityValue('location', data.location);
+      // ... other capability updates ...
 
-      for (const [capability, value] of Object.entries(data)) {
-        if (value !== undefined && value !== null) {
-          try {
-            await this.setCapabilityValue(capability, value);
-            updatedCapabilities++;
-          } catch (error) {
-            failedCapabilities.push(capability);
-            this.error(`Failed to set capability ${capability}:`, error.message);
-          }
+      // Trigger flow cards based on changes
+      const driver = this.driver;
+
+      // Battery level changes
+      if (prevBatteryLevel !== data.batteryLevel) {
+        await driver.batteryLevelChangedTrigger.trigger(this, {
+          battery_level: data.batteryLevel
+        });
+
+        // Check for low battery
+        if (data.batteryLevel < 20) {
+          await driver.batteryLowTrigger.trigger(this, {
+            battery_level: data.batteryLevel
+          });
         }
       }
 
-      this.log(`Updated ${updatedCapabilities} capabilities successfully`);
-      if (failedCapabilities.length > 0) {
-        this.error(`Failed to update capabilities: ${failedCapabilities.join(', ')}`);
+      // Charging status changes
+      if (prevChargingStatus !== data.chargingStatus) {
+        if (data.chargingStatus) {
+          await driver.chargingStartedTrigger.trigger(this);
+        } else {
+          await driver.chargingStoppedTrigger.trigger(this);
+        }
+        
+        await driver.chargingStatusChangedTrigger.trigger(this, {
+          status: data.chargingStatus ? 'charging' : 'not_charging'
+        });
       }
 
-      // If we successfully got data, device is available
-      await this.setAvailable();
+      // Plugged status changes
+      if (prevPluggedStatus !== data.pluggedInStatus) {
+        if (data.pluggedInStatus) {
+          await driver.pluggedInTrigger.trigger(this);
+        } else {
+          await driver.unpluggedTrigger.trigger(this);
+        }
+      }
+
+      // Location changes
+      if (prevLocation !== data.location) {
+        await this.handleLocationChange(data.location, prevLocation);
+      }
+
+      // Range changes
+      if (prevRange !== data.range && data.range < 50) {
+        await driver.rangeLowTrigger.trigger(this, {
+          range: data.range
+        });
+      }
 
     } catch (error) {
-      this.error('Failed to update capabilities:', error);
+      this.error('Error updating capabilities:', error);
+      throw error;
     }
   }
 
@@ -339,6 +360,50 @@ class XpengCarDevice extends Homey.Device {
         this.pollVehicleData();
       }, Math.max(10, this.updateInterval) * 60 * 1000);
       await this.pollVehicleData();
+    }
+  }
+
+  async handleLocationChange(newLocation, prevLocation) {
+    try {
+      if (!newLocation) return;
+      
+      // Convert coordinates to address
+      const address = await LocationService.getAddressFromCoordinates(
+        newLocation.latitude,
+        newLocation.longitude
+      );
+
+      const locationData = {
+        location: address,
+        formattedAddress: address
+      };
+
+      // Trigger the location change event
+      await this.driver.whenLocationTrigger.trigger(this, locationData);
+      
+      // Store the address for condition checking
+      await this.setStoreValue('lastAddress', address);
+    } catch (error) {
+      this.error('Failed to handle location change:', error);
+    }
+  }
+
+  // Method to check if car is at specific address
+  async isAtAddress(targetAddress) {
+    try {
+      const currentLocation = await this.getLocation();
+      if (!currentLocation) return false;
+
+      const currentAddress = await LocationService.getAddressFromCoordinates(
+        currentLocation.latitude,
+        currentLocation.longitude
+      );
+
+      // Simple string comparison (you might want to implement more sophisticated matching)
+      return currentAddress.toLowerCase().includes(targetAddress.toLowerCase());
+    } catch (error) {
+      this.error('Failed to check address:', error);
+      return false;
     }
   }
 }

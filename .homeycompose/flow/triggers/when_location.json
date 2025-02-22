@@ -1,0 +1,44 @@
+{
+  "id": "when_location",
+  "title": {
+    "en": "Location changes",
+    "no": "Posisjon endres"
+  },
+  "titleFormatted": {
+    "en": "Location changes to [[address]]",
+    "no": "Posisjon endres til [[address]]"
+  },
+  "hint": {
+    "en": "Triggers when the car's location changes to the specified address",
+    "no": "Utløses når bilens posisjon endres til den angitte adressen"
+  },
+  "args": [
+    {
+      "name": "device",
+      "type": "device",
+      "filter": "driver_id=xpeng"
+    },
+    {
+      "name": "address",
+      "type": "text",
+      "title": {
+        "en": "Address",
+        "no": "Adresse"
+      },
+      "placeholder": {
+        "en": "Enter address",
+        "no": "Skriv inn adresse"
+      }
+    }
+  ],
+  "tokens": [
+    {
+      "name": "location",
+      "type": "string",
+      "title": {
+        "en": "Location",
+        "no": "Posisjon"
+      }
+    }
+  ]
+}

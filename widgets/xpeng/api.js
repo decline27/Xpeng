@@ -256,24 +256,28 @@ module.exports = {
 
 // ==================================================================
 // Client-side helper functions for the widget.
+// (Integrate these as needed in your widget's front‑end.)
 // ==================================================================
+
 async function updateData() {
   console.log('updateData: Fetching vehicle data...');
   try {
-    const response = await fetch('/apps/xpeng/api/getVehicleData');
+    // Ensure the URL is correct. Update '/apps/xpeng/api/getVehicleData' if needed.
+    const response = await fetch('/apps/xpeng/api/getVehicleData'); 
     if (!response.ok) {
       console.error('updateData: Network response error:', response.statusText);
       return;
     }
     const data = await response.json();
     console.log('Vehicle data fetched:', data);
+    // TODO: Update widget UI with fetched data.
   } catch (error) {
     console.error('Error fetching vehicle data:', error);
   }
 }
 
 function startPolling(refreshInterval) {
-  const intervalMs = refreshInterval * 60 * 1000;
+  const intervalMs = refreshInterval * 60 * 1000; // convert minutes to ms
   console.log(`Starting polling every ${intervalMs} ms`);
   setInterval(updateData, intervalMs);
 }

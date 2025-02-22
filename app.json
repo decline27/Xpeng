@@ -215,16 +215,16 @@
       {
         "id": "location_changed",
         "title": {
-          "en": "Car location matches coordinate",
-          "no": "Bil posisjon matcher koordinat"
+          "en": "Car location matches address",
+          "no": "Bil posisjon matcher adresse"
         },
         "titleFormatted": {
-          "en": "Car [[comparison]] within [[radius]]m of coordinates ([[latitude]], [[longitude]])",
-          "no": "Bilen [[comparison]] innenfor [[radius]]m av koordinater ([[latitude]], [[longitude]])"
+          "en": "Car [[comparison]] within [[radius]]m of [[address]]",
+          "no": "Bilen [[comparison]] innenfor [[radius]]m av [[address]]"
         },
         "hint": {
-          "en": "Triggered when the car's location is within the specified radius of given coordinates",
-          "no": "Utløses når bilens posisjon er innenfor angitt radius fra gitte koordinater"
+          "en": "Triggered when the car enters or exits the specified address area",
+          "no": "Utløses når bilen kjører inn eller ut av det angitte adresseområdet"
         },
         "args": [
           {
@@ -257,33 +257,15 @@
             ]
           },
           {
-            "name": "latitude",
-            "type": "number",
+            "name": "address",
+            "type": "text",
             "title": {
-              "en": "Latitude",
-              "no": "Breddegrad"
+              "en": "Address",
+              "no": "Adresse"
             },
-            "min": -90,
-            "max": 90,
-            "step": 0.000001,
             "placeholder": {
-              "en": "60.123456",
-              "no": "60.123456"
-            }
-          },
-          {
-            "name": "longitude",
-            "type": "number",
-            "title": {
-              "en": "Longitude",
-              "no": "Lengdegrad"
-            },
-            "min": -180,
-            "max": 180,
-            "step": 0.000001,
-            "placeholder": {
-              "en": "10.123456",
-              "no": "10.123456"
+              "en": "Enter address",
+              "no": "Skriv inn adresse"
             }
           },
           {
@@ -382,6 +364,50 @@
             "name": "device",
             "type": "device",
             "filter": "driver_id=cars"
+          }
+        ]
+      },
+      {
+        "id": "when_location",
+        "title": {
+          "en": "Location changes",
+          "no": "Posisjon endres"
+        },
+        "titleFormatted": {
+          "en": "Location changes to [[address]]",
+          "no": "Posisjon endres til [[address]]"
+        },
+        "hint": {
+          "en": "Triggers when the car's location changes to the specified address",
+          "no": "Utløses når bilens posisjon endres til den angitte adressen"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=xpeng"
+          },
+          {
+            "name": "address",
+            "type": "text",
+            "title": {
+              "en": "Address",
+              "no": "Adresse"
+            },
+            "placeholder": {
+              "en": "Enter address",
+              "no": "Skriv inn adresse"
+            }
+          }
+        ],
+        "tokens": [
+          {
+            "name": "location",
+            "type": "string",
+            "title": {
+              "en": "Location",
+              "no": "Posisjon"
+            }
           }
         ]
       }
@@ -520,16 +546,16 @@
       {
         "id": "location_check",
         "title": {
-          "en": "Car !{{is|isn't}} at coordinates",
-          "no": "Bilen !{{er|er ikke}} ved koordinater"
+          "en": "Car !{{is|isn't}} at address",
+          "no": "Bilen !{{er|er ikke}} ved adresse"
         },
         "titleFormatted": {
-          "en": "Car !{{is|isn't}} within [[radius]]m of coordinates ([[latitude]], [[longitude]])",
-          "no": "Bilen !{{er|er ikke}} innenfor [[radius]]m av koordinater ([[latitude]], [[longitude]])"
+          "en": "Car !{{is|isn't}} at [[address]]",
+          "no": "Bilen !{{er|er ikke}} ved [[address]]"
         },
         "hint": {
-          "en": "Check if the car is within the specified radius of given coordinates",
-          "no": "Sjekk om bilen er innenfor angitt radius fra gitte koordinater"
+          "en": "Check if the car is at the specified address",
+          "no": "Sjekk om bilen er ved den angitte adressen"
         },
         "args": [
           {
@@ -538,46 +564,16 @@
             "filter": "driver_id=cars"
           },
           {
-            "name": "latitude",
-            "type": "number",
+            "name": "address",
+            "type": "text",
             "title": {
-              "en": "Latitude",
-              "no": "Breddegrad"
+              "en": "Address",
+              "no": "Adresse"
             },
-            "min": -90,
-            "max": 90,
-            "step": 0.000001,
             "placeholder": {
-              "en": "60.123456",
-              "no": "60.123456"
+              "en": "Street name 123, City",
+              "no": "Gatenavn 123, By"
             }
-          },
-          {
-            "name": "longitude",
-            "type": "number",
-            "title": {
-              "en": "Longitude",
-              "no": "Lengdegrad"
-            },
-            "min": -180,
-            "max": 180,
-            "step": 0.000001,
-            "placeholder": {
-              "en": "10.123456",
-              "no": "10.123456"
-            }
-          },
-          {
-            "name": "radius",
-            "type": "number",
-            "title": {
-              "en": "Radius (meters)",
-              "no": "Radius (meter)"
-            },
-            "min": 10,
-            "max": 1000,
-            "step": 10,
-            "default": 100
           }
         ]
       },
