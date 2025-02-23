@@ -109,5 +109,11 @@
   },
   "1.2.37": {
     "en": "fixed the start and stop charging button on the widget"
+  },
+  "1.2.38": {
+    "en": "fix broken changes"
+  },
+  "1.2.39": {
+    "en": "fix broken changes"
   }
 }
