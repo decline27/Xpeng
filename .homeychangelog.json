@@ -109,8 +109,5 @@
   },
   "1.2.37": {
     "en": "fixed the start and stop charging button on the widget"
-  },
-  "1.2.38": {
-    "en": "Updated location to use address insted of cordinat"
   }
 }
