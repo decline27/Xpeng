@@ -115,5 +115,8 @@
   },
   "1.2.39": {
     "en": "fix broken changes"
+  },
+  "1.2.40": {
+    "en": "Refactor and improved error handeling"
   }
 }
