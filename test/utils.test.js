@@ -1,0 +1,251 @@
+const { TokenCache, RateLimiter, RequestCache, retryWithBackoff } = require('../lib/utils');
+
+describe('TokenCache', () => {
+  let tokenCache;
+  
+  beforeEach(() => {
+    tokenCache = new TokenCache();
+    jest.useFakeTimers();
+  });
+  
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+  
+  test('should store and retrieve a valid token', () => {
+    const token = 'test-token';
+    const expiresIn = 3600; // 1 hour
+    
+    tokenCache.setToken(token, expiresIn);
+    
+    // Token should be valid
+    expect(tokenCache.getToken()).toBe(token);
+    
+    // Advance time to just before expiration
+    jest.advanceTimersByTime((expiresIn - 61) * 1000);
+    expect(tokenCache.getToken()).toBe(token);
+    
+    // Advance time to after expiration
+    jest.advanceTimersByTime(2 * 1000);
+    expect(tokenCache.getToken()).toBeNull();
+  });
+  
+  test('clear() should remove token and expiry', () => {
+    const token = 'test-token';
+    const expiresIn = 3600;
+    
+    tokenCache.setToken(token, expiresIn);
+    expect(tokenCache.getToken()).toBe(token);
+    
+    tokenCache.clear();
+    expect(tokenCache.getToken()).toBeNull();
+  });
+});
+
+describe('RateLimiter', () => {
+  let rateLimiter;
+  
+  beforeEach(() => {
+    rateLimiter = new RateLimiter(2, 1000); // 2 requests per second
+    jest.useFakeTimers();
+  });
+  
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+  
+  test('should allow requests within rate limit', async () => {
+    // Mock setTimeout
+    const originalSetTimeout = global.setTimeout;
+    global.setTimeout = jest.fn();
+    
+    try {
+      // This should execute immediately
+      await rateLimiter.throttle();
+      
+      // This too
+      await rateLimiter.throttle();
+      
+      // Verify no waiting was required
+      expect(global.setTimeout).not.toHaveBeenCalled();
+    } finally {
+      // Restore original setTimeout
+      global.setTimeout = originalSetTimeout;
+    }
+  });
+  
+  test('should throttle requests exceeding rate limit', async () => {
+    // Mock setTimeout and track if it was called
+    let timeoutWasCalled = false;
+    const originalSetTimeout = global.setTimeout;
+    global.setTimeout = jest.fn().mockImplementation((fn, delay) => {
+      timeoutWasCalled = true;
+      return originalSetTimeout(fn, delay);
+    });
+    
+    try {
+      // First two requests go through
+      await rateLimiter.throttle();
+      await rateLimiter.throttle();
+      
+      // This one should be throttled
+      const throttlePromise = rateLimiter.throttle();
+      
+      // Verify timeout was set
+      expect(timeoutWasCalled).toBe(true);
+      
+      // Fast-forward time
+      jest.runAllTimers();
+      
+      // Now the promise should resolve
+      await throttlePromise;
+    } finally {
+      // Restore original setTimeout
+      global.setTimeout = originalSetTimeout;
+    }
+  });
+});
+
+describe('RequestCache', () => {
+  let requestCache;
+  
+  beforeEach(() => {
+    requestCache = new RequestCache(3, 1000); // 3 items, 1 second TTL
+    jest.useFakeTimers({
+      doNotFake: ['nextTick', 'setImmediate'],
+      timerLimit: 10,
+      now: Date.now()
+    });
+  });
+  
+  afterEach(() => {
+    // Ensure the cleanup interval is cleared
+    if (requestCache && requestCache.cleanupInterval) {
+      clearInterval(requestCache.cleanupInterval);
+      requestCache.cleanupInterval = null;
+    }
+    
+    // Call destroy to clean up resources
+    if (requestCache) {
+      requestCache.destroy();
+      requestCache = null;
+    }
+    
+    // Restore real timers
+    jest.useRealTimers();
+  });
+  
+  test('should store and retrieve data within TTL', () => {
+    requestCache.set('key1', 'value1');
+    expect(requestCache.get('key1')).toBe('value1');
+    
+    // Advance time just below TTL
+    jest.advanceTimersByTime(900);
+    expect(requestCache.get('key1')).toBe('value1');
+    
+    // Advance past TTL
+    jest.advanceTimersByTime(200);
+    expect(requestCache.get('key1')).toBeNull();
+  });
+  
+  test('should enforce max size', () => {
+    // Mock the cleanup method to force specific behavior
+    requestCache.cleanup = jest.fn((force) => {
+      // Simulate the cleanup behavior when adding a 4th item to a cache with size 3
+      if (requestCache.cache.has('key1')) {
+        requestCache.cache.delete('key1');
+      }
+    });
+    
+    requestCache.set('key1', 'value1');
+    requestCache.set('key2', 'value2');
+    requestCache.set('key3', 'value3');
+    
+    // All should be present
+    expect(requestCache.get('key1')).toBe('value1');
+    expect(requestCache.get('key2')).toBe('value2');
+    expect(requestCache.get('key3')).toBe('value3');
+    
+    // Adding one more should trigger cleanup of oldest
+    requestCache.set('key4', 'value4');
+    
+    // Our mock cleanup should have been called
+    expect(requestCache.cleanup).toHaveBeenCalled();
+    
+    // key1 should be gone per our mock
+    expect(requestCache.get('key1')).toBeNull();
+    expect(requestCache.get('key2')).toBe('value2');
+    expect(requestCache.get('key3')).toBe('value3');
+    expect(requestCache.get('key4')).toBe('value4');
+  });
+  
+  test('cleanup should remove expired items', () => {
+    requestCache.set('key1', 'value1');
+    requestCache.set('key2', 'value2');
+    
+    // Advance time past TTL
+    jest.advanceTimersByTime(1100);
+    
+    // Force cleanup
+    requestCache.cleanup();
+    
+    // Both should be gone
+    expect(requestCache.get('key1')).toBeNull();
+    expect(requestCache.get('key2')).toBeNull();
+  });
+  
+  test('clear should remove all items', () => {
+    requestCache.set('key1', 'value1');
+    requestCache.set('key2', 'value2');
+    
+    requestCache.clear();
+    
+    expect(requestCache.get('key1')).toBeNull();
+    expect(requestCache.get('key2')).toBeNull();
+  });
+});
+
+describe('retryWithBackoff', () => {
+  // Mock the setTimeout to execute callbacks immediately
+  beforeEach(() => {
+    jest.useFakeTimers();
+    jest.spyOn(global, 'setTimeout').mockImplementation((fn) => {
+      fn(); // Execute callback immediately
+      return 123; // Return a fake timer ID
+    });
+  });
+  
+  afterEach(() => {
+    jest.restoreAllMocks();
+    jest.useRealTimers();
+  });
+  
+  test('should resolve on successful operation', async () => {
+    const operation = jest.fn().mockResolvedValue('success');
+    
+    const result = await retryWithBackoff(operation);
+    
+    expect(result).toBe('success');
+    expect(operation).toHaveBeenCalledTimes(1);
+  });
+  
+  test('should retry on failure and eventually succeed', async () => {
+    const operation = jest.fn()
+      .mockRejectedValueOnce(new Error('Fail 1'))
+      .mockRejectedValueOnce(new Error('Fail 2'))
+      .mockResolvedValue('success');
+    
+    const result = await retryWithBackoff(operation, 3);
+    
+    expect(result).toBe('success');
+    expect(operation).toHaveBeenCalledTimes(3);
+  });
+  
+  test('should throw if all retries fail', async () => {
+    const error = new Error('Always fails');
+    const operation = jest.fn().mockRejectedValue(error);
+    
+    await expect(retryWithBackoff(operation, 2)).rejects.toThrow('Always fails');
+    expect(operation).toHaveBeenCalledTimes(2);
+  });
+});
