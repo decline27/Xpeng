@@ -4,6 +4,9 @@ const VehicleStore = require('../../lib/vehicle-store');
 
 class XpengCarDevice extends Homey.Device {
   async onInit() {
+    // Import ErrorHandler at the top level
+    const ErrorHandler = require('../../lib/errorHandler');
+    
     try {
       this.log('XPeng device has been initialized');
       this.enodeApi = new EnodeAPI(this.homey);
@@ -24,8 +27,11 @@ class XpengCarDevice extends Homey.Device {
 
       // Check if essential data is present
       if (!this.vehicleId || isNaN(this.updateInterval)) {
-        this.error("Missing required device data or settings");
-        await this.setUnavailable("Missing required device data or settings");
+        const configError = new Error("Missing required device data or settings");
+        const handled = ErrorHandler.translateError(configError, 'deviceInit');
+        
+        this.error(`Configuration error: ${handled.original}`);
+        await this.setUnavailable(handled.message);
         return;
       }
 
@@ -42,17 +48,20 @@ class XpengCarDevice extends Homey.Device {
         const vehicle = vehicles.find(v => v.id === this.vehicleId);
         
         if (!vehicle) {
-          this.error(`Vehicle ${this.vehicleId} not found in user's account. Available vehicles:`, 
-            vehicles.map(v => ({ id: v.id, name: v.name }))
-          );
-          await this.setUnavailable("Vehicle not found in user's account");
+          const notFoundError = new Error(`Vehicle ${this.vehicleId} not found in user's account`);
+          const handled = ErrorHandler.translateError(notFoundError, 'vehicleVerification');
+          
+          this.error(`Vehicle not found: ${vehicles.map(v => ({ id: v.id, name: v.name }))}`);
+          await this.setUnavailable(handled.message);
           return;
         }
 
         this.log(`Verified vehicle ${this.vehicleId} exists in user's account:`, vehicle);
       } catch (error) {
+        // Handle initialization error with user-friendly message
+        const handled = ErrorHandler.translateError(error, 'vehicleVerification');
         this.error('Failed to verify vehicle:', error);
-        await this.setUnavailable("Failed to verify vehicle: " + error.message);
+        await this.setUnavailable(`${handled.message} ${handled.suggestion}`);
         return;
       }
 
@@ -62,20 +71,42 @@ class XpengCarDevice extends Homey.Device {
       // Load stored vehicle data
       await this.vehicleStore.loadStaticData();
 
-      // Set up polling interval for vehicle data
-      // Use longer interval for regular polling to protect battery
-      this.pollingInterval = this.homey.setInterval(() => {
-        this.pollVehicleData();
-      }, Math.max(10, this.updateInterval) * 60 * 1000); // Minimum 10 minutes
-
+      // Set up adaptive polling based on vehicle state
+      this.setupAdaptivePolling();
+      
+      // Set up health check to periodically verify device connectivity
+      this.setupHealthCheck();
+      
       // Initial poll
-      await this.pollVehicleData();
+      try {
+        await this.pollVehicleData();
+      } catch (pollError) {
+        // Non-fatal error - log but continue
+        const handled = ErrorHandler.translateError(pollError, 'initialPoll');
+        this.error(`Initial data poll failed: ${handled.original}`);
+        
+        // We can still make the device available, but warn the user
+        if (this.homey && this.homey.notifications) {
+          this.homey.notifications.createNotification({
+            excerpt: `XPENG Car: ${handled.message} ${handled.suggestion}`
+          });
+        }
+      }
 
+      // Set firstConnected timestamp if not already set
+      const firstConnected = this.getStoreValue('firstConnected');
+      if (!firstConnected) {
+        this.setStoreValue('firstConnected', Date.now());
+      }
+      
       // Mark device as available
       await this.setAvailable();
+      
     } catch (error) {
+      // Handle any uncaught errors during initialization
+      const handled = ErrorHandler.translateError(error, 'deviceInit');
       this.error('Failed to initialize device:', error);
-      await this.setUnavailable("Failed to initialize: " + error.message);
+      await this.setUnavailable(`${handled.message} ${handled.suggestion}`);
     }
   }
 
@@ -112,10 +143,40 @@ class XpengCarDevice extends Homey.Device {
     }
   }
 
+  /**
+   * Cleanup when device is deleted
+   */
   async onDeleted() {
-    // Clean up polling interval
-    if (this.pollingInterval) {
-      this.homey.clearInterval(this.pollingInterval);
+    try {
+      // Clean up all intervals and timeouts
+      if (this.pollingInterval) {
+        this.homey.clearInterval(this.pollingInterval);
+        this.pollingInterval = null;
+      }
+      
+      if (this.shortPollTimeout) {
+        this.homey.clearTimeout(this.shortPollTimeout);
+        this.shortPollTimeout = null;
+      }
+      
+      if (this.healthCheckInterval) {
+        this.homey.clearInterval(this.healthCheckInterval);
+        this.healthCheckInterval = null;
+      }
+      
+      // Clean up any cache
+      if (this.vehicleStore) {
+        this.vehicleStore.clearCache();
+      }
+      
+      // Log device removal for analytics
+      const deviceLifespan = Date.now() - (this.getStoreValue('firstConnected') || Date.now());
+      const lifespanDays = Math.round(deviceLifespan / (24 * 60 * 60 * 1000));
+      
+      this.log(`Device deleted after ${lifespanDays} days`);
+      this.log('Device cleanup completed successfully');
+    } catch (error) {
+      this.error('Error during device cleanup:', error);
     }
   }
 
@@ -160,6 +221,11 @@ class XpengCarDevice extends Homey.Device {
       let data;
       if (useRefresh) {
         data = await this.enodeApi.refreshVehicleData(clientId, clientSecret, vehicleId, 2000);
+        // Only fallback to getVehicleData if refreshVehicleData returned null
+        if (!data) {
+          this.log('Refresh failed, using regular vehicle data fetch');
+          data = await this.enodeApi.getVehicleData(clientId, clientSecret, vehicleId);
+        }
       } else {
         data = await this.enodeApi.getVehicleData(clientId, clientSecret, vehicleId);
       }
@@ -234,6 +300,8 @@ class XpengCarDevice extends Homey.Device {
       // Set capabilities
       let updatedCapabilities = 0;
       const failedCapabilities = [];
+      const changedCapabilities = new Map();
+      const oldValues = {};
 
       // Log the charge state for debugging
       this.log('Processing charge state:', {
@@ -243,17 +311,56 @@ class XpengCarDevice extends Homey.Device {
         chargeLimit: data.chargeState?.chargeLimit
       });
 
+      // First, store old values for comparison
+      for (const capability of Object.keys(data)) {
+        if (data[capability] !== undefined && data[capability] !== null) {
+          oldValues[capability] = this.getCapabilityValue(capability);
+        }
+      }
+
+      // Then update capabilities
       for (const [capability, value] of Object.entries(data)) {
         if (value !== undefined && value !== null) {
           try {
-            await this.setCapabilityValue(capability, value);
-            updatedCapabilities++;
+            const oldValue = oldValues[capability];
+            
+            // Special handling for pluggedInStatus 
+            if (capability === 'pluggedInStatus') {
+              // Ensure we have boolean values
+              const oldBool = oldValue === true;
+              const newBool = value === true;
+              
+              // Apply the value as boolean
+              await this.setCapabilityValue(capability, newBool);
+              updatedCapabilities++;
+              
+              this.log(`Processing pluggedInStatus: ${oldBool} => ${newBool}`);
+              
+              // Only store changes if the boolean interpretation changes
+              if (oldBool !== newBool) {
+                this.log(`Plugged in status changed from ${oldBool} to ${newBool} (will trigger flow)`);
+                changedCapabilities.set(capability, { oldValue: oldBool, newValue: newBool });
+              }
+            } 
+            // Handle other capabilities normally
+            else {
+              await this.setCapabilityValue(capability, value);
+              updatedCapabilities++;
+              
+              // Store capability changes for flow triggers
+              if (oldValue !== value) {
+                changedCapabilities.set(capability, { oldValue, newValue: value });
+              }
+            }
           } catch (error) {
             failedCapabilities.push(capability);
             this.error(`Failed to set capability ${capability}:`, error.message);
           }
         }
       }
+
+      // Handle flow triggers based on capability changes
+      await this.handleFlowTriggers(changedCapabilities);
 
       this.log(`Updated ${updatedCapabilities} capabilities successfully`);
       if (failedCapabilities.length > 0) {
@@ -265,6 +372,126 @@ class XpengCarDevice extends Homey.Device {
 
     } catch (error) {
       this.error('Failed to update capabilities:', error);
+    }
+  }
+  
+  /**
+   * Handle flow triggers based on capability changes
+   * @param {Map} changedCapabilities - Map of changed capabilities with old and new values
+   */
+  async handleFlowTriggers(changedCapabilities) {
+    try {
+      // Battery level changed
+      if (changedCapabilities.has('batteryLevel')) {
+        const { newValue } = changedCapabilities.get('batteryLevel');
+        // Extract numeric value from percentage string (e.g., "75%")
+        const numericValue = parseInt(newValue, 10);
+        if (!isNaN(numericValue)) {
+          this.log(`Triggering battery_level_changed flow: ${numericValue}%`);
+          await this.homey.flow.getDeviceTriggerCard('battery_level_changed')
+            .trigger(this, { battery_level: numericValue });
+            
+          // Check for low battery
+          if (numericValue <= 20) {
+            this.log('Triggering battery_low flow');
+            await this.homey.flow.getDeviceTriggerCard('battery_low')
+              .trigger(this, { battery_level: numericValue });
+          }
+        }
+      }
+      
+      // Range changed
+      if (changedCapabilities.has('range')) {
+        const { newValue } = changedCapabilities.get('range');
+        // Extract numeric value from range string (e.g., "300 km")
+        const numericValue = parseInt(newValue, 10);
+        if (!isNaN(numericValue)) {
+          // Check for low range
+          if (numericValue <= 50) {
+            this.log('Triggering range_low flow');
+            await this.homey.flow.getDeviceTriggerCard('range_low')
+              .trigger(this, { range: numericValue });
+          }
+        }
+      }
+      
+      // Charging status changed
+      if (changedCapabilities.has('chargingStatus')) {
+        const { oldValue, newValue } = changedCapabilities.get('chargingStatus');
+        this.log(`Charging status changed from ${oldValue} to ${newValue}`);
+        
+        // Trigger general status changed flow
+        await this.homey.flow.getDeviceTriggerCard('charging_status_changed')
+          .trigger(this, { 
+            status: newValue,
+            previous_status: oldValue || 'Unknown'
+          });
+        
+        // Handle specific charging state changes
+        if (newValue === 'Charging' && oldValue !== 'Charging') {
+          this.log('Triggering charging_started flow');
+          await this.homey.flow.getDeviceTriggerCard('charging_started')
+            .trigger(this);
+        } else if (oldValue === 'Charging' && newValue !== 'Charging') {
+          this.log('Triggering charging_stopped flow');
+          await this.homey.flow.getDeviceTriggerCard('charging_stopped')
+            .trigger(this);
+        }
+      }
+      
+      // Plugged in status changed
+      if (changedCapabilities.has('pluggedInStatus')) {
+        const { oldValue, newValue } = changedCapabilities.get('pluggedInStatus');
+        this.log(`Plugged in status changed from ${oldValue} to ${newValue}`);
+        
+        // Check the type of values and log them for debugging
+        this.log('Value types:', {
+          oldValueType: typeof oldValue,
+          newValueType: typeof newValue,
+          oldValue: String(oldValue),
+          newValue: String(newValue)
+        });
+        
+        if (newValue === true && oldValue !== true) {
+          this.log('Triggering plugged_in flow');
+          try {
+            const triggerCard = this.homey.flow.getDeviceTriggerCard('plugged_in');
+            this.log('Trigger card found:', !!triggerCard);
+            
+            // Make sure we're passing the device correctly
+            this.log('Device info:', {
+              id: this.id,
+              name: this.getName(),
+              hasCapabilities: !!this.hasCapability
+            });
+            
+            await triggerCard.trigger(this);
+            this.log('Plugged in trigger completed successfully');
+          } catch (triggerError) {
+            this.error('Error triggering plugged_in flow:', triggerError);
+          }
+        } else if (newValue === false && oldValue !== false) {
+          this.log('Triggering unplugged flow');
+          try {
+            await this.homey.flow.getDeviceTriggerCard('unplugged')
+              .trigger(this);
+            this.log('Unplugged trigger completed successfully');
+          } catch (triggerError) {
+            this.error('Error triggering unplugged flow:', triggerError);
+          }
+        }
+      }
+      
+      // Location changed
+      if (changedCapabilities.has('location')) {
+        const { newValue } = changedCapabilities.get('location');
+        this.log(`Location changed to ${newValue}`);
+        await this.homey.flow.getDeviceTriggerCard('location_changed')
+          .trigger(this, { location: newValue });
+      }
+      
+    } catch (error) {
+      this.error('Failed to handle flow triggers:', error);
     }
   }
 
@@ -287,8 +514,31 @@ class XpengCarDevice extends Homey.Device {
       await this.enodeApi.startCharging(clientId, clientSecret, vehicleId);
       await this.pollVehicleData(); // Update device status
     } catch (error) {
-      this.error('Failed to start charging:', error);
-      throw error;
+      // Use the ErrorHandler to handle and format the error
+      const ErrorHandler = require('../../lib/errorHandler');
+      
+      // Create a reporter function to display errors to the user (if possible)
+      const reporter = (translatedError) => {
+        // Show in device activity log if available
+        if (this.homey && this.homey.notifications) {
+          this.homey.notifications.createNotification({
+            excerpt: ErrorHandler.formatErrorMessage(translatedError)
+          });
+        }
+      };
+      
+      // Handle the error with context
+      const handled = ErrorHandler.handleError(
+        error, 
+        'startCharging', 
+        reporter
+      );
+      
+      // Log additional context (useful for troubleshooting)
+      this.error(`Failed to start charging for ${this.getName()}: ${handled.original}`);
+      
+      // Rethrow with user-friendly message
+      throw new Error(`${handled.message} ${handled.suggestion}`);
     }
   }
 
@@ -311,8 +561,31 @@ class XpengCarDevice extends Homey.Device {
       await this.enodeApi.stopCharging(clientId, clientSecret, vehicleId);
       await this.pollVehicleData(); // Update device status
     } catch (error) {
-      this.error('Failed to stop charging:', error);
-      throw error;
+      // Use the ErrorHandler to handle and format the error
+      const ErrorHandler = require('../../lib/errorHandler');
+      
+      // Create a reporter function to display errors to the user (if possible)
+      const reporter = (translatedError) => {
+        // Show in device activity log if available
+        if (this.homey && this.homey.notifications) {
+          this.homey.notifications.createNotification({
+            excerpt: ErrorHandler.formatErrorMessage(translatedError)
+          });
+        }
+      };
+      
+      // Handle the error with context
+      const handled = ErrorHandler.handleError(
+        error, 
+        'stopCharging', 
+        reporter
+      );
+      
+      // Log additional context
+      this.error(`Failed to stop charging for ${this.getName()}: ${handled.original}`);
+      
+      // Rethrow with user-friendly message
+      throw new Error(`${handled.message} ${handled.suggestion}`);
     }
   }
 
@@ -322,22 +595,158 @@ class XpengCarDevice extends Homey.Device {
       await this.pollVehicleData();
       return true;
     } catch (error) {
-      this.error('Failed to refresh data:', error);
+      // Use the ErrorHandler to handle and format the error
+      const ErrorHandler = require('../../lib/errorHandler');
+      
+      // Create a reporter function to display errors to the user (if possible)
+      const reporter = (translatedError) => {
+        // For refresh errors, we can use a different notification mechanism
+        // since this is less critical than charging errors
+        if (this.homey && this.homey.notifications) {
+          this.homey.notifications.createNotification({
+            excerpt: `Data refresh: ${ErrorHandler.formatErrorMessage(translatedError)}`,
+            options: { excerpt: { containsHtml: false } }
+          });
+        }
+      };
+      
+      // Handle the error but don't rethrow (non-critical operation)
+      const handled = ErrorHandler.handleError(
+        error, 
+        'refreshData', 
+        reporter, 
+        false // don't rethrow
+      );
+      
+      this.error(`Failed to refresh data for ${this.getName()}: ${handled.original}`);
       return false;
+    }
+  }
+
+  // Set up adaptive polling intervals based on vehicle state
+  setupAdaptivePolling() {
+    // Clear any existing polling
+    if (this.pollingInterval) {
+      this.homey.clearInterval(this.pollingInterval);
+    }
+    
+    // Get current settings
+    const settings = this.getSettings();
+    this.updateInterval = parseInt(settings.updateInterval) || 10;
+    
+    // Set the base polling interval (minimum 10 minutes by default)
+    const baseInterval = Math.max(10, this.updateInterval) * 60 * 1000;
+    
+    // Create adaptive polling function
+    this.pollingInterval = this.homey.setInterval(async () => {
+      try {
+        // Check vehicle state to determine if we need more frequent polling
+        const isCharging = this.getCapabilityValue('chargingStatus') === 'Charging';
+        const isPluggedIn = this.getCapabilityValue('pluggedInStatus');
+        
+        // If vehicle is charging, we'll poll again sooner (half the regular interval)
+        if (isCharging) {
+          this.log('Vehicle is charging - scheduling next poll sooner');
+          // Cancel the regular interval temporarily
+          this.homey.clearInterval(this.pollingInterval);
+          
+          // Poll once after a shorter delay
+          this.shortPollTimeout = this.homey.setTimeout(async () => {
+            await this.pollVehicleData();
+            // Resume normal polling
+            this.setupAdaptivePolling();
+          }, Math.min(baseInterval / 2, 5 * 60 * 1000)); // Min of half time or 5 minutes
+          
+          // Make sure the timeout doesn't keep the Node.js process alive (for testing)
+          if (this.shortPollTimeout.unref && typeof this.shortPollTimeout.unref === 'function') {
+            this.shortPollTimeout.unref();
+          }
+          
+          return; // Exit early since we've scheduled the next poll
+        }
+        
+        // Regular polling
+        await this.pollVehicleData();
+      } catch (error) {
+        this.error('Error in adaptive polling:', error);
+        // Still try to poll on the next scheduled interval
+      }
+    }, baseInterval);
+    
+    // Make sure the interval doesn't keep the Node.js process alive (for testing)
+    if (this.pollingInterval.unref && typeof this.pollingInterval.unref === 'function') {
+      this.pollingInterval.unref();
+    }
+  }
+  
+  /**
+   * Set up a periodic health check to verify device connectivity
+   * This helps detect issues with the vehicle connection before users notice
+   */
+  setupHealthCheck() {
+    // Clear any existing health check
+    if (this.healthCheckInterval) {
+      this.homey.clearInterval(this.healthCheckInterval);
+    }
+    
+    // Set up daily health check (every 24 hours)
+    const HEALTH_CHECK_INTERVAL = 24 * 60 * 60 * 1000; // 24 hours
+    
+    this.healthCheckInterval = this.homey.setInterval(async () => {
+      try {
+        this.log('Running periodic health check');
+        
+        // Check if we've received data recently (within double the polling interval)
+        const lastDataUpdate = this.getStoreValue('lastDataUpdate') || 0;
+        const now = Date.now();
+        const maxSilence = Math.max(20, this.updateInterval * 2) * 60 * 1000; // At least 20 minutes
+        
+        if (now - lastDataUpdate > maxSilence) {
+          this.log(`Health check: No data received since ${new Date(lastDataUpdate).toISOString()}`);
+          
+          // Try to refresh data
+          const success = await this.refreshData();
+          
+          if (!success) {
+            // If refresh fails, notify user about potential connection issue
+            const ErrorHandler = require('../../lib/errorHandler');
+            const error = new Error('Vehicle connection may be interrupted');
+            const handled = ErrorHandler.translateError(error, 'healthCheck');
+            
+            if (this.homey && this.homey.notifications) {
+              this.homey.notifications.createNotification({
+                excerpt: `XPENG Car Health Check: ${handled.message} ${handled.suggestion}`
+              });
+            }
+          }
+        } else {
+          this.log('Health check: Connection is good');
+        }
+        
+        // Record health check
+        this.setStoreValue('lastHealthCheck', now);
+      } catch (error) {
+        this.error('Error in health check:', error);
+      }
+    }, HEALTH_CHECK_INTERVAL);
+    
+    // Make sure interval doesn't keep process alive
+    if (this.healthCheckInterval.unref && typeof this.healthCheckInterval.unref === 'function') {
+      this.healthCheckInterval.unref();
     }
   }
 
   // Device#onSettings to handle changes in settings
   async onSettings({ oldSettings, newSettings, changedKeys }) {
     if (changedKeys.includes('updateInterval')) {
-      // Update settings and clear interval if necessary
-      this.homey.clearInterval(this.pollingInterval);
+      // Update settings and reconfigure adaptive polling
       this.updateInterval = parseInt(newSettings.updateInterval) || 10;
-
-      // Restart data fetching with the new interval
-      this.pollingInterval = this.homey.setInterval(() => {
-        this.pollVehicleData();
-      }, Math.max(10, this.updateInterval) * 60 * 1000);
+      this.setupAdaptivePolling();
+      
+      // Update health check as polling interval has changed
+      this.setupHealthCheck();
+      
+      // Do an immediate poll with the new settings
       await this.pollVehicleData();
     }
   }
