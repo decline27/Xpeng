@@ -206,46 +206,97 @@ describe('RequestCache', () => {
 });
 
 describe('retryWithBackoff', () => {
-  // Mock the setTimeout to execute callbacks immediately
-  beforeEach(() => {
+  test('should retry failed operations', async () => {
+    // Create a mock function that fails twice then succeeds
+    const mockFn = jest.fn()
+      .mockRejectedValueOnce(new Error('First failure'))
+      .mockRejectedValueOnce(new Error('Second failure'))
+      .mockResolvedValueOnce('success');
+    
+    // Mock setTimeout to avoid waiting
     jest.useFakeTimers();
-    jest.spyOn(global, 'setTimeout').mockImplementation((fn) => {
-      fn(); // Execute callback immediately
-      return 123; // Return a fake timer ID
+    const originalSetTimeout = global.setTimeout;
+    global.setTimeout = jest.fn((fn) => fn());
+    
+    try {
+      const result = await retryWithBackoff(mockFn, 3, 100);
+      
+      // Should have been called 3 times
+      expect(mockFn).toHaveBeenCalledTimes(3);
+      expect(result).toBe('success');
+    } finally {
+      global.setTimeout = originalSetTimeout;
+      jest.useRealTimers();
+    }
+  });
+  
+  test('should throw after max retries', async () => {
+    // Create a mock function that always fails
+    const mockFn = jest.fn().mockRejectedValue(new Error('Always fails'));
+    
+    // Mock setTimeout to avoid waiting
+    jest.useFakeTimers();
+    const originalSetTimeout = global.setTimeout;
+    global.setTimeout = jest.fn((fn) => fn());
+    
+    try {
+      await expect(retryWithBackoff(mockFn, 3, 100))
+        .rejects.toThrow('Always fails');
+      
+      // Should have been called exactly 3 times
+      expect(mockFn).toHaveBeenCalledTimes(3);
+    } finally {
+      global.setTimeout = originalSetTimeout;
+      jest.useRealTimers();
+    }
+  });
+  
+  test('should succeed immediately if first attempt succeeds', async () => {
+    // Create a mock function that succeeds on first try
+    const mockFn = jest.fn().mockResolvedValue('immediate success');
+    
+    const result = await retryWithBackoff(mockFn, 3, 100);
+    
+    // Should have been called only once
+    expect(mockFn).toHaveBeenCalledTimes(1);
+    expect(result).toBe('immediate success');
+  });
+  
+  test('should use exponential backoff for retries', async () => {
+    // Create a mock function that always fails
+    const mockFn = jest.fn().mockRejectedValue(new Error('Always fails'));
+    
+    // Track setTimeout calls to verify backoff timing
+    jest.useFakeTimers();
+    const originalSetTimeout = global.setTimeout;
+    const setTimeoutMock = jest.fn((fn, delay) => {
+      // Just execute the function immediately for testing
+      fn();
+      return 123; // Mock timer ID
     });
+    global.setTimeout = setTimeoutMock;
+    
+    try {
+      await expect(retryWithBackoff(mockFn, 3, 100))
+        .rejects.toThrow('Always fails');
+      
+      // Verify exponential backoff delays
+      expect(setTimeoutMock).toHaveBeenCalledTimes(2); // 2 retries
+      expect(setTimeoutMock.mock.calls[0][1]).toBe(100); // First retry: base delay
+      expect(setTimeoutMock.mock.calls[1][1]).toBe(200); // Second retry: 2x base delay
+    } finally {
+      global.setTimeout = originalSetTimeout;
+      jest.useRealTimers();
+    }
   });
   
-  afterEach(() => {
-    jest.restoreAllMocks();
-    jest.useRealTimers();
-  });
-  
-  test('should resolve on successful operation', async () => {
-    const operation = jest.fn().mockResolvedValue('success');
+  test('should pass arguments to the retried function', async () => {
+    // Create a mock function that checks arguments
+    const mockFn = jest.fn().mockResolvedValue('success');
     
-    const result = await retryWithBackoff(operation);
+    await retryWithBackoff(() => mockFn('arg1', 'arg2'), 3, 100);
     
-    expect(result).toBe('success');
-    expect(operation).toHaveBeenCalledTimes(1);
-  });
-  
-  test('should retry on failure and eventually succeed', async () => {
-    const operation = jest.fn()
-      .mockRejectedValueOnce(new Error('Fail 1'))
-      .mockRejectedValueOnce(new Error('Fail 2'))
-      .mockResolvedValue('success');
-    
-    const result = await retryWithBackoff(operation, 3);
-    
-    expect(result).toBe('success');
-    expect(operation).toHaveBeenCalledTimes(3);
-  });
-  
-  test('should throw if all retries fail', async () => {
-    const error = new Error('Always fails');
-    const operation = jest.fn().mockRejectedValue(error);
-    
-    await expect(retryWithBackoff(operation, 2)).rejects.toThrow('Always fails');
-    expect(operation).toHaveBeenCalledTimes(2);
+    // Verify arguments were passed correctly
+    expect(mockFn).toHaveBeenCalledWith('arg1', 'arg2');
   });
 });

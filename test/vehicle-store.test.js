@@ -15,6 +15,9 @@ describe('VehicleStore', () => {
     };
     
     vehicleStore = new VehicleStore(mockDevice);
+    
+    // Reset all mocks before each test
+    jest.clearAllMocks();
   });
   
   test('should store and retrieve static vehicle data', async () => {
@@ -190,5 +193,51 @@ describe('VehicleStore', () => {
     expect(vehicleStore.getCachedData()).toBeNull();
     
     jest.useRealTimers();
+  });
+  
+  test('should handle error when loading static data from invalid JSON', async () => {
+    // Set up invalid JSON in settings
+    mockDevice.getSettings.mockReturnValue({
+      storedVehicleData: '{invalid-json}'
+    });
+    
+    const result = await vehicleStore.loadStaticData();
+    
+    // Should return false on error
+    expect(result).toBe(false);
+    // Should log error
+    expect(mockDevice.error).toHaveBeenCalled();
+  });
+  
+  test('should handle missing data in processDynamicData', () => {
+    // Test with minimal data
+    const minimalData = {
+      lastSeen: '2023-01-01T12:00:00Z'
+      // Missing all other fields
+    };
+    
+    const processed = vehicleStore.processDynamicData(minimalData);
+    
+    // Should handle missing data gracefully
+    expect(processed.batteryLevel).toBeUndefined();
+    expect(processed.chargingStatus).toBe('Unknown');
+    expect(processed.pluggedInStatus).toBe(false);
+    expect(processed.lastSeen).toContain('2023-01-01');
+  });
+  
+  test('should handle error when storing static data', async () => {
+    // Mock setSettings to fail
+    mockDevice.setSettings.mockRejectedValueOnce(new Error('Failed to save settings'));
+    
+    const staticData = {
+      information: {
+        brand: 'XPENG',
+        model: 'P7'
+      }
+    };
+    
+    // Should not throw but log error
+    await vehicleStore.storeStaticData(staticData);
+    expect(mockDevice.error).toHaveBeenCalled();
   });
 });
