@@ -1,6 +1,53 @@
 const ErrorHandler = require('../lib/errorHandler');
 
 describe('ErrorHandler', () => {
+  beforeEach(() => {
+    // Reset any mocked functions
+    jest.clearAllMocks();
+  });
+  
+  test('should categorize API errors correctly', () => {
+    const apiError = new Error('API rate limit exceeded');
+    apiError.status = 429;
+    
+    const result = ErrorHandler.translateError(apiError, 'testContext');
+    
+    expect(result.type).toBe(ErrorHandler.ErrorTypes.API);
+    expect(result.message).toContain('service');
+    expect(result.suggestion).toContain('try again');
+  });
+  
+  test('should categorize permission errors correctly', () => {
+    const permError = new Error('Insufficient permissions');
+    permError.status = 403;
+    
+    const result = ErrorHandler.translateError(permError, 'testContext');
+    
+    expect(result.type).toBe(ErrorHandler.ErrorTypes.PERMISSION);
+    expect(result.message).toContain('permission');
+    expect(result.suggestion).toContain('access');
+  });
+  
+  test('should handle reporter function throwing an error', () => {
+    const error = new Error('Test error');
+    const failingReporter = jest.fn().mockImplementation(() => {
+      throw new Error('Reporter failed');
+    });
+    
+    const result = ErrorHandler.handleError(error, 'testContext', failingReporter, false);
+    
+    expect(result).toBeDefined();
+    expect(failingReporter).toHaveBeenCalled();
+  });
+  
+  test('should include timestamp in translated error', () => {
+    const error = new Error('Test error');
+    const result = ErrorHandler.translateError(error, 'testContext');
+    
+    expect(result.timestamp).toBeDefined();
+    expect(new Date(result.timestamp).getTime()).not.toBeNaN();
+  });
+
   test('should categorize network errors correctly', () => {
     const networkError = new Error('Failed to fetch data');
     networkError.name = 'AbortError';
