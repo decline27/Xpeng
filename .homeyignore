@@ -1,0 +1,42 @@
+# Environment and secrets
+/env.json
+.env
+
+# Development files
+/.git/
+/.github/
+/.gitignore
+/test/
+/docs/
+/examples/
+/scripts/
+README.md
+CONTRIBUTING.md
+CHANGELOG.md
+
+# Dependencies (will be installed by Homey)
+/node_modules/
+
+# Build output
+/.homeybuild/
+*.log
+
+# System files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Temporary files
+*.tmp
+*.temp
+.cache/

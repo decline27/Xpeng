@@ -1,37 +1,57 @@
 const Homey = require('homey');
 const EnodeAPI = require('../../lib/enode-api');
+const EnodeOAuth2 = require('../../lib/enode-oauth');
 
 class XpengDriver extends Homey.Driver {
   async onInit() {
     this.log('XPeng Driver has been initialized');
+
+    // Initialize API clients
     this.enodeApi = new EnodeAPI(this.homey);
-    
+
     // Initialize driver storage and log current values
-    this.clientId = this.homey.settings.get('enode_client_id');
-    this.clientSecret = this.homey.settings.get('enode_client_secret');
-    
+    this.clientId = this.homey.settings.get('enode_client_id') || Homey.env.ENODE_CLIENT_ID;
+    this.clientSecret = this.homey.settings.get('enode_client_secret') || Homey.env.ENODE_CLIENT_SECRET;
+
     this.log('Current stored credentials status:', {
       hasClientId: !!this.clientId,
       hasClientSecret: !!this.clientSecret
     });
 
+    // Initialize OAuth2 client
+    this.oAuth2Client = new EnodeOAuth2({
+      clientId: this.clientId,
+      clientSecret: this.clientSecret,
+      redirectUri: 'https://callback.athom.com/oauth2/callback',
+      homey: this.homey,
+      logger: this
+    });
+
+    // Initialize OAuth2 client
+    try {
+      this.oAuth2Client.init();
+      this.log('OAuth2 client initialized');
+    } catch (error) {
+      this.error('Failed to initialize OAuth2 client:', error);
+    }
+
     // Register all flow cards
     this.registerFlowCards();
   }
-  
+
   /**
    * Register all flow cards (triggers, conditions, actions)
    */
   registerFlowCards() {
     this.log('Registering flow cards...');
-    
+
     this.registerTriggerCards();
     this.registerConditionCards();
     this.registerActionCards();
-    
+
     this.log('All flow cards registered');
   }
-  
+
   /**
    * Register trigger flow cards
    */
@@ -39,26 +59,26 @@ class XpengDriver extends Homey.Driver {
     // Battery level triggers
     this.batteryLevelChangedTrigger = this.homey.flow.getDeviceTriggerCard('battery_level_changed');
     this.batteryLowTrigger = this.homey.flow.getDeviceTriggerCard('battery_low');
-    
+
     // Charging state triggers
     this.chargingStartedTrigger = this.homey.flow.getDeviceTriggerCard('charging_started');
     this.chargingStoppedTrigger = this.homey.flow.getDeviceTriggerCard('charging_stopped');
     this.chargingStatusChangedTrigger = this.homey.flow.getDeviceTriggerCard('charging_status_changed');
-    
+
     // Connection state triggers
     this.pluggedInTrigger = this.homey.flow.getDeviceTriggerCard('plugged_in');
     // Register trigger explicitly (for safety)
     this.log('Registering plugged_in trigger card');
-    
+
     this.unpluggedTrigger = this.homey.flow.getDeviceTriggerCard('unplugged');
-    
+
     // Range triggers
     this.rangeLowTrigger = this.homey.flow.getDeviceTriggerCard('range_low');
-    
+
     // Location triggers
     this.locationChangedTrigger = this.homey.flow.getDeviceTriggerCard('location_changed');
   }
-  
+
   /**
    * Register condition flow cards
    */
@@ -70,13 +90,13 @@ class XpengDriver extends Homey.Driver {
         const { device, value, comparison } = args;
         const batteryValue = device.getCapabilityValue('batteryLevel');
         const batteryLevel = parseInt(batteryValue, 10);
-        
+
         this.log(`Battery level check: ${batteryValue} (${batteryLevel}) ${comparison} ${value}`);
-        
+
         if (isNaN(batteryLevel)) {
           return false;
         }
-        
+
         switch (comparison) {
           case 'lt': return batteryLevel < value;
           case 'lte': return batteryLevel <= value;
@@ -90,7 +110,7 @@ class XpengDriver extends Homey.Driver {
         return false;
       }
     });
-    
+
     // Charging status condition
     this.isChargingCondition = this.homey.flow.getConditionCard('is_charging');
     this.isChargingCondition.registerRunListener(async (args, state) => {
@@ -104,7 +124,7 @@ class XpengDriver extends Homey.Driver {
         return false;
       }
     });
-    
+
     // Plugged in condition
     this.pluggedInCondition = this.homey.flow.getConditionCard('plugged_in_status');
     this.pluggedInCondition.registerRunListener(async (args, state) => {
@@ -118,7 +138,7 @@ class XpengDriver extends Homey.Driver {
         return false;
       }
     });
-    
+
     // Range condition
     this.rangeCondition = this.homey.flow.getConditionCard('range_check');
     this.rangeCondition.registerRunListener(async (args, state) => {
@@ -127,13 +147,13 @@ class XpengDriver extends Homey.Driver {
         const rangeStr = device.getCapabilityValue('range');
         const rangeMatch = rangeStr && rangeStr.match(/(\d+)/);
         const range = rangeMatch ? parseInt(rangeMatch[1], 10) : NaN;
-        
+
         this.log(`Range check: ${rangeStr} (${range}) ${comparison} ${value}`);
-        
+
         if (isNaN(range)) {
           return false;
         }
-        
+
         switch (comparison) {
           case 'lt': return range < value;
           case 'lte': return range <= value;
@@ -147,17 +167,17 @@ class XpengDriver extends Homey.Driver {
         return false;
       }
     });
-    
+
     // Location condition
     this.locationCondition = this.homey.flow.getConditionCard('location_check');
     this.locationCondition.registerRunListener(async (args, state) => {
       try {
         const { device, location } = args;
         const currentLocation = device.getCapabilityValue('location');
-        
+
         this.log(`Location check: "${currentLocation}" contains "${location}"`);
-        
-        // This is a simplified check. In reality, you might want to do 
+
+        // This is a simplified check. In reality, you might want to do
         // distance calculations between coordinates
         return currentLocation && currentLocation.includes(location);
       } catch (error) {
@@ -165,16 +185,16 @@ class XpengDriver extends Homey.Driver {
         return false;
       }
     });
-    
+
     // Charging status specific condition
     this.chargingStatusCondition = this.homey.flow.getConditionCard('charging_status');
     this.chargingStatusCondition.registerRunListener(async (args, state) => {
       try {
         const { device, status } = args;
         const currentStatus = device.getCapabilityValue('chargingStatus');
-        
+
         this.log(`Charging status check: current "${currentStatus}" against "${status}"`);
-        
+
         // Match the status from dropdown to the actual device status
         switch (status) {
           case 'charging':
@@ -196,7 +216,7 @@ class XpengDriver extends Homey.Driver {
       }
     });
   }
-  
+
   /**
    * Register action flow cards
    */
@@ -214,7 +234,7 @@ class XpengDriver extends Homey.Driver {
         throw error;
       }
     });
-    
+
     // Stop charging action
     this.stopChargingAction = this.homey.flow.getActionCard('stop_charging');
     this.stopChargingAction.registerRunListener(async (args, state) => {
@@ -248,7 +268,7 @@ class XpengDriver extends Homey.Driver {
         throw error; // Re-throw to show error in flow
       }
     });
-    
+
     // Refresh data action
     this.refreshDataAction = this.homey.flow.getActionCard('refresh_data');
     this.refreshDataAction.registerRunListener(async (args, state) => {
@@ -283,70 +303,76 @@ class XpengDriver extends Homey.Driver {
   async onPair(session) {
     let savedCredentials = false;
     let pairingStartTime = Date.now();
-    
+
     // Log pairing start
     this.log('Starting XPENG pairing process');
 
-    // Handler to get stored credentials
+    // Handler to get stored credentials status (not the actual credentials)
     session.setHandler('get_stored_credentials', async () => {
-      const storedClientId = this.homey.settings.get('enode_client_id');
-      const storedClientSecret = this.homey.settings.get('enode_client_secret');
-      
-      this.log('Retrieving stored credentials:', {
+      const storedClientId = this.homey.settings.get('enode_client_id') || Homey.env.ENODE_CLIENT_ID;
+      const storedClientSecret = this.homey.settings.get('enode_client_secret') || Homey.env.ENODE_CLIENT_SECRET;
+
+      this.log('Checking credentials status:', {
         hasClientId: !!storedClientId,
         hasClientSecret: !!storedClientSecret
       });
-      
+
+      // Only return whether credentials are available, not the actual values
       return {
-        clientId: storedClientId || '',
-        clientSecret: storedClientSecret || ''
+        hasCredentials: !!(storedClientId && storedClientSecret)
       };
     });
 
-    session.setHandler('save_credentials', async (data) => {
+    // This handler is now just a validation step, not actually saving user-provided credentials
+    session.setHandler('save_credentials', async () => {
       try {
-        this.log('Attempting to save new credentials');
-        
-        this.clientId = data.clientId;
-        this.clientSecret = data.clientSecret;
-        
-        // Input validation first
+        this.log('Validating API credentials');
+
+        // Get credentials from env.json or settings
+        this.clientId = Homey.env.ENODE_CLIENT_ID || this.homey.settings.get('enode_client_id');
+        this.clientSecret = Homey.env.ENODE_CLIENT_SECRET || this.homey.settings.get('enode_client_secret');
+
+        // Input validation
         if (!this.clientId || this.clientId.trim() === '') {
-          throw new Error('Client ID cannot be empty');
+          throw new Error('Client ID is not configured. Please create an env.json file with your ENODE_CLIENT_ID value.');
         }
-        
+
         if (!this.clientSecret || this.clientSecret.trim() === '') {
-          throw new Error('Client Secret cannot be empty'); 
+          throw new Error('Client Secret is not configured. Please create an env.json file with your ENODE_CLIENT_SECRET value.');
         }
-        
-        // Validate credentials before saving
-        await this.enodeApi.getAccessToken(this.clientId, this.clientSecret);
-        
-        // Store credentials in Homey settings
-        await this.homey.settings.set('enode_client_id', this.clientId);
-        await this.homey.settings.set('enode_client_secret', this.clientSecret);
-        
-        // Verify storage
-        const verifyClientId = this.homey.settings.get('enode_client_id');
-        const verifyClientSecret = this.homey.settings.get('enode_client_secret');
-        
-        this.log('Credentials saved successfully:', {
-          clientIdSaved: !!verifyClientId,
-          clientSecretSaved: !!verifyClientSecret
+
+        // Validate credentials by getting a machine token
+        await this.enodeApi.getAccessToken();
+
+        // Update OAuth2 client with credentials
+        this.oAuth2Client = new EnodeOAuth2({
+          clientId: this.clientId,
+          clientSecret: this.clientSecret,
+          redirectUri: 'https://callback.athom.com/oauth2/callback',
+          homey: this.homey,
+          logger: this
         });
-        
+
+        try {
+          this.oAuth2Client.init();
+          this.log('OAuth2 client initialized with credentials');
+        } catch (error) {
+          this.error('Failed to initialize OAuth2 client:', error);
+          // Non-blocking error, continue with pairing
+        }
+
         savedCredentials = true;
         return true;
       } catch (error) {
         // Use ErrorHandler for better error messages
         const ErrorHandler = require('../../lib/errorHandler');
-        const handled = ErrorHandler.translateError(error, 'saveCredentials');
-        
-        this.error('Failed to save credentials:', error);
-        
+        const handled = ErrorHandler.translateError(error, 'validateCredentials');
+
+        this.error('Failed to validate credentials:', error);
+
         // For credential errors, provide more specific guidance
         if (handled.type === ErrorHandler.ErrorTypes.AUTHENTICATION) {
-          throw new Error('Invalid credentials. Please check the Client ID and Secret from your Enode dashboard and try again.');
+          throw new Error('Invalid API credentials. Please contact the app developer.');
         } else if (handled.type === ErrorHandler.ErrorTypes.NETWORK) {
           throw new Error('Network issue while validating credentials. Please check your internet connection and try again.');
         } else {
@@ -359,9 +385,9 @@ class XpengDriver extends Homey.Driver {
       try {
         if (!savedCredentials && !this.clientId && !this.clientSecret) {
           // Try to get credentials from settings if not saved in current session
-          this.clientId = this.homey.settings.get('enode_client_id');
-          this.clientSecret = this.homey.settings.get('enode_client_secret');
-          
+          this.clientId = this.homey.settings.get('enode_client_id') || Homey.env.ENODE_CLIENT_ID;
+          this.clientSecret = this.homey.settings.get('enode_client_secret') || Homey.env.ENODE_CLIENT_SECRET;
+
           this.log('Retrieved credentials for link generation:', {
             hasClientId: !!this.clientId,
             hasClientSecret: !!this.clientSecret
@@ -372,16 +398,24 @@ class XpengDriver extends Homey.Driver {
           throw new Error('Credentials not set');
         }
 
-        const userId = `homey-${Date.now()}`; // Generate a unique user ID
-        const linkUrl = await this.enodeApi.generateVehicleLink(this.clientId, this.clientSecret, userId);
+        // Use a consistent user ID based on the Homey device ID
+        // This ensures we don't create duplicate entries in Enode
+        const homeyId = this.homey.id || 'homey';
+
+        // We'll use a consistent user ID for all vehicles from this Homey
+        // The VIN-based deduplication will happen when listing devices
+        const userId = `homey-${homeyId}`;
+
+        // Generate the vehicle link using OAuth2 client
+        const linkUrl = await this.oAuth2Client.generateAuthUrl(userId);
         return { linkUrl };
       } catch (error) {
         // Use ErrorHandler for better error messages
         const ErrorHandler = require('../../lib/errorHandler');
         const handled = ErrorHandler.translateError(error, 'generateLink');
-        
+
         this.error('Failed to generate vehicle link:', error);
-        
+
         // Provide more specific guidance based on error type
         if (handled.type === ErrorHandler.ErrorTypes.AUTHENTICATION) {
           throw new Error(
@@ -405,9 +439,9 @@ class XpengDriver extends Homey.Driver {
       try {
         if (!savedCredentials && !this.clientId && !this.clientSecret) {
           // Try to get credentials from settings if not saved in current session
-          this.clientId = this.homey.settings.get('enode_client_id');
-          this.clientSecret = this.homey.settings.get('enode_client_secret');
-          
+          this.clientId = this.homey.settings.get('enode_client_id') || Homey.env.ENODE_CLIENT_ID;
+          this.clientSecret = this.homey.settings.get('enode_client_secret') || Homey.env.ENODE_CLIENT_SECRET;
+
           this.log('Retrieved credentials for device listing:', {
             hasClientId: !!this.clientId,
             hasClientSecret: !!this.clientSecret
@@ -419,8 +453,8 @@ class XpengDriver extends Homey.Driver {
         }
 
         // Fetch vehicles from Enode API
-        const vehicles = await this.enodeApi.getVehicles(this.clientId, this.clientSecret);
-        
+        const vehicles = await this.enodeApi.getVehicles();
+
         if (!vehicles || vehicles.length === 0) {
           throw new Error('No vehicles found. Please make sure you have completed the connection process in your browser.');
         }
@@ -428,40 +462,78 @@ class XpengDriver extends Homey.Driver {
         // Log found vehicles for debugging
         this.log('Found vehicles:', vehicles.map(v => ({ id: v.id, name: v.name })));
 
-        // Map vehicles to Homey device format
-        return vehicles.map(vehicle => ({
-          name: vehicle.name || `XPENG ${vehicle.model || 'Vehicle'}`,
-          data: {
-            id: vehicle.id,
-            vehicleId: vehicle.id  // Store the ID in both places for backward compatibility
-          },
-          store: {
-            vehicleInfo: vehicle
-          },
-          capabilities: [
-            'batteryLevel',
-            'batteryCapacity',
-            'chargingStatus',
-            'pluggedInStatus',
-            'range',
-            'location',
-            'lastSeen',
-            'odometer',
-            'vehicleBrand',
-            'vehicleModel',
-            'vehicleYear',
-            'vehicleVin',
-            'chargingLimit',
-            'powerDeliveryState'
-          ]
-        }));
+        // Group vehicles by VIN to detect duplicates
+        const vehiclesByVin = {};
+        vehicles.forEach(vehicle => {
+          const vin = vehicle.information?.vin;
+          if (vin) {
+            if (!vehiclesByVin[vin]) {
+              vehiclesByVin[vin] = [];
+            }
+            vehiclesByVin[vin].push(vehicle);
+          }
+        });
+
+        // For each VIN, select the most recently seen vehicle
+        const uniqueVehicles = [];
+        Object.values(vehiclesByVin).forEach(duplicates => {
+          // Sort by lastSeen date (most recent first)
+          duplicates.sort((a, b) => {
+            const dateA = new Date(a.lastSeen || 0);
+            const dateB = new Date(b.lastSeen || 0);
+            return dateB - dateA;
+          });
+
+          // Add the most recent vehicle
+          uniqueVehicles.push(duplicates[0]);
+
+          // Log if duplicates were found
+          if (duplicates.length > 1) {
+            this.log(`Found ${duplicates.length} vehicles with VIN ${duplicates[0].information?.vin}. Using the most recently seen one.`);
+          }
+        });
+
+        // Map unique vehicles to Homey device format
+        return uniqueVehicles.map(vehicle => {
+          const vin = vehicle.information?.vin || 'unknown';
+          const model = vehicle.information?.model || 'Vehicle';
+
+          return {
+            name: vehicle.name || `XPENG ${model} (${vin.substring(vin.length - 6)})`,
+            data: {
+              id: vehicle.id,
+              vehicleId: vehicle.id,  // Store the ID in both places for backward compatibility
+              vin: vin  // Store the VIN for future reference
+            },
+            store: {
+              vehicleInfo: vehicle,
+              oAuth2TokenData: this.oAuth2Client.getTokenData() // Store OAuth2 token data for the device
+            },
+            capabilities: [
+              'batteryLevel',
+              'batteryCapacity',
+              'chargingStatus',
+              'pluggedInStatus',
+              'range',
+              'location',
+              'lastSeen',
+              'odometer',
+              'vehicleBrand',
+              'vehicleModel',
+              'vehicleYear',
+              'vehicleVin',
+              'chargingLimit',
+              'powerDeliveryState'
+            ]
+          };
+        });
       } catch (error) {
         // Use ErrorHandler for better error messages
         const ErrorHandler = require('../../lib/errorHandler');
         const handled = ErrorHandler.translateError(error, 'listDevices');
-        
+
         this.error('Failed to list devices:', error);
-        
+
         // Special handling for common vehicle discovery issues
         if (error.message.includes('vehicles found') || error.message.includes('No vehicles')) {
           throw new Error(
@@ -481,38 +553,97 @@ class XpengDriver extends Homey.Driver {
         }
       }
     });
-    
+
     // Handle session completion
     session.setHandler('complete', async () => {
       const pairingDuration = (Date.now() - pairingStartTime) / 1000;
       this.log(`XPENG pairing process completed in ${pairingDuration.toFixed(1)} seconds`);
-      
+
       // Track usage statistics (non-PII)
       try {
         this.homey.settings.set('last_pairing_duration', pairingDuration);
         this.homey.settings.set('last_pairing_time', new Date().toISOString());
-        
+
         const pairingCount = this.homey.settings.get('pairing_count') || 0;
         this.homey.settings.set('pairing_count', pairingCount + 1);
       } catch (error) {
         // Non-critical, just log
         this.error('Failed to save pairing statistics:', error);
       }
-      
+
       return true;
     });
   }
 
+  /**
+   * Get stored credentials from env.json or Homey settings
+   * @returns {Object} The credentials object
+   */
   getStoredCredentials() {
-    const clientId = this.homey.settings.get('enode_client_id');
-    const clientSecret = this.homey.settings.get('enode_client_secret');
-    
+    const clientId = Homey.env.ENODE_CLIENT_ID || this.homey.settings.get('enode_client_id');
+    const clientSecret = Homey.env.ENODE_CLIENT_SECRET || this.homey.settings.get('enode_client_secret');
+
     this.log('Getting stored credentials:', {
       hasClientId: !!clientId,
       hasClientSecret: !!clientSecret
     });
-    
+
     return { clientId, clientSecret };
+  }
+
+  /**
+   * Check for duplicate vehicles and log information about them
+   * This can help diagnose issues with multiple copies of the same vehicle
+   */
+  async checkForDuplicates() {
+    try {
+      const DuplicateCleanup = require('../../lib/cleanup-duplicates');
+      const cleanup = new DuplicateCleanup(this.enodeApi);
+      cleanup.logger = this;
+
+      await cleanup.logDuplicateInfo();
+      return true;
+    } catch (error) {
+      this.error('Error checking for duplicates:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Get a vehicle by VIN
+   * If multiple vehicles with the same VIN exist, returns the most recently seen one
+   * @param {string} vin - The VIN to look for
+   * @returns {Promise<Object|null>} The vehicle or null if not found
+   */
+  async getVehicleByVin(vin) {
+    try {
+      if (!vin) {
+        return null;
+      }
+
+      // Get all vehicles
+      const vehicles = await this.enodeApi.getVehicles();
+
+      // Find vehicles with matching VIN
+      const matches = vehicles.filter(v => v.information?.vin === vin);
+
+      if (matches.length === 0) {
+        return null;
+      }
+
+      // If only one match, return it
+      if (matches.length === 1) {
+        return matches[0];
+      }
+
+      // If multiple matches, get the most recently seen one
+      const DuplicateCleanup = require('../../lib/cleanup-duplicates');
+      const cleanup = new DuplicateCleanup(this.enodeApi);
+      return cleanup.getBestVehicle(matches);
+    } catch (error) {
+      this.error(`Error getting vehicle by VIN ${vin}:`, error);
+      return null;
+    }
   }
 
 }

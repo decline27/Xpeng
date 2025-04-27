@@ -1,11 +1,10 @@
 <!-- Pair template -->
 <style>
-    .existing-credentials {
-        background-color: #e8f5e9;
-        padding: 10px;
+    .info-message {
+        background-color: #e3f2fd;
+        padding: 15px;
         border-radius: 4px;
-        margin-bottom: 15px;
-        display: none;
+        margin-bottom: 20px;
     }
     .error-message {
         color: #d32f2f;
@@ -24,27 +23,33 @@
         display: none;
         margin: 20px 0;
     }
+    .credentials-status {
+        margin-bottom: 20px;
+        padding: 10px;
+        border-radius: 4px;
+    }
+    .credentials-valid {
+        background-color: #e8f5e9;
+        color: #2e7d32;
+    }
+    .credentials-invalid {
+        background-color: #ffebee;
+        color: #c62828;
+    }
 </style>
 
 <div class="homey-form-group">
-    <h1 class="homey-title" data-i18n="pair.start.title">Connect Your Vehicle</h1>
-    <p class="homey-subtitle" data-i18n="pair.start.subtitle">Enter your Enode credentials to connect your vehicle</p>
+    <h1 class="homey-title">Connect Your XPENG Vehicle</h1>
+    <p class="homey-subtitle">Connect your XPENG vehicle to Homey</p>
 
-    <div class="existing-credentials" id="existing_credentials">
-        <p><strong>Existing credentials found!</strong> You can use these or enter new ones.</p>
+    <div class="info-message">
+        <p><strong>Secure Connection</strong></p>
+        <p>This app uses Enode's secure API to connect to your XPENG vehicle. Your vehicle credentials are stored securely and are only used to communicate with your vehicle.</p>
     </div>
+
+    <div id="credentials-status" class="credentials-status"></div>
 
     <div class="error-message" id="error"></div>
-
-    <div class="homey-form-group">
-        <label class="homey-form-label" for="clientId">Enode Client ID</label>
-        <input class="homey-form-input" id="clientId" type="text" placeholder="Enter your Enode Client ID" />
-    </div>
-
-    <div class="homey-form-group">
-        <label class="homey-form-label" for="clientSecret">Enode Client Secret</label>
-        <input class="homey-form-input" id="clientSecret" type="password" placeholder="Enter your Enode Client Secret" />
-    </div>
 
     <div class="loading-spinner" id="loading">
         <div class="homey-loading">
@@ -68,21 +73,26 @@
 </div>
 
 <script type="text/javascript">
-Homey.setTitle('Connect Your Vehicle');
+Homey.setTitle('Connect Your XPENG Vehicle');
 
-// Load stored credentials when page loads
-async function loadStoredCredentials() {
+// Check if credentials are available
+async function checkCredentials() {
     try {
         const credentials = await Homey.emit('get_stored_credentials');
-        
-        if (credentials && credentials.clientId && credentials.clientSecret) {
-            document.getElementById('clientId').value = credentials.clientId;
-            document.getElementById('clientSecret').value = credentials.clientSecret;
-            document.getElementById('existing_credentials').style.display = 'block';
+        const statusElement = document.getElementById('credentials-status');
+
+        if (credentials && credentials.hasCredentials) {
+            statusElement.textContent = 'Enode API credentials are configured and ready to use.';
+            statusElement.className = 'credentials-status credentials-valid';
+            document.getElementById('start-link').disabled = false;
+        } else {
+            statusElement.textContent = 'Enode API credentials are not configured. Please contact the app developer.';
+            statusElement.className = 'credentials-status credentials-invalid';
+            document.getElementById('start-link').disabled = true;
         }
     } catch (error) {
-        console.error('Error loading credentials:', error);
-        showError('Failed to load existing credentials');
+        console.error('Error checking credentials:', error);
+        showError('Failed to check API credentials');
     }
 }
 
@@ -100,30 +110,19 @@ function showLoading(show) {
     document.getElementById('start-link').style.display = show ? 'none' : 'block';
 }
 
-// Load credentials immediately
-loadStoredCredentials();
+// Check credentials immediately
+checkCredentials();
 
 document.getElementById('start-link').addEventListener('click', async () => {
-    const clientId = document.getElementById('clientId').value.trim();
-    const clientSecret = document.getElementById('clientSecret').value.trim();
-
-    if (!clientId || !clientSecret) {
-        showError('Please enter both Client ID and Client Secret');
-        return;
-    }
-
     try {
         showLoading(true);
         document.getElementById('error').style.display = 'none';
 
-        // Store credentials in driver settings
-        await Homey.emit('save_credentials', { clientId, clientSecret });
-        
         const result = await Homey.emit('get_link');
-        
+
         showLoading(false);
         document.getElementById('link-container').style.display = 'block';
-        
+
         const enodeLink = document.getElementById('enode-link');
         enodeLink.href = result.linkUrl;
     } catch (error) {
