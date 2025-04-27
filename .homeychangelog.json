@@ -118,5 +118,8 @@
   },
   "1.2.40": {
     "en": "Refactor and improved error handeling"
+  },
+  "1.2.41": {
+    "en": "New login that dont uses enode developer acount."
   }
 }

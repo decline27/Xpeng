@@ -15,6 +15,7 @@ Transform your XPENG electric vehicle into an integral part of your smart home e
 - **Energy Management**: Optimize charging times based on your home's energy usage
 - **Intelligent Notifications**: Get alerts for critical events like low battery or completed charging
 - **Custom Triggers**: Build complex automations using multiple car-related conditions
+- **VIN-Based Identification**: Automatic deduplication ensures each physical car appears only once
 
 ### Charging Optimization
 - **Power Monitoring**: Track charging power and efficiency
@@ -24,17 +25,20 @@ Transform your XPENG electric vehicle into an integral part of your smart home e
 
 ## Requirements
 - XPENG Electric Vehicle (Compatible with all models)
-- Enode API Access (Credentials required for setup)
 - Homey Pro
 
 ## Setup Guide
-1. Create an Enode developer account at https://www.enode.io/
-2. Request production access from Enode for your developer account
-3. Create a new application in your Enode developer dashboard
-4. Get your Client ID and Client Secret from the Enode dashboard
-5. Install the XPENG Car Manager app on your Homey
-6. Add your vehicle through the Homey app
-7. Configure your preferred monitoring settings and alerts
+1. Install the XPENG Car Manager app on your Homey
+2. Add your vehicle through the Homey app:
+   - Click "+ Add Device" in Homey
+   - Select "XPENG Car Manager"
+   - Click "Generate Connection Link"
+   - Open the link in your browser to connect your XPENG account
+   - Return to Homey and click "Continue"
+   - Your vehicle will be added automatically
+3. Configure your preferred monitoring settings and alerts
+
+> **Note for Developers**: The app uses pre-configured Enode API credentials that are securely encrypted and stored. End users don't need to create an Enode account or configure any credentials.
 
 ## Project Improvements and Setup
 
@@ -71,5 +75,27 @@ For questions, feature requests, or support:
 
 ## Privacy & Security
 - All credentials are securely stored within Homey
+- Enode API credentials are securely encrypted and stored by the Homey App Store
 - No personal data is collected or stored outside your Homey
 - Communication with XPENG servers is encrypted
+- OAuth2 authentication ensures each user only sees their own vehicles
+- Each user's vehicle data is isolated from other users, even though the app uses shared developer credentials
+- VIN-based deduplication ensures each physical car appears only once in your Homey
+
+## Advanced Features
+
+### VIN-Based Deduplication
+- The app uses the vehicle's VIN (Vehicle Identification Number) to identify unique cars
+- If multiple entries for the same physical car exist, the app automatically selects the most recently seen one
+- This prevents duplicate devices in your Homey and ensures you always see the most up-to-date data
+- Device names include part of the VIN for easy identification
+
+### Adaptive Polling
+- The app automatically adjusts polling frequency based on vehicle state
+- When your car is charging, data is refreshed more frequently
+- This provides more accurate charging status while preserving battery life when idle
+
+### Health Monitoring
+- Periodic health checks verify connectivity with your vehicle
+- Automatic recovery attempts if connection issues are detected
+- Notifications for persistent connectivity problems
