@@ -121,5 +121,8 @@
   },
   "1.2.41": {
     "en": "New login that dont uses enode developer acount."
+  },
+  "1.2.42": {
+    "en": "Updated the readme"
   }
 }
