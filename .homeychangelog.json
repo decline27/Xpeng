@@ -124,5 +124,11 @@
   },
   "1.2.42": {
     "en": "Updated the readme"
+  },
+  "1.2.43": {
+    "en": "updated login"
+  },
+  "1.2.44": {
+    "en": "enode bug fix"
   }
 }
