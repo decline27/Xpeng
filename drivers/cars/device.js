@@ -22,12 +22,13 @@ class XpengCarDevice extends Homey.Device {
         hasOAuth2TokenData: !!storeData.oAuth2TokenData
       });
 
-      // Store the vehicle ID
-      this.vehicleId = deviceData.vehicleId || deviceData.id;
+      // Store the vehicle ID - check settings first, then device data
+      // This allows us to recover if the vehicle ID has changed
+      const settings = this.getSettings();
+      const storedVehicleId = this.getStoreValue('vehicleId');
+      this.vehicleId = settings.vehicleId || storedVehicleId || deviceData.vehicleId || deviceData.id;
       this.log('Initialized with vehicle ID:', this.vehicleId);
 
-      // Retrieve settings
-      const settings = this.getSettings();
       // Default to 10 minutes polling to match Enode's cache timing
       this.updateInterval = parseInt(settings.updateInterval) || 10;
 
@@ -69,6 +70,35 @@ class XpengCarDevice extends Homey.Device {
         const vehicle = vehicles.find(v => v.id === this.vehicleId);
 
         if (!vehicle) {
+          // Get the VIN from device data
+          const deviceData = this.getData();
+          const vin = deviceData.vin;
+
+          // If we have a VIN, try to find the vehicle by VIN
+          if (vin) {
+            this.log(`Vehicle ID ${this.vehicleId} not found, trying to find by VIN ${vin}`);
+            const vehicleByVin = vehicles.find(v => v.information?.vin === vin);
+
+            if (vehicleByVin) {
+              // Update the vehicle ID to the new one
+              this.log(`Found vehicle with matching VIN but different ID: ${vehicleByVin.id}`);
+              this.vehicleId = vehicleByVin.id;
+
+              // Store the updated ID - we can't directly update the data
+              // but we can store it in settings and use it from now on
+              await this.setSettings({
+                vehicleId: vehicleByVin.id
+              });
+
+              // Also update the store
+              await this.setStoreValue('vehicleId', vehicleByVin.id);
+
+              this.log(`Updated vehicle ID to ${this.vehicleId}`);
+              this.log(`Verified vehicle with VIN ${vin} exists in user's account:`, vehicleByVin);
+              return;
+            }
+          }
+
           const notFoundError = new Error(`Vehicle ${this.vehicleId} not found in user's account`);
           const handled = ErrorHandler.translateError(notFoundError, 'vehicleVerification');
 

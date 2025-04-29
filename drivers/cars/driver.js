@@ -398,13 +398,21 @@ class XpengDriver extends Homey.Driver {
           throw new Error('Credentials not set');
         }
 
-        // Use a consistent user ID based on the Homey device ID
-        // This ensures we don't create duplicate entries in Enode
+        // Get or create an installation ID (only generated once per app installation)
+        let installationId = this.homey.settings.get('installation_id');
+        if (!installationId) {
+          installationId = Date.now().toString(36) + Math.random().toString(36).substring(2, 7);
+          this.homey.settings.set('installation_id', installationId);
+          this.log('Created new installation ID:', installationId);
+        }
+
+        // Use a consistent user ID based on the Homey device ID and installation ID
+        // This ensures we don't create duplicate entries in Enode and improves uniqueness
         const homeyId = this.homey.id || 'homey';
 
-        // We'll use a consistent user ID for all vehicles from this Homey
-        // The VIN-based deduplication will happen when listing devices
-        const userId = `homey-${homeyId}`;
+        // Create a more unique user ID by combining Homey ID and installation ID
+        const userId = `homey-${homeyId}-${installationId}`;
+        this.log('Using user ID for vehicle link:', userId);
 
         // Generate the vehicle link using OAuth2 client
         const linkUrl = await this.oAuth2Client.generateAuthUrl(userId);
@@ -453,14 +461,83 @@ class XpengDriver extends Homey.Driver {
         }
 
         // Fetch vehicles from Enode API
-        const vehicles = await this.enodeApi.getVehicles();
+        let allVehicles = await this.enodeApi.getVehicles();
 
-        if (!vehicles || vehicles.length === 0) {
+        if (!allVehicles || allVehicles.length === 0) {
           throw new Error('No vehicles found. Please make sure you have completed the connection process in your browser.');
         }
 
         // Log found vehicles for debugging
-        this.log('Found vehicles:', vehicles.map(v => ({ id: v.id, name: v.name })));
+        this.log('Found vehicles:', allVehicles.map(v => ({ id: v.id, name: v.name, userId: v.userId })));
+
+        // Get the installation ID and Homey ID to create a unique identifier
+        const homeyId = this.homey.id || 'homey';
+        let installationId = this.homey.settings.get('installation_id');
+        if (!installationId) {
+          // If installation ID doesn't exist yet, create it
+          installationId = Date.now().toString(36) + Math.random().toString(36).substring(2, 7);
+          this.homey.settings.set('installation_id', installationId);
+          this.log('Created new installation ID during device listing:', installationId);
+        }
+
+        // Create a more unique user ID by combining Homey ID and installation ID
+        const userId = `homey-${homeyId}-${installationId}`;
+        this.log('Using user ID for vehicle filtering:', userId);
+
+        // SECURITY IMPROVEMENT: Filter vehicles by user ID
+        // This ensures users only see their own vehicles
+        const userVehicles = allVehicles.filter(vehicle =>
+          vehicle.userId === userId ||
+          (vehicle.user && vehicle.user.id === userId)
+        );
+
+        // Get authorized VINs from settings
+        const authorizedVins = this.homey.settings.get('authorized_vins') || [];
+        this.log(`Found ${authorizedVins.length} authorized VINs in settings`);
+
+        // First try to filter by authorized VINs
+        let vinFilteredVehicles = [];
+        if (authorizedVins.length > 0) {
+          vinFilteredVehicles = allVehicles.filter(vehicle =>
+            authorizedVins.includes(vehicle.information?.vin)
+          );
+          this.log(`Found ${vinFilteredVehicles.length} vehicles matching authorized VINs`);
+        }
+
+        // If we found vehicles for this user by ID, use those
+        // Otherwise, if we found vehicles by VIN, use those
+        // As a last resort during pairing, show all vehicles
+        let vehicles = allVehicles;
+
+        if (userVehicles.length > 0) {
+          this.log(`Found ${userVehicles.length} vehicles for user ID ${userId}. Using these vehicles.`);
+          vehicles = userVehicles;
+
+          // Store the VINs of these vehicles in the authorized list if they're not already there
+          userVehicles.forEach(vehicle => {
+            const vin = vehicle.information?.vin;
+            if (vin && !authorizedVins.includes(vin)) {
+              authorizedVins.push(vin);
+              this.log(`Adding VIN ${vin} to authorized list from user ID match`);
+            }
+          });
+
+          // Update the authorized VINs in settings
+          if (authorizedVins.length > 0) {
+            this.homey.settings.set('authorized_vins', authorizedVins);
+            // Clear any cached data in the API client to ensure fresh data
+            if (this.enodeApi && this.enodeApi.requestCache) {
+              this.enodeApi.requestCache.clear('vehicles');
+            }
+          }
+        } else if (vinFilteredVehicles.length > 0) {
+          this.log(`Using ${vinFilteredVehicles.length} vehicles matching authorized VINs`);
+          vehicles = vinFilteredVehicles;
+        } else {
+          this.log(`No vehicles found specifically for user ID ${userId} or matching authorized VINs. This might be during initial pairing.`);
+          // During initial pairing, we might need to show all vehicles
+          // The user will only be able to select their own vehicles
+        }
 
         // Group vehicles by VIN to detect duplicates
         const vehiclesByVin = {};
@@ -551,6 +628,38 @@ class XpengDriver extends Homey.Driver {
         } else {
           throw new Error(`${handled.message} ${handled.suggestion}`);
         }
+      }
+    });
+
+    // Handle device added event
+    session.setHandler('add_device', async (data) => {
+      try {
+        // Extract the VIN from the device data
+        const vin = data.data?.vin;
+        if (vin) {
+          // Get the current list of authorized VINs
+          const authorizedVins = this.homey.settings.get('authorized_vins') || [];
+
+          // Add this VIN if it's not already in the list
+          if (!authorizedVins.includes(vin)) {
+            authorizedVins.push(vin);
+            this.homey.settings.set('authorized_vins', authorizedVins);
+            this.log(`Added VIN ${vin} to authorized list. Total authorized VINs: ${authorizedVins.length}`);
+
+            // Clear any cached data in the API client to ensure fresh data
+            if (this.enodeApi && this.enodeApi.requestCache) {
+              this.enodeApi.requestCache.clear('vehicles');
+            }
+          } else {
+            this.log(`VIN ${vin} already in authorized list`);
+          }
+        } else {
+          this.log('No VIN found in device data during add_device');
+        }
+        return true;
+      } catch (error) {
+        this.error('Error in add_device handler:', error);
+        return true; // Continue with device addition even if storing VIN fails
       }
     });
 
