@@ -34,7 +34,12 @@
     {
       "id": "start",
       "navigation": {
-        "next": "list_devices"
+        "next": "list_devices",
+        "buttons": {
+          "next": {
+            "visible": false
+          }
+        }
       }
     },
     {
