@@ -44,10 +44,6 @@
         opacity: 0.7;
         box-shadow: none !important;
     }
-    /* Hide the standard navigation buttons */
-    .homey-form-buttons {
-        display: none !important;
-    }
     /* Authentication status styles */
     .auth-status-waiting {
         background-color: #fff3e0;
@@ -179,43 +175,6 @@
 
 <script type="text/javascript">
 Homey.setTitle('Connect Your XPENG Vehicle');
-
-// Hide the standard navigation buttons
-function hideStandardButtons() {
-    // Try to find the standard navigation buttons
-    const formButtons = document.querySelector('.homey-form-buttons');
-    if (formButtons) {
-        formButtons.style.display = 'none';
-        console.log('Standard navigation buttons hidden via JS');
-    }
-
-    // Also try to find any button with text "Continue" in the standard UI
-    const allButtons = document.querySelectorAll('button');
-    allButtons.forEach(button => {
-        if (button.textContent.includes('Continue') &&
-            button.id !== 'continue' &&
-            !button.closest('.link-container')) {
-            button.style.display = 'none';
-            console.log('Found and hid standard Continue button');
-        }
-    });
-}
-
-// Run immediately and also after a short delay to catch dynamically added buttons
-hideStandardButtons();
-setTimeout(hideStandardButtons, 500);
-setTimeout(hideStandardButtons, 1000);
-
-// Set up a MutationObserver to continuously monitor for and hide any dynamically added buttons
-const observer = new MutationObserver((mutations) => {
-    hideStandardButtons();
-});
-
-// Start observing the document with the configured parameters
-observer.observe(document.body, {
-    childList: true,
-    subtree: true
-});
 
 // Check if credentials are available
 async function checkCredentials() {
