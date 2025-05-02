@@ -36,6 +36,66 @@
         background-color: #ffebee;
         color: #c62828;
     }
+    /* Style for disabled buttons */
+    .homey-button-primary:disabled {
+        background-color: #e0e0e0 !important;
+        color: #9e9e9e !important;
+        cursor: not-allowed !important;
+        opacity: 0.7;
+        box-shadow: none !important;
+    }
+    /* Authentication status styles */
+    .auth-status-waiting {
+        background-color: #fff3e0;
+        padding: 15px;
+        border-radius: 4px;
+        margin: 15px 0;
+        border-left: 4px solid #ff9800;
+    }
+    .auth-status-success {
+        background-color: #e8f5e9;
+        padding: 15px;
+        border-radius: 4px;
+        margin: 15px 0;
+        border-left: 4px solid #4caf50;
+    }
+    .auth-status-error {
+        background-color: #ffebee;
+        padding: 15px;
+        border-radius: 4px;
+        margin: 15px 0;
+        border-left: 4px solid #f44336;
+    }
+    /* Step indicators */
+    .step-container {
+        margin-bottom: 20px;
+    }
+    .step {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    .step-number {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background-color: #2196f3;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 10px;
+        font-weight: bold;
+    }
+    .step-active .step-number {
+        background-color: #4caf50;
+    }
+    .step-completed .step-number {
+        background-color: #4caf50;
+    }
+    .step-pending .step-number {
+        background-color: #9e9e9e;
+    }
 </style>
 
 <div class="homey-form-group">
@@ -51,6 +111,31 @@
 
     <div class="error-message" id="error"></div>
 
+    <!-- Step indicators -->
+    <div class="step-container">
+        <div id="step1" class="step step-active">
+            <div class="step-number">1</div>
+            <div class="step-content">
+                <strong>Generate connection link</strong>
+                <p>Click the button below to start the connection process</p>
+            </div>
+        </div>
+        <div id="step2" class="step step-pending">
+            <div class="step-number">2</div>
+            <div class="step-content">
+                <strong>Connect your XPENG account</strong>
+                <p>Click the "Connect Vehicle" button and complete the authentication in your browser</p>
+            </div>
+        </div>
+        <div id="step3" class="step step-pending">
+            <div class="step-number">3</div>
+            <div class="step-content">
+                <strong>Continue to vehicle selection</strong>
+                <p>After authentication is complete, click "Continue" to select your vehicle</p>
+            </div>
+        </div>
+    </div>
+
     <div class="loading-spinner" id="loading">
         <div class="homey-loading">
             <div class="homey-loading-circle"></div>
@@ -61,20 +146,28 @@
     </div>
 
     <div class="link-container" id="link-container">
-        <p>Click the button below to open Enode's connection page in your browser:</p>
+        <p><strong>Step 2:</strong> Click the button below to open Enode's connection page in your browser:</p>
         <a id="enode-link" class="homey-button-primary" target="_blank" rel="noopener noreferrer">
             Connect Vehicle
         </a>
-        <div id="auth-status" style="margin-top: 20px; display: none;">
-            <p>Waiting for authentication to complete...</p>
-            <div class="homey-loading">
+
+        <div id="auth-status" class="auth-status-waiting" style="margin-top: 20px; display: none;">
+            <strong>Waiting for authentication...</strong>
+            <p>Please complete the authentication process in your browser. This page will automatically update when complete.</p>
+            <div class="homey-loading" style="margin-top: 10px;">
                 <div class="homey-loading-circle"></div>
                 <div class="homey-loading-circle"></div>
                 <div class="homey-loading-circle"></div>
             </div>
         </div>
-        <p style="margin-top: 20px;">After connecting your vehicle, click continue:</p>
-        <button id="continue" class="homey-button-primary" disabled>Continue</button>
+
+        <div style="margin-top: 20px;">
+            <p><strong>Step 3:</strong> After connecting your vehicle, click continue:</p>
+            <button id="continue" class="homey-button-primary" disabled>Continue</button>
+            <p id="continue-hint" style="color: #9e9e9e; font-size: 0.9em; margin-top: 5px;">
+                The Continue button will be enabled once authentication is complete
+            </p>
+        </div>
     </div>
 
     <button id="start-link" class="homey-button-primary">Generate Connection Link</button>
@@ -121,6 +214,18 @@ function showLoading(show) {
 // Check credentials immediately
 checkCredentials();
 
+// Function to update step status
+function updateStepStatus(stepNumber, status) {
+    const step = document.getElementById(`step${stepNumber}`);
+    if (!step) return;
+
+    // Remove all status classes
+    step.classList.remove('step-active', 'step-completed', 'step-pending');
+
+    // Add the appropriate class
+    step.classList.add(`step-${status}`);
+}
+
 // Poll for authentication status
 let authCheckInterval = null;
 const MAX_POLL_TIME = 300000; // 5 minutes
@@ -134,8 +239,26 @@ async function checkAuthStatus() {
         if (status && status.isAuthenticated) {
             // Authentication successful
             clearInterval(authCheckInterval);
-            document.getElementById('auth-status').innerHTML = '<p style="color: #2e7d32;">✓ Authentication successful! Vehicle connected.</p>';
-            document.getElementById('continue').disabled = false;
+
+            // Update the auth status display
+            const authStatusEl = document.getElementById('auth-status');
+            authStatusEl.className = 'auth-status-success';
+            authStatusEl.innerHTML = `
+                <strong>✓ Authentication successful!</strong>
+                <p>Your XPENG vehicle has been connected successfully. You can now proceed to the next step.</p>
+            `;
+
+            // Enable the continue button and update its appearance
+            const continueBtn = document.getElementById('continue');
+            continueBtn.disabled = false;
+
+            // Hide the hint text
+            document.getElementById('continue-hint').style.display = 'none';
+
+            // Update step indicators
+            updateStepStatus(2, 'completed');
+            updateStepStatus(3, 'active');
+
             return true;
         }
         return false;
@@ -150,6 +273,10 @@ function startAuthStatusPolling() {
     // Show the auth status indicator
     document.getElementById('auth-status').style.display = 'block';
 
+    // Update step indicators
+    updateStepStatus(1, 'completed');
+    updateStepStatus(2, 'active');
+
     // Clear any existing interval
     if (authCheckInterval) {
         clearInterval(authCheckInterval);
@@ -159,8 +286,15 @@ function startAuthStatusPolling() {
     const pollTimeout = setTimeout(() => {
         if (authCheckInterval) {
             clearInterval(authCheckInterval);
-            document.getElementById('auth-status').innerHTML =
-                '<p style="color: #c62828;">Authentication timed out. Please try again or refresh the page.</p>';
+
+            // Update the auth status display
+            const authStatusEl = document.getElementById('auth-status');
+            authStatusEl.className = 'auth-status-error';
+            authStatusEl.innerHTML = `
+                <strong>Authentication timed out</strong>
+                <p>The authentication process took too long. Please try again or refresh the page.</p>
+                <button onclick="location.reload()" class="homey-button-primary" style="margin-top: 10px;">Refresh Page</button>
+            `;
         }
     }, MAX_POLL_TIME);
 
@@ -181,13 +315,25 @@ document.getElementById('start-link').addEventListener('click', async () => {
         showLoading(true);
         document.getElementById('error').style.display = 'none';
 
+        // Update step indicators - step 1 is active
+        updateStepStatus(1, 'active');
+        updateStepStatus(2, 'pending');
+        updateStepStatus(3, 'pending');
+
         const result = await Homey.emit('get_link');
 
         showLoading(false);
         document.getElementById('link-container').style.display = 'block';
 
+        // Hide the start link button as it's no longer needed
+        document.getElementById('start-link').style.display = 'none';
+
         const enodeLink = document.getElementById('enode-link');
         enodeLink.href = result.linkUrl;
+
+        // Mark step 1 as completed and step 2 as active
+        updateStepStatus(1, 'completed');
+        updateStepStatus(2, 'active');
 
         // Open the link in a new window when generated
         enodeLink.addEventListener('click', () => {
@@ -196,6 +342,7 @@ document.getElementById('start-link').addEventListener('click', async () => {
         });
     } catch (error) {
         showLoading(false);
+        updateStepStatus(1, 'active'); // Reset to step 1
         showError(error.message || 'Failed to generate link');
     }
 });
@@ -206,6 +353,21 @@ document.getElementById('continue').addEventListener('click', () => {
         showError('Please complete the authentication process first');
         return;
     }
-    Homey.showView('list_devices');
+
+    // Mark step 3 as completed before proceeding
+    updateStepStatus(3, 'completed');
+
+    // Show a brief completion message
+    const authStatusEl = document.getElementById('auth-status');
+    authStatusEl.className = 'auth-status-success';
+    authStatusEl.innerHTML = `
+        <strong>✓ All steps completed!</strong>
+        <p>Proceeding to vehicle selection...</p>
+    `;
+
+    // Proceed to the next view after a short delay to show completion
+    setTimeout(() => {
+        Homey.showView('list_devices');
+    }, 1000);
 });
 </script>
