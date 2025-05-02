@@ -65,8 +65,16 @@
         <a id="enode-link" class="homey-button-primary" target="_blank" rel="noopener noreferrer">
             Connect Vehicle
         </a>
+        <div id="auth-status" style="margin-top: 20px; display: none;">
+            <p>Waiting for authentication to complete...</p>
+            <div class="homey-loading">
+                <div class="homey-loading-circle"></div>
+                <div class="homey-loading-circle"></div>
+                <div class="homey-loading-circle"></div>
+            </div>
+        </div>
         <p style="margin-top: 20px;">After connecting your vehicle, click continue:</p>
-        <button id="continue" class="homey-button-primary">Continue</button>
+        <button id="continue" class="homey-button-primary" disabled>Continue</button>
     </div>
 
     <button id="start-link" class="homey-button-primary">Generate Connection Link</button>
@@ -113,6 +121,61 @@ function showLoading(show) {
 // Check credentials immediately
 checkCredentials();
 
+// Poll for authentication status
+let authCheckInterval = null;
+const MAX_POLL_TIME = 300000; // 5 minutes
+const POLL_INTERVAL = 5000; // 5 seconds
+
+async function checkAuthStatus() {
+    try {
+        const status = await Homey.emit('check_auth_status');
+        console.log('Auth status check:', status);
+
+        if (status && status.isAuthenticated) {
+            // Authentication successful
+            clearInterval(authCheckInterval);
+            document.getElementById('auth-status').innerHTML = '<p style="color: #2e7d32;">✓ Authentication successful! Vehicle connected.</p>';
+            document.getElementById('continue').disabled = false;
+            return true;
+        }
+        return false;
+    } catch (error) {
+        console.error('Error checking auth status:', error);
+        return false;
+    }
+}
+
+// Start polling for authentication status
+function startAuthStatusPolling() {
+    // Show the auth status indicator
+    document.getElementById('auth-status').style.display = 'block';
+
+    // Clear any existing interval
+    if (authCheckInterval) {
+        clearInterval(authCheckInterval);
+    }
+
+    // Set a timeout to stop polling after MAX_POLL_TIME
+    const pollTimeout = setTimeout(() => {
+        if (authCheckInterval) {
+            clearInterval(authCheckInterval);
+            document.getElementById('auth-status').innerHTML =
+                '<p style="color: #c62828;">Authentication timed out. Please try again or refresh the page.</p>';
+        }
+    }, MAX_POLL_TIME);
+
+    // Start polling
+    authCheckInterval = setInterval(async () => {
+        const success = await checkAuthStatus();
+        if (success) {
+            clearTimeout(pollTimeout);
+        }
+    }, POLL_INTERVAL);
+
+    // Do an immediate check
+    checkAuthStatus();
+}
+
 document.getElementById('start-link').addEventListener('click', async () => {
     try {
         showLoading(true);
@@ -125,6 +188,12 @@ document.getElementById('start-link').addEventListener('click', async () => {
 
         const enodeLink = document.getElementById('enode-link');
         enodeLink.href = result.linkUrl;
+
+        // Open the link in a new window when generated
+        enodeLink.addEventListener('click', () => {
+            // Start polling for authentication status after user clicks the link
+            startAuthStatusPolling();
+        });
     } catch (error) {
         showLoading(false);
         showError(error.message || 'Failed to generate link');
@@ -132,6 +201,11 @@ document.getElementById('start-link').addEventListener('click', async () => {
 });
 
 document.getElementById('continue').addEventListener('click', () => {
+    // Only proceed if authentication is confirmed
+    if (document.getElementById('continue').disabled) {
+        showError('Please complete the authentication process first');
+        return;
+    }
     Homey.showView('list_devices');
 });
 </script>

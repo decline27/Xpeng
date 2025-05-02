@@ -381,6 +381,43 @@ class XpengDriver extends Homey.Driver {
       }
     });
 
+    // Add a handler to check if the user has authenticated vehicles
+    session.setHandler('check_auth_status', async () => {
+      try {
+        // Get the installation ID to create a unique identifier
+        const installationId = this.homey.settings.get('installation_id');
+        if (!installationId) {
+          // Generate and save a unique installation ID if not already set
+          const newInstallationId = Date.now().toString();
+          this.homey.settings.set('installation_id', newInstallationId);
+        }
+
+        // Get the Homey ID and installation ID to create a unique user ID
+        const homeyId = this.homey.id || 'homey';
+        const userId = `homey-${homeyId}-${installationId || Date.now().toString()}`;
+
+        // Fetch vehicles from Enode API
+        const allVehicles = await this.enodeApi.getVehicles();
+
+        // Filter vehicles by user ID
+        const userVehicles = allVehicles.filter(vehicle =>
+          vehicle.userId === userId ||
+          (vehicle.user && vehicle.user.id === userId)
+        );
+
+        this.log(`Auth status check: Found ${userVehicles.length} vehicles for user ID ${userId}`);
+
+        // Return authentication status
+        return {
+          isAuthenticated: userVehicles.length > 0,
+          vehicleCount: userVehicles.length
+        };
+      } catch (error) {
+        this.error('Error checking authentication status:', error);
+        return { isAuthenticated: false, vehicleCount: 0 };
+      }
+    });
+
     session.setHandler('get_link', async () => {
       try {
         if (!savedCredentials && !this.clientId && !this.clientSecret) {
