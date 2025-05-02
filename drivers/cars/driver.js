@@ -534,9 +534,20 @@ class XpengDriver extends Homey.Driver {
           this.log(`Using ${vinFilteredVehicles.length} vehicles matching authorized VINs`);
           vehicles = vinFilteredVehicles;
         } else {
-          this.log(`No vehicles found specifically for user ID ${userId} or matching authorized VINs. This might be during initial pairing.`);
-          // During initial pairing, we might need to show all vehicles
-          // The user will only be able to select their own vehicles
+          this.log(`No vehicles found specifically for user ID ${userId} or matching authorized VINs. Returning empty list for security.`);
+          // SECURITY IMPROVEMENT: Never show all vehicles, even during initial pairing
+          // Instead, we'll throw a helpful error message below when vehicles.length is 0
+          vehicles = [];
+        }
+
+        // Check if we have any vehicles to show
+        if (vehicles.length === 0) {
+          throw new Error(
+            'No XPENG vehicles found. Please make sure you have:\n\n' +
+            '1. Completed the connection process by clicking the link and authorizing in your browser\n' +
+            '2. Waited a few minutes for the connection to be established\n' +
+            '3. If problems persist, try clicking "Generate Connection Link" again'
+          );
         }
 
         // Group vehicles by VIN to detect duplicates
@@ -614,8 +625,10 @@ class XpengDriver extends Homey.Driver {
         // Special handling for common vehicle discovery issues
         if (error.message.includes('vehicles found') || error.message.includes('No vehicles')) {
           throw new Error(
-            'No XPENG vehicles found. Please ensure you have completed the connection in your browser ' +
-            'and that your vehicle is properly registered with Enode.'
+            'No XPENG vehicles found. Please make sure you have:\n\n' +
+            '1. Completed the connection process by clicking the link and authorizing in your browser\n' +
+            '2. Waited a few minutes for the connection to be established\n' +
+            '3. If problems persist, try clicking "Generate Connection Link" again'
           );
         } else if (handled.type === ErrorHandler.ErrorTypes.AUTHENTICATION) {
           throw new Error(
