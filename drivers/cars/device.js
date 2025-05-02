@@ -53,7 +53,7 @@ class XpengCarDevice extends Homey.Device {
       this.oAuth2Client = new EnodeOAuth2({
         clientId: clientId,
         clientSecret: clientSecret,
-        redirectUri: 'https://callback.athom.com/oauth2/callback',
+        redirectUri: 'https://homey.app/oauth/close.html',
         homey: this.homey,
         logger: this
       });
