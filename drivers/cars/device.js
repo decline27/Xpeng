@@ -2,6 +2,7 @@ const Homey = require('homey');
 const EnodeAPI = require('../../lib/enode-api');
 const EnodeOAuth2 = require('../../lib/enode-oauth');
 const VehicleStore = require('../../lib/vehicle-store');
+const AccountManager = require('../../lib/account-manager');
 
 class XpengCarDevice extends Homey.Device {
   async onInit() {
@@ -12,6 +13,7 @@ class XpengCarDevice extends Homey.Device {
       this.log('XPeng device has been initialized');
       this.enodeApi = new EnodeAPI(this.homey);
       this.vehicleStore = new VehicleStore(this);
+      this.accountManager = new AccountManager(this.homey);
 
       // Get device data and log it for debugging
       const deviceData = this.getData();
@@ -64,14 +66,27 @@ class XpengCarDevice extends Homey.Device {
         this.log('Loaded OAuth2 token data from device store');
       }
 
+      // Store the account ID if available
+      // Use the existing deviceData variable
+      let accountId = this.getStoreValue('accountId');
+
+      // If we have a VIN, check which account it belongs to
+      if (deviceData.vin && !accountId) {
+        accountId = this.accountManager.getVehicleAccount(deviceData.vin);
+        if (accountId) {
+          this.log(`Found account ${accountId} for vehicle with VIN ${deviceData.vin}`);
+          await this.setStoreValue('accountId', accountId);
+        }
+      }
+
       // Verify the vehicle ID with Enode API
       try {
+        // Get vehicles from the appropriate account or all accounts
         const vehicles = await this.enodeApi.getVehicles();
         const vehicle = vehicles.find(v => v.id === this.vehicleId);
 
         if (!vehicle) {
-          // Get the VIN from device data
-          const deviceData = this.getData();
+          // Get the VIN from device data (using existing deviceData variable)
           const vin = deviceData.vin;
 
           // If we have a VIN, try to find the vehicle by VIN
@@ -258,6 +273,12 @@ class XpengCarDevice extends Homey.Device {
         useRefresh = true;
       }
 
+      // Get the account ID for this vehicle
+      const accountId = this.getStoreValue('accountId');
+      if (accountId) {
+        this.log(`Using account ${accountId} for vehicle ${vehicleId}`);
+      }
+
       // Get data with or without refresh
       let data;
       if (useRefresh) {
@@ -265,10 +286,21 @@ class XpengCarDevice extends Homey.Device {
         // Only fallback to getVehicleData if refreshVehicleData returned null
         if (!data) {
           this.log('Refresh failed, using regular vehicle data fetch');
-          data = await this.enodeApi.getVehicleData(vehicleId);
+          data = await this.enodeApi.getVehicleData(vehicleId, accountId);
         }
       } else {
-        data = await this.enodeApi.getVehicleData(vehicleId);
+        data = await this.enodeApi.getVehicleData(vehicleId, accountId);
+      }
+
+      // If we got data and have a VIN but no account ID, store the account mapping
+      if (data && data.information?.vin && !accountId) {
+        const vin = data.information.vin;
+        // If the vehicle has an _accountId property, use it
+        if (data._accountId) {
+          this.log(`Storing account ${data._accountId} for vehicle with VIN ${vin}`);
+          this.accountManager.setVehicleAccount(vin, data._accountId);
+          await this.setStoreValue('accountId', data._accountId);
+        }
       }
 
       if (!data) {
@@ -568,7 +600,14 @@ class XpengCarDevice extends Homey.Device {
         throw new Error('Missing vehicle ID');
       }
 
-      this.log('Starting charging for vehicle:', vehicleId);
+      // Get the account ID for this vehicle
+      const accountId = this.getStoreValue('accountId');
+      if (accountId) {
+        this.log(`Starting charging for vehicle ${vehicleId} using account ${accountId}`);
+      } else {
+        this.log('Starting charging for vehicle:', vehicleId);
+      }
+
       await this.enodeApi.startCharging(vehicleId);
       await this.pollVehicleData(); // Update device status
     } catch (error) {
@@ -608,7 +647,14 @@ class XpengCarDevice extends Homey.Device {
         throw new Error('Missing vehicle ID');
       }
 
-      this.log('Stopping charging for vehicle:', vehicleId);
+      // Get the account ID for this vehicle
+      const accountId = this.getStoreValue('accountId');
+      if (accountId) {
+        this.log(`Stopping charging for vehicle ${vehicleId} using account ${accountId}`);
+      } else {
+        this.log('Stopping charging for vehicle:', vehicleId);
+      }
+
       await this.enodeApi.stopCharging(vehicleId);
       await this.pollVehicleData(); // Update device status
     } catch (error) {
