@@ -1,6 +1,7 @@
 const Homey = require('homey');
 const EnodeAPI = require('../../lib/enode-api');
 const EnodeOAuth2 = require('../../lib/enode-oauth');
+const AccountManager = require('../../lib/account-manager');
 
 class XpengDriver extends Homey.Driver {
   async onInit() {
@@ -9,16 +10,23 @@ class XpengDriver extends Homey.Driver {
     // Initialize API clients
     this.enodeApi = new EnodeAPI(this.homey);
 
-    // Initialize driver storage and log current values
-    this.clientId = this.homey.settings.get('enode_client_id') || Homey.env.ENODE_CLIENT_ID;
-    this.clientSecret = this.homey.settings.get('enode_client_secret') || Homey.env.ENODE_CLIENT_SECRET;
+    // Initialize account manager
+    this.accountManager = new AccountManager(this.homey);
 
-    this.log('Current stored credentials status:', {
-      hasClientId: !!this.clientId,
-      hasClientSecret: !!this.clientSecret
+    // Check account status
+    const accountStatus = this.accountManager.checkAccountsStatus();
+    this.log('Enode accounts status:', {
+      primaryConfigured: accountStatus.primaryConfigured,
+      secondaryConfigured: accountStatus.secondaryConfigured,
+      defaultAccount: this.accountManager.getDefaultAccount()
     });
 
-    // Initialize OAuth2 client
+    // Get credentials for the default account
+    const credentials = this.accountManager.getCredentials();
+    this.clientId = credentials.clientId;
+    this.clientSecret = credentials.clientSecret;
+
+    // Initialize OAuth2 client with default account credentials
     this.oAuth2Client = new EnodeOAuth2({
       clientId: this.clientId,
       clientSecret: this.clientSecret,
@@ -449,10 +457,13 @@ class XpengDriver extends Homey.Driver {
 
         // Create a more unique user ID by combining Homey ID and installation ID
         const userId = `homey-${homeyId}-${installationId}`;
-        this.log('Using user ID for vehicle link:', userId);
 
-        // Generate the vehicle link using OAuth2 client
-        const linkUrl = await this.oAuth2Client.generateAuthUrl(userId);
+        // Get the default account for new vehicles
+        const defaultAccount = this.accountManager.getDefaultAccount();
+        this.log(`Using user ID for vehicle link: ${userId} with account: ${defaultAccount}`);
+
+        // Generate the vehicle link using the default account
+        const linkUrl = await this.enodeApi.generateVehicleLink(userId, defaultAccount);
         return { linkUrl };
       } catch (error) {
         // Use ErrorHandler for better error messages
@@ -736,18 +747,20 @@ class XpengDriver extends Homey.Driver {
 
   /**
    * Get stored credentials from env.json or Homey settings
+   * @param {string} accountId - Optional account ID to get credentials for
    * @returns {Object} The credentials object
    */
-  getStoredCredentials() {
-    const clientId = Homey.env.ENODE_CLIENT_ID || this.homey.settings.get('enode_client_id');
-    const clientSecret = Homey.env.ENODE_CLIENT_SECRET || this.homey.settings.get('enode_client_secret');
+  getStoredCredentials(accountId = null) {
+    // Use the account manager to get credentials
+    const credentials = this.accountManager.getCredentials(accountId);
 
-    this.log('Getting stored credentials:', {
-      hasClientId: !!clientId,
-      hasClientSecret: !!clientSecret
+    this.log(`Getting stored credentials for account ${accountId || 'default'}:`, {
+      hasClientId: !!credentials.clientId,
+      hasClientSecret: !!credentials.clientSecret,
+      accountId: credentials.accountId
     });
 
-    return { clientId, clientSecret };
+    return credentials;
   }
 
   /**

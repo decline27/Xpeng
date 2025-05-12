@@ -130,5 +130,11 @@
   },
   "1.2.44": {
     "en": "enode bug fix"
+  },
+  "1.2.45": {
+    "en": "Bug fixes"
+  },
+  "1.2.46": {
+    "en": "updated the enode flow"
   }
 }
