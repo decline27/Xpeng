@@ -54,8 +54,8 @@ module.exports = class XPengApp extends Homey.App {
         const primaryClientId = Homey.env.ENODE_CLIENT_ID || this.homey.settings.get('enode_client_id');
         const primaryClientSecret = Homey.env.ENODE_CLIENT_SECRET || this.homey.settings.get('enode_client_secret');
 
-        const secondaryClientId = Homey.env.ENODE_CLIENT_ID_SECONDARY || this.homey.settings.get('enode_client_id_secondary') || '92a84316-6eed-462b-98f2-e212d3f0cd17';
-        const secondaryClientSecret = Homey.env.ENODE_CLIENT_SECRET_SECONDARY || this.homey.settings.get('enode_client_secret_secondary') || '37c3a47b2f0153b9e4958661634c098ccbd15621';
+        const secondaryClientId = Homey.env.ENODE_CLIENT_ID_SECONDARY || this.homey.settings.get('enode_client_id_secondary');
+        const secondaryClientSecret = Homey.env.ENODE_CLIENT_SECRET_SECONDARY || this.homey.settings.get('enode_client_secret_secondary');
 
         // Add primary client if credentials exist
         if (primaryClientId && primaryClientSecret) {
@@ -67,6 +67,8 @@ module.exports = class XPengApp extends Homey.App {
             true
           );
           Logger.log('Primary Enode client initialized');
+        } else {
+          Logger.warn('Primary Enode client credentials not found in env.json or settings');
         }
 
         // Add secondary client if credentials exist
@@ -79,10 +81,13 @@ module.exports = class XPengApp extends Homey.App {
             true
           );
           Logger.log('Secondary Enode client initialized');
+        } else {
+          Logger.warn('Secondary Enode client credentials not found in env.json or settings');
         }
 
         // Check for additional clients in env.json (format: ENODE_CLIENT_ID_3, ENODE_CLIENT_SECRET_3, etc.)
         // This allows for unlimited clients to be added
+        let additionalClientsFound = false;
         for (let i = 3; i <= 10; i++) {
           const clientIdKey = `ENODE_CLIENT_ID_${i}`;
           const clientSecretKey = `ENODE_CLIENT_SECRET_${i}`;
@@ -99,7 +104,12 @@ module.exports = class XPengApp extends Homey.App {
               false
             );
             Logger.log(`Additional Enode client ${i} initialized`);
+            additionalClientsFound = true;
           }
+        }
+
+        if (!additionalClientsFound) {
+          Logger.log('No additional Enode clients found in env.json');
         }
 
         // Check client status
