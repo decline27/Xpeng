@@ -2,7 +2,7 @@ const Homey = require('homey');
 const EnodeAPI = require('../../lib/enode-api');
 const EnodeOAuth2 = require('../../lib/enode-oauth');
 const VehicleStore = require('../../lib/vehicle-store');
-const AccountManager = require('../../lib/account-manager');
+const ClientManager = require('../../lib/client-manager');
 
 class XpengCarDevice extends Homey.Device {
   async onInit() {
@@ -13,7 +13,7 @@ class XpengCarDevice extends Homey.Device {
       this.log('XPeng device has been initialized');
       this.enodeApi = new EnodeAPI(this.homey);
       this.vehicleStore = new VehicleStore(this);
-      this.accountManager = new AccountManager(this.homey);
+      this.clientManager = new ClientManager(this.homey);
 
       // Get device data and log it for debugging
       const deviceData = this.getData();
@@ -66,16 +66,17 @@ class XpengCarDevice extends Homey.Device {
         this.log('Loaded OAuth2 token data from device store');
       }
 
-      // Store the account ID if available
+      // Store the client ID if available
       // Use the existing deviceData variable
-      let accountId = this.getStoreValue('accountId');
+      const deviceClientId = deviceData.clientId || this.getStoreValue('clientId');
 
-      // If we have a VIN, check which account it belongs to
-      if (deviceData.vin && !accountId) {
-        accountId = this.accountManager.getVehicleAccount(deviceData.vin);
-        if (accountId) {
-          this.log(`Found account ${accountId} for vehicle with VIN ${deviceData.vin}`);
-          await this.setStoreValue('accountId', accountId);
+      // If we have a VIN, check which client it belongs to
+      let finalClientId = deviceClientId;
+      if (deviceData.vin && !finalClientId) {
+        finalClientId = this.clientManager.getVehicleClient(deviceData.vin);
+        if (finalClientId) {
+          this.log(`Found client ${finalClientId} for vehicle with VIN ${deviceData.vin}`);
+          await this.setStoreValue('clientId', finalClientId);
         }
       }
 
@@ -273,10 +274,10 @@ class XpengCarDevice extends Homey.Device {
         useRefresh = true;
       }
 
-      // Get the account ID for this vehicle
-      const accountId = this.getStoreValue('accountId');
-      if (accountId) {
-        this.log(`Using account ${accountId} for vehicle ${vehicleId}`);
+      // Get the client ID for this vehicle
+      const clientId = this.getData().clientId || this.getStoreValue('clientId');
+      if (clientId) {
+        this.log(`Using client ${clientId} for vehicle ${vehicleId}`);
       }
 
       // Get data with or without refresh
@@ -286,20 +287,20 @@ class XpengCarDevice extends Homey.Device {
         // Only fallback to getVehicleData if refreshVehicleData returned null
         if (!data) {
           this.log('Refresh failed, using regular vehicle data fetch');
-          data = await this.enodeApi.getVehicleData(vehicleId, accountId);
+          data = await this.enodeApi.getVehicleData(vehicleId, clientId);
         }
       } else {
-        data = await this.enodeApi.getVehicleData(vehicleId, accountId);
+        data = await this.enodeApi.getVehicleData(vehicleId, clientId);
       }
 
-      // If we got data and have a VIN but no account ID, store the account mapping
-      if (data && data.information?.vin && !accountId) {
+      // If we got data and have a VIN but no client ID, store the client mapping
+      if (data && data.information?.vin && !clientId) {
         const vin = data.information.vin;
-        // If the vehicle has an _accountId property, use it
-        if (data._accountId) {
-          this.log(`Storing account ${data._accountId} for vehicle with VIN ${vin}`);
-          this.accountManager.setVehicleAccount(vin, data._accountId);
-          await this.setStoreValue('accountId', data._accountId);
+        // If the vehicle has an _clientId property, use it
+        if (data._clientId) {
+          this.log(`Storing client ${data._clientId} for vehicle with VIN ${vin}`);
+          this.clientManager.setVehicleClient(vin, data._clientId);
+          await this.setStoreValue('clientId', data._clientId);
         }
       }
 
@@ -600,10 +601,10 @@ class XpengCarDevice extends Homey.Device {
         throw new Error('Missing vehicle ID');
       }
 
-      // Get the account ID for this vehicle
-      const accountId = this.getStoreValue('accountId');
-      if (accountId) {
-        this.log(`Starting charging for vehicle ${vehicleId} using account ${accountId}`);
+      // Get the client ID for this vehicle
+      const clientId = this.getData().clientId || this.getStoreValue('clientId');
+      if (clientId) {
+        this.log(`Starting charging for vehicle ${vehicleId} using client ${clientId}`);
       } else {
         this.log('Starting charging for vehicle:', vehicleId);
       }
@@ -647,10 +648,10 @@ class XpengCarDevice extends Homey.Device {
         throw new Error('Missing vehicle ID');
       }
 
-      // Get the account ID for this vehicle
-      const accountId = this.getStoreValue('accountId');
-      if (accountId) {
-        this.log(`Stopping charging for vehicle ${vehicleId} using account ${accountId}`);
+      // Get the client ID for this vehicle
+      const clientId = this.getData().clientId || this.getStoreValue('clientId');
+      if (clientId) {
+        this.log(`Stopping charging for vehicle ${vehicleId} using client ${clientId}`);
       } else {
         this.log('Stopping charging for vehicle:', vehicleId);
       }
@@ -834,7 +835,8 @@ class XpengCarDevice extends Homey.Device {
   }
 
   // Device#onSettings to handle changes in settings
-  async onSettings({ oldSettings, newSettings, changedKeys }) {
+  async onSettings({ oldSettings, newSettings, changedKeys, options }) {
+    // Handle update interval changes
     if (changedKeys.includes('updateInterval')) {
       // Update settings and reconfigure adaptive polling
       this.updateInterval = parseInt(newSettings.updateInterval) || 10;
@@ -845,6 +847,88 @@ class XpengCarDevice extends Homey.Device {
 
       // Do an immediate poll with the new settings
       await this.pollVehicleData();
+    }
+
+    // Handle button clicks
+    if (options && options.button === 'removeVehicleAssociation') {
+      this.log('Remove Vehicle Association button clicked');
+
+      try {
+        // Get the vehicle VIN
+        const deviceData = this.getData();
+        const staticData = this.vehicleStore.getStaticData();
+        const vin = staticData?.vehicleVin || deviceData.vin;
+
+        if (!vin) {
+          this.error('Cannot remove vehicle association: VIN not found');
+          return {
+            success: false,
+            message: 'Cannot remove vehicle association: VIN not found'
+          };
+        }
+
+        this.log(`Removing association for vehicle with VIN: ${vin}`);
+
+        // Get current authorized VINs
+        const authorizedVins = this.homey.settings.get('authorized_vins') || [];
+
+        // Remove this VIN from the list
+        const updatedVins = authorizedVins.filter(v => v !== vin);
+
+        // Update the authorized VINs in settings
+        this.homey.settings.set('authorized_vins', updatedVins);
+        this.log(`Removed VIN ${vin} from authorized list. Remaining authorized VINs: ${updatedVins.length}`);
+
+        // Clear vehicle-to-client mapping if ClientManager is available
+        if (this.clientManager) {
+          try {
+            const mappingKey = this.clientManager.SETTINGS_KEYS.VEHICLE_CLIENT_MAPPING;
+            const mapping = this.homey.settings.get(mappingKey) || {};
+            if (mapping[vin]) {
+              delete mapping[vin];
+              this.homey.settings.set(mappingKey, mapping);
+              this.log(`Removed client mapping for VIN ${vin}`);
+            }
+          } catch (clientError) {
+            this.error('Error removing client mapping:', clientError);
+          }
+        }
+
+        // Clear vehicle-to-account mapping if it exists
+        try {
+          const accountMapping = this.homey.settings.get('vehicle_account_mapping') || {};
+          if (accountMapping[vin]) {
+            delete accountMapping[vin];
+            this.homey.settings.set('vehicle_account_mapping', accountMapping);
+            this.log(`Removed account mapping for VIN ${vin}`);
+          }
+        } catch (accountError) {
+          this.error('Error removing account mapping:', accountError);
+        }
+
+        // Clear cached data in VehicleStore
+        if (this.vehicleStore) {
+          this.vehicleStore.clearCache();
+          this.log('Cleared vehicle store cache');
+        }
+
+        // Clear any cached data in the API client
+        if (this.enodeApi && this.enodeApi.requestCache) {
+          this.enodeApi.requestCache.clear('vehicles');
+          this.log('Cleared API request cache');
+        }
+
+        return {
+          success: true,
+          message: `Successfully removed vehicle association for VIN ${vin}`
+        };
+      } catch (error) {
+        this.error('Error removing vehicle association:', error);
+        return {
+          success: false,
+          message: `Failed to remove vehicle association: ${error.message}`
+        };
+      }
     }
   }
 }
