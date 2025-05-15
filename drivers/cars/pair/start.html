@@ -107,6 +107,12 @@
         <p>This app uses Enode's secure API to connect to your XPENG vehicle. Your vehicle credentials are stored securely and are only used to communicate with your vehicle.</p>
     </div>
 
+    <div class="info-message" style="background-color: #e8f5e9;">
+        <p><strong>Manage Existing Vehicles</strong></p>
+        <p>If you need to remove an existing vehicle association, you can do so by clicking the button below:</p>
+        <button id="manage-associations" class="homey-button" style="margin-top: 10px;">Manage Vehicle Associations</button>
+    </div>
+
     <div id="credentials-status" class="credentials-status"></div>
 
     <div class="error-message" id="error"></div>
@@ -213,6 +219,11 @@ function showLoading(show) {
 
 // Check credentials immediately
 checkCredentials();
+
+// Add event listener for manage associations button
+document.getElementById('manage-associations').addEventListener('click', function() {
+    Homey.showView('manage_associations');
+});
 
 // Function to update step status
 function updateStepStatus(stepNumber, status) {

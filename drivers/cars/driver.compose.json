@@ -34,14 +34,22 @@
     {
       "id": "start",
       "navigation": {
-        "next": "list_devices"
+        "next": "manage_associations"
+      }
+    },
+    {
+      "id": "manage_associations",
+      "navigation": {
+        "next": "list_devices",
+        "prev": "start"
       }
     },
     {
       "id": "list_devices",
       "template": "list_devices",
       "navigation": {
-        "next": "add_devices"
+        "next": "add_devices",
+        "prev": "manage_associations"
       }
     },
     {

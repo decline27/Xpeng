@@ -312,6 +312,140 @@ class XpengDriver extends Homey.Driver {
     // Log pairing start
     this.log('Starting XPENG pairing process');
 
+    // Handler for getting vehicle associations
+    session.setHandler('get_vehicle_associations', async () => {
+      try {
+        this.log('Getting vehicle associations');
+
+        // Get authorized VINs from settings
+        const authorizedVins = this.homey.settings.get('authorized_vins') || [];
+        this.log(`Found ${authorizedVins.length} authorized VINs in settings`);
+
+        // Get vehicle details for each VIN
+        const vehicles = [];
+
+        // If we have authorized VINs, try to get more details for each
+        if (authorizedVins.length > 0) {
+          try {
+            // Try to get vehicles from Enode API
+            const allVehicles = await this.enodeApi.getVehicles();
+
+            // Match vehicles with authorized VINs
+            for (const vin of authorizedVins) {
+              const matchingVehicle = allVehicles.find(v => v.information?.vin === vin);
+
+              if (matchingVehicle) {
+                vehicles.push({
+                  vin: vin,
+                  brand: matchingVehicle.information?.brand || 'XPENG',
+                  model: matchingVehicle.information?.model || '',
+                  year: matchingVehicle.information?.year || ''
+                });
+              } else {
+                // If we can't find details, just add the VIN
+                vehicles.push({
+                  vin: vin,
+                  brand: 'XPENG',
+                  model: '',
+                  year: ''
+                });
+              }
+            }
+          } catch (error) {
+            this.error('Error getting vehicle details from Enode API:', error);
+
+            // Fallback: Just use the VINs without additional details
+            for (const vin of authorizedVins) {
+              vehicles.push({
+                vin: vin,
+                brand: 'XPENG',
+                model: '',
+                year: ''
+              });
+            }
+          }
+        }
+
+        return { vehicles };
+      } catch (error) {
+        this.error('Error getting vehicle associations:', error);
+        throw new Error('Failed to get vehicle associations: ' + error.message);
+      }
+    });
+
+    // Handler for removing vehicle association
+    session.setHandler('remove_vehicle_association', async (data) => {
+      try {
+        const vin = data.vin;
+
+        if (!vin) {
+          throw new Error('VIN is required');
+        }
+
+        this.log(`Removing association for vehicle with VIN: ${vin}`);
+
+        // Get current authorized VINs
+        const authorizedVins = this.homey.settings.get('authorized_vins') || [];
+
+        // Check if VIN exists in the list
+        if (!authorizedVins.includes(vin)) {
+          return {
+            success: false,
+            message: `VIN ${vin} not found in authorized list`
+          };
+        }
+
+        // Remove this VIN from the list
+        const updatedVins = authorizedVins.filter(v => v !== vin);
+
+        // Update the authorized VINs in settings
+        this.homey.settings.set('authorized_vins', updatedVins);
+        this.log(`Removed VIN ${vin} from authorized list. Remaining authorized VINs: ${updatedVins.length}`);
+
+        // Clear vehicle-to-client mapping if ClientManager is available
+        try {
+          const mappingKey = this.clientManager.SETTINGS_KEYS.VEHICLE_CLIENT_MAPPING;
+          const mapping = this.homey.settings.get(mappingKey) || {};
+          if (mapping[vin]) {
+            delete mapping[vin];
+            this.homey.settings.set(mappingKey, mapping);
+            this.log(`Removed client mapping for VIN ${vin}`);
+          }
+        } catch (clientError) {
+          this.error('Error removing client mapping:', clientError);
+        }
+
+        // Clear vehicle-to-account mapping if it exists
+        try {
+          const accountMapping = this.homey.settings.get('vehicle_account_mapping') || {};
+          if (accountMapping[vin]) {
+            delete accountMapping[vin];
+            this.homey.settings.set('vehicle_account_mapping', accountMapping);
+            this.log(`Removed account mapping for VIN ${vin}`);
+          }
+        } catch (accountError) {
+          this.error('Error removing account mapping:', accountError);
+        }
+
+        // Clear any cached data in the API client
+        if (this.enodeApi && this.enodeApi.requestCache) {
+          this.enodeApi.requestCache.clear('vehicles');
+          this.log('Cleared API request cache');
+        }
+
+        return {
+          success: true,
+          message: `Successfully removed vehicle association for VIN ${vin}`
+        };
+      } catch (error) {
+        this.error('Error removing vehicle association:', error);
+        return {
+          success: false,
+          message: `Failed to remove vehicle association: ${error.message}`
+        };
+      }
+    });
+
     // Handler to get stored credentials status (not the actual credentials)
     session.setHandler('get_stored_credentials', async () => {
       const storedClientId = this.homey.settings.get('enode_client_id') || Homey.env.ENODE_CLIENT_ID;
