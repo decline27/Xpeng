@@ -1,7 +1,7 @@
 {
   "_comment": "This file is generated. Please edit .homeycompose/app.json instead.",
   "id": "com.xpeng.car",
-  "version": "1.2.46",
+  "version": "1.2.47",
   "compatibility": ">=12.2.0",
   "sdk": 3,
   "platforms": [
@@ -792,6 +792,25 @@
               },
               "hint": {
                 "en": "How often to update vehicle data (10-60 minutes)"
+              }
+            }
+          ]
+        },
+        {
+          "type": "group",
+          "label": {
+            "en": "Advanced Settings"
+          },
+          "children": [
+            {
+              "id": "removeVehicleAssociation",
+              "type": "checkbox",
+              "label": {
+                "en": "Remove Vehicle Association"
+              },
+              "value": false,
+              "hint": {
+                "en": "Check and save to remove this vehicle's association with your account (for testing purposes only)"
               }
             }
           ]

@@ -1,7 +1,7 @@
 const Homey = require('homey');
 const EnodeAPI = require('../../lib/enode-api');
 const EnodeOAuth2 = require('../../lib/enode-oauth');
-const AccountManager = require('../../lib/account-manager');
+const ClientManager = require('../../lib/client-manager');
 
 class XpengDriver extends Homey.Driver {
   async onInit() {
@@ -10,21 +10,18 @@ class XpengDriver extends Homey.Driver {
     // Initialize API clients
     this.enodeApi = new EnodeAPI(this.homey);
 
-    // Initialize account manager
-    this.accountManager = new AccountManager(this.homey);
+    // Initialize client manager
+    this.clientManager = new ClientManager(this.homey);
 
-    // Check account status
-    const accountStatus = this.accountManager.checkAccountsStatus();
-    this.log('Enode accounts status:', {
-      primaryConfigured: accountStatus.primaryConfigured,
-      secondaryConfigured: accountStatus.secondaryConfigured,
-      defaultAccount: this.accountManager.getDefaultAccount()
-    });
-
-    // Get credentials for the default account
-    const credentials = this.accountManager.getCredentials();
+    // Get credentials for the default client
+    const credentials = this.clientManager.getClientCredentials();
     this.clientId = credentials.clientId;
     this.clientSecret = credentials.clientSecret;
+
+    this.log('Enode client status:', {
+      defaultClient: this.clientManager.getDefaultClient(),
+      clientIdentifier: credentials.clientIdentifier
+    });
 
     // Initialize OAuth2 client with default account credentials
     this.oAuth2Client = new EnodeOAuth2({
@@ -430,12 +427,14 @@ class XpengDriver extends Homey.Driver {
       try {
         if (!savedCredentials && !this.clientId && !this.clientSecret) {
           // Try to get credentials from settings if not saved in current session
-          this.clientId = this.homey.settings.get('enode_client_id') || Homey.env.ENODE_CLIENT_ID;
-          this.clientSecret = this.homey.settings.get('enode_client_secret') || Homey.env.ENODE_CLIENT_SECRET;
+          const credentials = this.clientManager.getClientCredentials();
+          this.clientId = credentials.clientId;
+          this.clientSecret = credentials.clientSecret;
 
           this.log('Retrieved credentials for link generation:', {
             hasClientId: !!this.clientId,
-            hasClientSecret: !!this.clientSecret
+            hasClientSecret: !!this.clientSecret,
+            clientIdentifier: credentials.clientIdentifier
           });
         }
 
@@ -458,12 +457,31 @@ class XpengDriver extends Homey.Driver {
         // Create a more unique user ID by combining Homey ID and installation ID
         const userId = `homey-${homeyId}-${installationId}`;
 
-        // Get the default account for new vehicles
-        const defaultAccount = this.accountManager.getDefaultAccount();
-        this.log(`Using user ID for vehicle link: ${userId} with account: ${defaultAccount}`);
+        // Try to use the secondary client first for new connections
+        // This helps distribute the load and avoid hitting the primary client's capacity
+        let clientId;
 
-        // Generate the vehicle link using the default account
-        const linkUrl = await this.enodeApi.generateVehicleLink(userId, defaultAccount);
+        // First try the secondary client
+        const secondaryCredentials = this.clientManager.getClientCredentials('secondary');
+        if (secondaryCredentials && secondaryCredentials.clientId && secondaryCredentials.clientSecret) {
+          clientId = 'secondary';
+          this.log('Using secondary client for new vehicle connection');
+        } else {
+          // If secondary client is not available, find any available client
+          clientId = this.clientManager.findAvailableClient();
+        }
+
+        if (!clientId) {
+          throw new Error('All clients have reached their capacity. Please add a new client.');
+        }
+
+        this.log(`Using user ID for vehicle link: ${userId} with client: ${clientId}`);
+
+        // Store the client ID used for this pairing session
+        this.homey.settings.set('last_pairing_client', clientId);
+
+        // Generate the vehicle link using the selected client
+        const linkUrl = await this.enodeApi.generateVehicleLink(userId, clientId);
         return { linkUrl };
       } catch (error) {
         // Use ErrorHandler for better error messages
@@ -598,9 +616,51 @@ class XpengDriver extends Homey.Driver {
           );
         }
 
-        // Group vehicles by VIN to detect duplicates
+        // Get all vehicles from all clients
+        const allClientsVehicles = await this.enodeApi.getVehicles(null, true);
+
+        // Apply filtering to all vehicles without deduplication
+        let filteredVehicles = [];
+
+        // First try user ID filtering
+        const userClientVehicles = allClientsVehicles.filter(vehicle =>
+          vehicle.userId === userId || (vehicle.user && vehicle.user.id === userId)
+        );
+
+        // Then try VIN filtering
+        const vinFilteredClientVehicles = authorizedVins.length > 0 ?
+          allClientsVehicles.filter(vehicle => authorizedVins.includes(vehicle.information?.vin)) :
+          [];
+
+        // Select the appropriate filtered list
+        if (userClientVehicles.length > 0) {
+          this.log(`Found ${userClientVehicles.length} vehicles for user ID ${userId}`);
+          filteredVehicles = userClientVehicles;
+
+          // Store VINs in authorized list if not already there
+          userClientVehicles.forEach(vehicle => {
+            const vin = vehicle.information?.vin;
+            if (vin && !authorizedVins.includes(vin)) {
+              authorizedVins.push(vin);
+              this.log(`Adding VIN ${vin} to authorized list from user ID match`);
+            }
+          });
+
+          // Update authorized VINs in settings
+          if (authorizedVins.length > 0) {
+            this.homey.settings.set('authorized_vins', authorizedVins);
+          }
+        } else if (vinFilteredClientVehicles.length > 0) {
+          this.log(`Found ${vinFilteredClientVehicles.length} vehicles matching authorized VINs`);
+          filteredVehicles = vinFilteredClientVehicles;
+        } else {
+          this.log(`No vehicles found for user ID ${userId} or matching authorized VINs`);
+          filteredVehicles = [];
+        }
+
+        // Group vehicles by VIN for logging purposes
         const vehiclesByVin = {};
-        vehicles.forEach(vehicle => {
+        filteredVehicles.forEach(vehicle => {
           const vin = vehicle.information?.vin;
           if (vin) {
             if (!vehiclesByVin[vin]) {
@@ -610,36 +670,46 @@ class XpengDriver extends Homey.Driver {
           }
         });
 
-        // For each VIN, select the most recently seen vehicle
-        const uniqueVehicles = [];
-        Object.values(vehiclesByVin).forEach(duplicates => {
-          // Sort by lastSeen date (most recent first)
-          duplicates.sort((a, b) => {
-            const dateA = new Date(a.lastSeen || 0);
-            const dateB = new Date(b.lastSeen || 0);
-            return dateB - dateA;
-          });
+        // Log all vehicles by VIN for debugging
+        this.log('All filtered vehicles by VIN:');
+        Object.entries(vehiclesByVin).forEach(([vin, instances]) => {
+          const clientInfo = instances.map(v => `${v._clientId || 'unknown'}:${v.id}`).join(', ');
+          this.log(`VIN ${vin}: ${instances.length} instances - ${clientInfo}`);
 
-          // Add the most recent vehicle
-          uniqueVehicles.push(duplicates[0]);
-
-          // Log if duplicates were found
-          if (duplicates.length > 1) {
-            this.log(`Found ${duplicates.length} vehicles with VIN ${duplicates[0].information?.vin}. Using the most recently seen one.`);
+          if (instances.length > 1) {
+            this.log(`Found ${instances.length} instances of vehicle with VIN ${vin} across clients (${instances.map(v => v._clientId || 'unknown').join(', ')}). Showing all instances.`);
           }
         });
+
+        // Use all filtered vehicles without deduplication
+        const uniqueVehicles = filteredVehicles;
 
         // Map unique vehicles to Homey device format
         return uniqueVehicles.map(vehicle => {
           const vin = vehicle.information?.vin || 'unknown';
           const model = vehicle.information?.model || 'Vehicle';
 
+          // Get the client ID for this vehicle
+          const clientId = vehicle._clientId || this.clientManager.getVehicleClient(vin);
+
+          // Get a user-friendly client name
+          let clientName = "Unknown";
+          if (clientId === "primary") {
+            clientName = "Primary";
+          } else if (clientId === "secondary") {
+            clientName = "Secondary";
+          } else if (clientId) {
+            clientName = clientId.charAt(0).toUpperCase() + clientId.slice(1);
+          }
+
+          // Store the client ID in the device data and include it in the name for user visibility
           return {
-            name: vehicle.name || `XPENG ${model} (${vin.substring(vin.length - 6)})`,
+            name: vehicle.name || `XPENG ${model} (${vin.substring(vin.length - 6)}) - ${clientName}`,
             data: {
               id: vehicle.id,
               vehicleId: vehicle.id,  // Store the ID in both places for backward compatibility
-              vin: vin  // Store the VIN for future reference
+              vin: vin,  // Store the VIN for future reference
+              clientId: clientId  // Store the client ID for API requests
             },
             store: {
               vehicleInfo: vehicle,
@@ -707,6 +777,15 @@ class XpengDriver extends Homey.Driver {
             this.homey.settings.set('authorized_vins', authorizedVins);
             this.log(`Added VIN ${vin} to authorized list. Total authorized VINs: ${authorizedVins.length}`);
 
+            // Get the client ID used for this pairing session
+            const pairingClientId = this.homey.settings.get('last_pairing_client');
+
+            if (pairingClientId) {
+              // Associate the vehicle with the client used during pairing
+              this.clientManager.setVehicleClient(vin, pairingClientId);
+              this.log(`Associated vehicle ${vin} with client: ${pairingClientId}`);
+            }
+
             // Clear any cached data in the API client to ensure fresh data
             if (this.enodeApi && this.enodeApi.requestCache) {
               this.enodeApi.requestCache.clear('vehicles');
@@ -747,17 +826,17 @@ class XpengDriver extends Homey.Driver {
 
   /**
    * Get stored credentials from env.json or Homey settings
-   * @param {string} accountId - Optional account ID to get credentials for
+   * @param {string} clientId - Optional client ID to get credentials for
    * @returns {Object} The credentials object
    */
-  getStoredCredentials(accountId = null) {
-    // Use the account manager to get credentials
-    const credentials = this.accountManager.getCredentials(accountId);
+  getStoredCredentials(clientId = null) {
+    // Use the client manager to get credentials
+    const credentials = this.clientManager.getClientCredentials(clientId);
 
-    this.log(`Getting stored credentials for account ${accountId || 'default'}:`, {
+    this.log(`Getting stored credentials for client ${clientId || 'default'}:`, {
       hasClientId: !!credentials.clientId,
       hasClientSecret: !!credentials.clientSecret,
-      accountId: credentials.accountId
+      clientIdentifier: credentials.clientIdentifier
     });
 
     return credentials;
