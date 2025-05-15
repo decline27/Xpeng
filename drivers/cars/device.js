@@ -849,9 +849,9 @@ class XpengCarDevice extends Homey.Device {
       await this.pollVehicleData();
     }
 
-    // Handle button clicks
-    if (options && options.button === 'removeVehicleAssociation') {
-      this.log('Remove Vehicle Association button clicked');
+    // Handle checkbox for removing vehicle association
+    if (changedKeys.includes('removeVehicleAssociation') && newSettings.removeVehicleAssociation === true) {
+      this.log('Remove Vehicle Association checkbox checked');
 
       try {
         // Get the vehicle VIN
@@ -861,10 +861,7 @@ class XpengCarDevice extends Homey.Device {
 
         if (!vin) {
           this.error('Cannot remove vehicle association: VIN not found');
-          return {
-            success: false,
-            message: 'Cannot remove vehicle association: VIN not found'
-          };
+          throw new Error('Cannot remove vehicle association: VIN not found');
         }
 
         this.log(`Removing association for vehicle with VIN: ${vin}`);
@@ -918,16 +915,20 @@ class XpengCarDevice extends Homey.Device {
           this.log('Cleared API request cache');
         }
 
-        return {
-          success: true,
-          message: `Successfully removed vehicle association for VIN ${vin}`
-        };
+        // Reset the checkbox to false after processing
+        await this.setSettings({
+          removeVehicleAssociation: false
+        });
+
+        // Show a notification to the user
+        this.homey.notifications.createNotification({
+          excerpt: `XPENG Car: Successfully removed vehicle association for VIN ${vin}`
+        });
+
+        this.log('Vehicle association removal completed successfully');
       } catch (error) {
         this.error('Error removing vehicle association:', error);
-        return {
-          success: false,
-          message: `Failed to remove vehicle association: ${error.message}`
-        };
+        throw new Error(`Failed to remove vehicle association: ${error.message}`);
       }
     }
   }

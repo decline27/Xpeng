@@ -31,12 +31,13 @@
     "children": [
       {
         "id": "removeVehicleAssociation",
-        "type": "button",
+        "type": "checkbox",
         "label": {
           "en": "Remove Vehicle Association"
         },
+        "value": false,
         "hint": {
-          "en": "Removes this vehicle's association with your account (for testing purposes only)"
+          "en": "Check and save to remove this vehicle's association with your account (for testing purposes only)"
         }
       }
     ]
