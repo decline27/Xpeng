@@ -109,8 +109,48 @@
 
     <div class="info-message" style="background-color: #e8f5e9;">
         <p><strong>Manage Existing Vehicles</strong></p>
-        <p>If you need to remove an existing vehicle association, you can do so by clicking the button below:</p>
-        <button id="manage-associations" class="homey-button" style="margin-top: 10px;">Manage Vehicle Associations</button>
+        <p>If you need to remove an existing vehicle association, you can do so below:</p>
+
+        <div id="vehicle-management" style="margin-top: 15px;">
+            <div id="loading-vehicles" style="display: none; text-align: center; margin: 10px 0;">
+                <div class="homey-loading">
+                    <div class="homey-loading-circle"></div>
+                    <div class="homey-loading-circle"></div>
+                    <div class="homey-loading-circle"></div>
+                </div>
+                <p>Loading vehicles...</p>
+            </div>
+
+            <div id="vehicle-list" style="margin-top: 10px;">
+                <!-- Vehicle items will be added here dynamically -->
+            </div>
+
+            <button id="load-vehicles" class="homey-button" style="margin-top: 10px;">Show My Vehicles</button>
+        </div>
+    </div>
+
+    <!-- Confirmation Dialog -->
+    <div id="confirmation-dialog" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.5); z-index: 1000; justify-content: center; align-items: center;">
+        <div style="background-color: white; padding: 20px; border-radius: 4px; max-width: 400px; width: 100%;">
+            <h2>Confirm Removal</h2>
+            <p>Are you sure you want to remove the association for this vehicle?</p>
+            <p><strong>VIN: <span id="confirm-vin"></span></strong></p>
+            <p>This action cannot be undone.</p>
+            <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
+                <button id="cancel-button" class="homey-button" style="margin-right: 10px;">Cancel</button>
+                <button id="confirm-button" class="homey-button-danger">Remove</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="removal-success" class="info-message" style="background-color: #e8f5e9; display: none; margin-top: 10px;">
+        <p><strong>✓ Success!</strong></p>
+        <p>Vehicle association has been successfully removed.</p>
+    </div>
+
+    <div id="removal-error" class="info-message" style="background-color: #ffebee; color: #d32f2f; display: none; margin-top: 10px;">
+        <p><strong>Error</strong></p>
+        <p id="error-message">Failed to remove vehicle association.</p>
     </div>
 
     <div id="credentials-status" class="credentials-status"></div>
@@ -220,18 +260,186 @@ function showLoading(show) {
 // Check credentials immediately
 checkCredentials();
 
-// Add event listener for manage associations button
-document.getElementById('manage-associations').addEventListener('click', function() {
-    console.log('Manage associations button clicked');
+// Vehicle management functionality
+document.getElementById('load-vehicles').addEventListener('click', function() {
+    loadVehicles();
+});
+
+// Function to load vehicles
+async function loadVehicles() {
+    console.log('Loading vehicles...');
+
+    // Show loading spinner
+    document.getElementById('loading-vehicles').style.display = 'block';
+    document.getElementById('load-vehicles').style.display = 'none';
+
     try {
-        // Try the direct navigation first
-        Homey.showView('manage_associations');
+        // Call the get_vehicle_associations handler
+        const result = await Homey.emit('get_vehicle_associations');
+        console.log('Received vehicle associations:', result);
+
+        // Hide loading spinner
+        document.getElementById('loading-vehicles').style.display = 'none';
+
+        // Get the vehicle list element
+        const vehicleList = document.getElementById('vehicle-list');
+        vehicleList.innerHTML = '';
+
+        // Check if we have vehicles
+        if (result && result.vehicles && result.vehicles.length > 0) {
+            // Create a container for the vehicles
+            const vehiclesContainer = document.createElement('div');
+            vehiclesContainer.style.marginBottom = '15px';
+
+            // Add a heading
+            const heading = document.createElement('p');
+            heading.innerHTML = `<strong>Your Vehicles (${result.vehicles.length})</strong>`;
+            vehiclesContainer.appendChild(heading);
+
+            // Add each vehicle
+            result.vehicles.forEach(vehicle => {
+                const vehicleItem = document.createElement('div');
+                vehicleItem.style.padding = '10px';
+                vehicleItem.style.border = '1px solid #e0e0e0';
+                vehicleItem.style.borderRadius = '4px';
+                vehicleItem.style.marginBottom = '10px';
+                vehicleItem.style.display = 'flex';
+                vehicleItem.style.justifyContent = 'space-between';
+                vehicleItem.style.alignItems = 'center';
+
+                // Vehicle info
+                const vehicleInfo = document.createElement('div');
+                vehicleInfo.style.flexGrow = '1';
+                vehicleInfo.innerHTML = `
+                    <strong>${vehicle.brand || 'XPENG'} ${vehicle.model || ''}</strong>
+                    <div>VIN: ${vehicle.vin}</div>
+                `;
+
+                // Vehicle actions
+                const vehicleActions = document.createElement('div');
+                vehicleActions.style.marginLeft = '10px';
+
+                // Remove button
+                const removeButton = document.createElement('button');
+                removeButton.className = 'homey-button-danger';
+                removeButton.textContent = 'Remove';
+                removeButton.setAttribute('data-vin', vehicle.vin);
+                removeButton.addEventListener('click', function() {
+                    const vin = this.getAttribute('data-vin');
+                    showConfirmationDialog(vin);
+                });
+
+                vehicleActions.appendChild(removeButton);
+                vehicleItem.appendChild(vehicleInfo);
+                vehicleItem.appendChild(vehicleActions);
+                vehiclesContainer.appendChild(vehicleItem);
+            });
+
+            // Add the vehicles container to the list
+            vehicleList.appendChild(vehiclesContainer);
+
+            // Add a "Hide Vehicles" button
+            const hideButton = document.createElement('button');
+            hideButton.className = 'homey-button';
+            hideButton.textContent = 'Hide Vehicles';
+            hideButton.addEventListener('click', function() {
+                vehicleList.innerHTML = '';
+                document.getElementById('load-vehicles').style.display = 'block';
+            });
+            vehicleList.appendChild(hideButton);
+        } else {
+            // No vehicles found
+            vehicleList.innerHTML = `
+                <div style="padding: 15px; text-align: center; color: #757575; border: 1px dashed #e0e0e0; border-radius: 4px; margin-bottom: 15px;">
+                    <p>No vehicle associations found.</p>
+                </div>
+            `;
+            document.getElementById('load-vehicles').style.display = 'block';
+        }
     } catch (error) {
-        console.error('Error navigating to manage_associations view:', error);
-        // Fallback to emit
-        Homey.emit('showView', 'manage_associations')
-            .then(() => console.log('Navigation to manage_associations view requested via emit'))
-            .catch(err => console.error('Failed to navigate via emit:', err));
+        console.error('Error loading vehicles:', error);
+        document.getElementById('loading-vehicles').style.display = 'none';
+        document.getElementById('load-vehicles').style.display = 'block';
+
+        // Show error message
+        document.getElementById('error').textContent = 'Failed to load vehicles: ' + (error.message || 'Unknown error');
+        document.getElementById('error').style.display = 'block';
+
+        // Hide error after 5 seconds
+        setTimeout(() => {
+            document.getElementById('error').style.display = 'none';
+        }, 5000);
+    }
+}
+
+// Function to show confirmation dialog
+function showConfirmationDialog(vin) {
+    console.log('Showing confirmation dialog for VIN:', vin);
+    document.getElementById('confirm-vin').textContent = vin;
+    document.getElementById('confirmation-dialog').style.display = 'flex';
+
+    // Set up confirm button
+    document.getElementById('confirm-button').onclick = async function() {
+        try {
+            console.log('Confirm button clicked for VIN:', vin);
+            document.getElementById('confirmation-dialog').style.display = 'none';
+
+            // Show loading spinner
+            document.getElementById('loading-vehicles').style.display = 'block';
+
+            // Call the remove_vehicle_association handler
+            const result = await Homey.emit('remove_vehicle_association', { vin });
+            console.log('Remove vehicle result:', result);
+
+            // Hide loading spinner
+            document.getElementById('loading-vehicles').style.display = 'none';
+
+            if (result && result.success) {
+                // Show success message
+                document.getElementById('removal-success').style.display = 'block';
+
+                // Hide success message after 5 seconds
+                setTimeout(() => {
+                    document.getElementById('removal-success').style.display = 'none';
+                }, 5000);
+
+                // Reload the vehicle list
+                loadVehicles();
+            } else {
+                // Show error message
+                document.getElementById('error-message').textContent = result.message || 'Failed to remove vehicle association';
+                document.getElementById('removal-error').style.display = 'block';
+
+                // Hide error message after 5 seconds
+                setTimeout(() => {
+                    document.getElementById('removal-error').style.display = 'none';
+                }, 5000);
+            }
+        } catch (error) {
+            console.error('Error removing vehicle association:', error);
+            document.getElementById('loading-vehicles').style.display = 'none';
+
+            // Show error message
+            document.getElementById('error-message').textContent = 'Error removing vehicle association: ' + (error.message || 'Unknown error');
+            document.getElementById('removal-error').style.display = 'block';
+
+            // Hide error message after 5 seconds
+            setTimeout(() => {
+                document.getElementById('removal-error').style.display = 'none';
+            }, 5000);
+        }
+    };
+
+    // Set up cancel button
+    document.getElementById('cancel-button').onclick = function() {
+        document.getElementById('confirmation-dialog').style.display = 'none';
+    };
+}
+
+// Set up cancel button for confirmation dialog (in case it's clicked outside the dialog)
+document.getElementById('confirmation-dialog').addEventListener('click', function(event) {
+    if (event.target === this) {
+        this.style.display = 'none';
     }
 });
 
