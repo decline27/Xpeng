@@ -222,7 +222,17 @@ checkCredentials();
 
 // Add event listener for manage associations button
 document.getElementById('manage-associations').addEventListener('click', function() {
-    Homey.showView('manage_associations');
+    console.log('Manage associations button clicked');
+    try {
+        // Try the direct navigation first
+        Homey.showView('manage_associations');
+    } catch (error) {
+        console.error('Error navigating to manage_associations view:', error);
+        // Fallback to emit
+        Homey.emit('showView', 'manage_associations')
+            .then(() => console.log('Navigation to manage_associations view requested via emit'))
+            .catch(err => console.error('Failed to navigate via emit:', err));
+    }
 });
 
 // Function to update step status

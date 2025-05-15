@@ -174,15 +174,20 @@ function showSuccess(message) {
 // Load vehicle associations
 async function loadVehicleAssociations() {
     showLoading(true);
+    console.log('Attempting to load vehicle associations...');
     try {
+        console.log('Calling get_vehicle_associations handler...');
         const result = await Homey.emit('get_vehicle_associations');
+        console.log('Received response from get_vehicle_associations:', result);
         showLoading(false);
-        
+
         const vehicleList = document.getElementById('vehicle-list');
         vehicleList.innerHTML = '';
-        
-        if (result.vehicles && result.vehicles.length > 0) {
+
+        if (result && result.vehicles && result.vehicles.length > 0) {
+            console.log(`Found ${result.vehicles.length} vehicles to display`);
             result.vehicles.forEach(vehicle => {
+                console.log('Adding vehicle to list:', vehicle);
                 const vehicleItem = document.createElement('div');
                 vehicleItem.className = 'vehicle-item';
                 vehicleItem.innerHTML = `
@@ -196,15 +201,17 @@ async function loadVehicleAssociations() {
                 `;
                 vehicleList.appendChild(vehicleItem);
             });
-            
+
             // Add event listeners to remove buttons
             document.querySelectorAll('.remove-vehicle').forEach(button => {
                 button.addEventListener('click', function() {
                     const vin = this.getAttribute('data-vin');
+                    console.log('Remove button clicked for VIN:', vin);
                     showConfirmationDialog(vin);
                 });
             });
         } else {
+            console.log('No vehicles found or empty result:', result);
             vehicleList.innerHTML = `
                 <div class="no-vehicles">
                     <p>No vehicle associations found.</p>
@@ -212,8 +219,9 @@ async function loadVehicleAssociations() {
             `;
         }
     } catch (error) {
+        console.error('Error loading vehicle associations:', error);
         showLoading(false);
-        showError('Failed to load vehicle associations: ' + error.message);
+        showError('Failed to load vehicle associations: ' + (error.message || 'Unknown error'));
     }
 }
 
@@ -221,15 +229,15 @@ async function loadVehicleAssociations() {
 function showConfirmationDialog(vin) {
     document.getElementById('confirm-vin').textContent = vin;
     document.getElementById('confirmation-dialog').style.display = 'flex';
-    
+
     // Set up confirm button
     document.getElementById('confirm-button').onclick = async function() {
         try {
             showLoading(true);
             document.getElementById('confirmation-dialog').style.display = 'none';
-            
+
             const result = await Homey.emit('remove_vehicle_association', { vin });
-            
+
             showLoading(false);
             if (result.success) {
                 showSuccess(`Successfully removed vehicle association for VIN ${vin}`);
@@ -243,7 +251,7 @@ function showConfirmationDialog(vin) {
             showError('Error removing vehicle association: ' + error.message);
         }
     };
-    
+
     // Set up cancel button
     document.getElementById('cancel-button').onclick = function() {
         document.getElementById('confirmation-dialog').style.display = 'none';
@@ -252,17 +260,48 @@ function showConfirmationDialog(vin) {
 
 // Initialize
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOMContentLoaded event fired');
+
     // Load vehicle associations
     loadVehicleAssociations();
-    
+
     // Set up back button
     document.getElementById('back-button').addEventListener('click', function() {
-        Homey.showView('start');
+        console.log('Back button clicked');
+        try {
+            // Try the direct navigation first
+            Homey.showView('start');
+        } catch (error) {
+            console.error('Error navigating to start view:', error);
+            // Fallback to emit
+            Homey.emit('showView', 'start')
+                .then(() => console.log('Navigation to start view requested via emit'))
+                .catch(err => console.error('Failed to navigate via emit:', err));
+        }
     });
-    
+
     // Set up continue button
     document.getElementById('continue-button').addEventListener('click', function() {
-        Homey.showView('list_devices');
+        console.log('Continue button clicked');
+        try {
+            // Try the direct navigation first
+            Homey.showView('list_devices');
+        } catch (error) {
+            console.error('Error navigating to list_devices view:', error);
+            // Fallback to emit
+            Homey.emit('showView', 'list_devices')
+                .then(() => console.log('Navigation to list_devices view requested via emit'))
+                .catch(err => console.error('Failed to navigate via emit:', err));
+        }
     });
+});
+
+// Also initialize when the page is shown
+Homey.on('show_view', function(viewId) {
+    console.log('View shown:', viewId);
+    if (viewId === 'manage_associations') {
+        console.log('Manage associations view shown, loading data...');
+        loadVehicleAssociations();
+    }
 });
 </script>

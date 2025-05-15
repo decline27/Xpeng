@@ -312,14 +312,20 @@ class XpengDriver extends Homey.Driver {
     // Log pairing start
     this.log('Starting XPENG pairing process');
 
+    // Set up navigation handlers
+    session.setHandler('showView', async (viewId) => {
+      this.log(`Navigation requested to view: ${viewId}`);
+      return true;
+    });
+
     // Handler for getting vehicle associations
     session.setHandler('get_vehicle_associations', async () => {
       try {
-        this.log('Getting vehicle associations');
+        this.log('Getting vehicle associations - handler called');
 
         // Get authorized VINs from settings
         const authorizedVins = this.homey.settings.get('authorized_vins') || [];
-        this.log(`Found ${authorizedVins.length} authorized VINs in settings`);
+        this.log(`Found ${authorizedVins.length} authorized VINs in settings: ${JSON.stringify(authorizedVins)}`);
 
         // Get vehicle details for each VIN
         const vehicles = [];
@@ -328,13 +334,17 @@ class XpengDriver extends Homey.Driver {
         if (authorizedVins.length > 0) {
           try {
             // Try to get vehicles from Enode API
+            this.log('Fetching vehicles from Enode API...');
             const allVehicles = await this.enodeApi.getVehicles();
+            this.log(`Received ${allVehicles.length} vehicles from Enode API`);
 
             // Match vehicles with authorized VINs
             for (const vin of authorizedVins) {
+              this.log(`Looking for vehicle with VIN: ${vin}`);
               const matchingVehicle = allVehicles.find(v => v.information?.vin === vin);
 
               if (matchingVehicle) {
+                this.log(`Found matching vehicle for VIN ${vin}: ${matchingVehicle.information?.brand} ${matchingVehicle.information?.model}`);
                 vehicles.push({
                   vin: vin,
                   brand: matchingVehicle.information?.brand || 'XPENG',
@@ -342,6 +352,7 @@ class XpengDriver extends Homey.Driver {
                   year: matchingVehicle.information?.year || ''
                 });
               } else {
+                this.log(`No matching vehicle found for VIN ${vin}, adding with basic info`);
                 // If we can't find details, just add the VIN
                 vehicles.push({
                   vin: vin,
@@ -355,6 +366,7 @@ class XpengDriver extends Homey.Driver {
             this.error('Error getting vehicle details from Enode API:', error);
 
             // Fallback: Just use the VINs without additional details
+            this.log('Using fallback: Adding vehicles with basic info');
             for (const vin of authorizedVins) {
               vehicles.push({
                 vin: vin,
@@ -364,8 +376,11 @@ class XpengDriver extends Homey.Driver {
               });
             }
           }
+        } else {
+          this.log('No authorized VINs found in settings');
         }
 
+        this.log(`Returning ${vehicles.length} vehicles to the frontend`);
         return { vehicles };
       } catch (error) {
         this.error('Error getting vehicle associations:', error);
