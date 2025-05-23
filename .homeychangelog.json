@@ -142,5 +142,8 @@
   },
   "1.2.48": {
     "en": "New login to Enode"
+  },
+  "1.2.49": {
+    "en": "Enode update"
   }
 }
