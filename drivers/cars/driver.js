@@ -458,12 +458,11 @@ class XpengDriver extends Homey.Driver {
         // Create a more unique user ID by combining Homey ID and installation ID
         const userId = `homey-${homeyId}-${installationId}`;
 
-        // Get the default account for new vehicles
-        const defaultAccount = this.accountManager.getDefaultAccount();
-        this.log(`Using user ID for vehicle link: ${userId} with account: ${defaultAccount}`);
+        // Let the system automatically select the best client with available capacity
+        this.log(`Using user ID for vehicle link: ${userId} with auto-selected client`);
 
-        // Generate the vehicle link using the default account
-        const linkUrl = await this.enodeApi.generateVehicleLink(userId, defaultAccount);
+        // Generate the vehicle link - let ClientManager auto-select the best client
+        const linkUrl = await this.enodeApi.generateVehicleLink(userId);
         return { linkUrl };
       } catch (error) {
         // Use ErrorHandler for better error messages
