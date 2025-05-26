@@ -145,5 +145,8 @@
   },
   "1.2.49": {
     "en": "Enode update"
+  },
+  "1.2.50": {
+    "en": "Iproved Enode function"
   }
 }
