@@ -331,6 +331,23 @@ class XpengDriver extends Homey.Driver {
       };
     });
 
+    session.setHandler('clear_credentials', async () => {
+      this.log('Attempting to clear stored Enode credentials.');
+      try {
+        await this.homey.settings.set('enode_client_id', '');
+        await this.homey.settings.set('enode_client_secret', '');
+        // Also clear any cached credentials in the driver instance
+        this.clientId = '';
+        this.clientSecret = '';
+        this.log('Stored Enode credentials cleared successfully.');
+        return { success: true, message: 'Credentials cleared.' };
+      } catch (error) {
+        this.error('Failed to clear stored credentials:', error);
+        // Rethrow or return an error object that Homey.emit().catch() can handle
+        throw new Error('Could not clear credentials from settings.');
+      }
+    });
+
     // This handler is now just a validation step, not actually saving user-provided credentials
     session.setHandler('save_credentials', async () => {
       try {

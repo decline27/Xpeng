@@ -171,6 +171,7 @@
     </div>
 
     <button id="start-link" class="homey-button-primary">Generate Connection Link</button>
+    <button id="clear-credentials" class="homey-button-secondary" style="margin-top: 15px;">Clear Stored Credentials</button>
 </div>
 
 <script type="text/javascript">
@@ -213,6 +214,26 @@ function showLoading(show) {
 
 // Check credentials immediately
 checkCredentials();
+
+document.getElementById('clear-credentials').addEventListener('click', async () => {
+    try {
+        showLoading(true); // Show loading indicator
+        await Homey.emit('clear_credentials');
+        // Optionally, you can also clear any displayed status or input fields here
+        // For example, if you had input fields for credentials:
+        // document.getElementById('clientIdInput').value = '';
+        // document.getElementById('clientSecretInput').value = '';
+        
+        // Re-check credentials to update the UI
+        await checkCredentials(); 
+        
+        showLoading(false); // Hide loading indicator
+        Homey.alert('Stored credentials have been cleared. Please contact the app developer if you need to re-configure them or if new credentials are provided.');
+    } catch (error) {
+        showLoading(false);
+        showError('Failed to clear credentials: ' + (error.message || 'Unknown error'));
+    }
+});
 
 // Function to update step status
 function updateStepStatus(stepNumber, status) {
