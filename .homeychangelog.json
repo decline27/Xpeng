@@ -148,5 +148,11 @@
   },
   "1.2.50": {
     "en": "Iproved Enode function"
+  },
+  "1.2.51": {
+    "en": "Updated the loading of the widget"
+  },
+  "1.2.52": {
+    "en": "Updated the loading of the widget"
   }
 }
