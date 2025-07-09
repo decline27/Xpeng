@@ -34,6 +34,10 @@
     "stopCharging": {
       "method": "POST",
       "path": "/stop-charging"
+    },
+    "initWidget": {
+      "method": "GET",
+      "path": "/init-widget"
     }
   }
 }
