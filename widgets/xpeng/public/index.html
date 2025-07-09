@@ -64,6 +64,29 @@
         padding: var(--homey-su-4);
       }
 
+      .loading {
+        opacity: 0.6;
+        position: relative;
+      }
+
+      .loading::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 20px;
+        height: 20px;
+        margin: -10px 0 0 -10px;
+        border: 2px solid rgba(0,0,0,0.2);
+        border-top-color: var(--homey-color-primary);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+
       .location-link {
         color: var(--homey-color-primary);
         text-decoration: none;
@@ -185,6 +208,26 @@
         }
       }
     </style>
+    <style>
+      /* Progressive loading styles */
+      .data-section {
+        opacity: 0;
+        transform: translateY(10px);
+        transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+      }
+      
+      .data-section.loaded {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      
+      /* Staggered animation delays */
+      .data-section:nth-child(1) { transition-delay: 0ms; }
+      .data-section:nth-child(2) { transition-delay: 100ms; }
+      .data-section:nth-child(3) { transition-delay: 200ms; }
+      .data-section:nth-child(4) { transition-delay: 300ms; }
+      .data-section:nth-child(5) { transition-delay: 400ms; }
+    </style>
   </head>
 
   <body class="homey-widget">
@@ -192,7 +235,7 @@
       <div id="error-container" style="display: none;" class="error-message"></div>
       
       <div id="vehicle-container" class="vehicle-info">
-        <div class="battery-section">
+        <div class="battery-section data-section">
           <div class="info-card-value" id="battery-percentage">--</div>
           <div class="battery-level">
             <div class="battery-level-fill" id="battery-level-fill" style="width: 0%"></div>
@@ -200,29 +243,29 @@
           <div class="info-card-value" id="range">-- km</div>
         </div>
 
-        <div class="info-card">
+        <div class="info-card data-section">
           <div class="info-card-title">Charging Status</div>
           <div class="info-card-value" id="charging-status">--</div>
         </div>
 
-        <div class="info-card">
+        <div class="info-card data-section">
           <div class="info-card-title">Plugged In</div>
           <div class="info-card-value" id="plugged-status">--</div>
         </div>
 
-        <div class="info-card">
+        <div class="info-card data-section">
           <div class="info-card-title">Last Updated</div>
           <div class="info-card-value" id="last-seen">--</div>
         </div>
 
-        <div class="info-card">
+        <div class="info-card data-section">
           <div class="info-card-title">Charging Power</div>
           <div class="info-card-value">
             <span id="charging-power" class="charging-power">--</span>
           </div>
         </div>
 
-        <div class="info-card full-width">
+        <div class="info-card full-width data-section">
           <div class="info-card-title">Location</div>
           <div class="info-card-value" id="location">
             <span id="address">--</span>
@@ -232,7 +275,7 @@
         </div>
       </div>
       
-      <div class="charging-buttons">
+      <div class="charging-buttons data-section">
         <button id="startCharging" class="charging-button" disabled>
           <i class="fas fa-bolt"></i>
           Start Charging
@@ -252,6 +295,23 @@
         const settings = Homey.getSettings();
         const refreshRate = (settings.refresh_interval || 5) * 60 * 1000; // Convert minutes to ms
 
+        // Initialize the widget
+        Homey.api('GET', '/init-widget')
+          .then(response => {
+            if (response.error) {
+              console.error('Error initializing widget:', response.error);
+            } else {
+              console.log('Widget initialized successfully');
+            }
+            // Continue with initial data update regardless of init result
+            updateVehicleData();
+          })
+          .catch(error => {
+            console.error('Failed to initialize widget:', error);
+            // Continue with initial data update even if init fails
+            updateVehicleData();
+          });
+
         function showError(message) {
           const errorContainer = document.getElementById('error-container');
           const vehicleContainer = document.getElementById('vehicle-container');
@@ -265,6 +325,28 @@
           const vehicleContainer = document.getElementById('vehicle-container');
           errorContainer.style.display = 'none';
           vehicleContainer.style.display = 'grid';
+        }
+        
+        function showLoading(elementId) {
+          const element = document.getElementById(elementId);
+          if (element) element.classList.add('loading');
+        }
+        
+        function hideLoading(elementId) {
+          const element = document.getElementById(elementId);
+          if (element) element.classList.remove('loading');
+        }
+        
+        function showAllLoading() {
+          const elements = ['battery-percentage', 'range', 'charging-status', 
+                          'plugged-status', 'last-seen', 'charging-power', 'address'];
+          elements.forEach(id => showLoading(id));
+        }
+        
+        function hideAllLoading() {
+          const elements = ['battery-percentage', 'range', 'charging-status', 
+                          'plugged-status', 'last-seen', 'charging-power', 'address'];
+          elements.forEach(id => hideLoading(id));
         }
 
         function formatLastSeen(timestamp) {
@@ -292,40 +374,84 @@
         function createLocationDisplay(location, address) {
           const addressElement = document.getElementById('address');
           const mapLink = document.getElementById('map-link');
+          
           if (!location || !location.latitude || !location.longitude) {
             addressElement.textContent = '--';
             mapLink.style.display = 'none';
+            hideLoading('address');
             return;
           }
-          addressElement.textContent = address || `${location.latitude.toFixed(6)}, ${location.longitude.toFixed(6)}`;
-          const mapUrl = `https://www.google.com/maps?q=${location.latitude},${location.longitude}`;
-          mapLink.style.display = 'inline';
-          mapLink.onclick = (e) => {
-            e.preventDefault();
-            Homey.popup(mapUrl);
-          };
+          
+          // Use a small timeout to simulate asynchronous address lookup
+          // This prevents blocking the UI while processing location data
+          setTimeout(() => {
+            addressElement.textContent = address || `${location.latitude.toFixed(6)}, ${location.longitude.toFixed(6)}`;
+            const mapUrl = `https://www.google.com/maps?q=${location.latitude},${location.longitude}`;
+            mapLink.style.display = 'inline';
+            mapLink.onclick = (e) => {
+              e.preventDefault();
+              Homey.popup(mapUrl);
+            };
+            hideLoading('address');
+          }, 100);
         }
 
         function updateVehicleData() {
+          showAllLoading();
+          showProgressiveLoading();
+          
           Homey.api('GET', '/vehicle-data')
             .then(data => {
               if (data.error) {
                 showError(data.error);
+                hideAllLoading();
                 return;
               }
               hideError();
 
+              // Create a document fragment for batch DOM updates
+              const fragment = document.createDocumentFragment();
+              const updates = {};
+              
               // Update battery info and range
-              const batteryLevel = parseFloat(data.batteryLevel) || 0;
-              document.getElementById('battery-percentage').textContent = `${Math.round(batteryLevel)}%`;
-              document.getElementById('battery-level-fill').style.width = `${batteryLevel}%`;
-              document.getElementById('range').textContent = `${Math.round(parseFloat(data.range) || 0)} km`;
+              if (data.batteryLevel) {
+                const batteryLevel = parseFloat(data.batteryLevel) || 0;
+                updates['battery-percentage'] = `${Math.round(batteryLevel)}%`;
+                document.getElementById('battery-level-fill').style.width = `${batteryLevel}%`;
+                hideLoading('battery-percentage');
+              }
+              
+              if (data.range) {
+                updates['range'] = `${Math.round(parseFloat(data.range) || 0)} km`;
+                hideLoading('range');
+              }
 
               // Update status cards
-              document.getElementById('charging-status').textContent = data.chargingStatus || '--';
-              document.getElementById('plugged-status').textContent = data.pluggedInStatus ? 'Yes' : 'No';
-              document.getElementById('last-seen').textContent = formatLastSeen(data.lastSeen);
-              document.getElementById('charging-power').textContent = formatChargingPower(data.powerDeliveryState);
+              if (data.chargingStatus) {
+                updates['charging-status'] = data.chargingStatus || '--';
+                hideLoading('charging-status');
+              }
+              
+              updates['plugged-status'] = data.pluggedInStatus ? 'Yes' : 'No';
+              hideLoading('plugged-status');
+              
+              if (data.lastSeen) {
+                updates['last-seen'] = formatLastSeen(data.lastSeen);
+                hideLoading('last-seen');
+              }
+              
+              if (data.powerDeliveryState) {
+                updates['charging-power'] = formatChargingPower(data.powerDeliveryState);
+                hideLoading('charging-power');
+              }
+              
+              // Apply all updates at once
+              Object.keys(updates).forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                  element.textContent = updates[id];
+                }
+              });
 
               // Update charging buttons based on status
               const startChargingButton = document.getElementById('startCharging');
@@ -334,33 +460,49 @@
               startChargingButton.disabled = chargingActive || !data.pluggedInStatus;
               stopChargingButton.disabled = !chargingActive;
 
-              // Update location info
-              createLocationDisplay(data.location, data.address);
+              // Update location info asynchronously
+              if (data.location) {
+                createLocationDisplay(data.location, data.address);
+              } else {
+                hideLoading('address');
+              }
+              
+              hideAllLoading();
+              hideProgressiveLoading();
             })
             .catch(error => {
               showError(error.message || 'Failed to fetch vehicle data');
+              hideAllLoading();
+              hideProgressiveLoading();
             });
         }
 
-        // Initial update
-        updateVehicleData();
+        // Initial update is now called after initialization
+        // updateVehicleData(); - Removed as it's now called after initWidget
 
         // Set up start charging button
         const startChargingButton = document.getElementById('startCharging');
         startChargingButton.onclick = () => {
           startChargingButton.disabled = true; // Prevent multiple clicks
+          startChargingButton.classList.add('loading');
+          
           Homey.api('POST', '/start-charging')
             .then(response => {
               if (response.error) {
                 showError(response.error);
               } else {
+                // Show immediate feedback
+                document.getElementById('charging-status').textContent = 'Starting...';
                 // Wait a bit before refreshing to allow state change
                 setTimeout(updateVehicleData, 10000);
               }
             })
             .catch(error => {
               showError(error.message || 'Failed to start charging');
-              startChargingButton.disabled = false;
+            })
+            .finally(() => {
+              startChargingButton.classList.remove('loading');
+              // Button will be re-enabled or disabled based on the next data update
             });
         };
 
@@ -368,17 +510,24 @@
         const stopChargingButton = document.getElementById('stopCharging');
         stopChargingButton.onclick = () => {
           stopChargingButton.disabled = true;
+          stopChargingButton.classList.add('loading');
+          
           Homey.api('POST', '/stop-charging')
             .then(response => {
               if (response.error) {
                 showError(response.error);
               } else {
+                // Show immediate feedback
+                document.getElementById('charging-status').textContent = 'Stopping...';
                 setTimeout(updateVehicleData, 10000);
               }
             })
             .catch(error => {
               showError(error.message || 'Failed to stop charging');
-              stopChargingButton.disabled = false;
+            })
+            .finally(() => {
+              stopChargingButton.classList.remove('loading');
+              // Button will be re-enabled or disabled based on the next data update
             });
         };
 
@@ -393,4 +542,79 @@
       }
     </script>
   </body>
+</html>
+
+<script>
+  // Progressive loading helper functions
+  function showProgressiveLoading() {
+    const sections = document.querySelectorAll('.data-section');
+    sections.forEach(section => {
+      section.classList.remove('loaded');
+    });
+  }
+  
+  function hideProgressiveLoading() {
+    const sections = document.querySelectorAll('.data-section');
+    let delay = 0;
+    sections.forEach((section, index) => {
+      setTimeout(() => {
+        section.classList.add('loaded');
+      }, delay);
+      delay += 100; // Stagger the animations
+    });
+  }
+</script>
+
+<body>
+  <div id="widget-container">
+    <div id="error-container" class="hidden">
+      <div id="error-message"></div>
+    </div>
+    
+    <!-- Battery section with data-section class -->
+    <div class="battery-container data-section">
+      <div class="battery-wrapper">
+        <div class="battery-icon">
+          <div class="battery-level" id="battery-level-fill"></div>
+        </div>
+        <div class="battery-info">
+          <div class="battery-percentage" id="battery-percentage">--</div>
+          <div class="battery-range" id="range">-- km</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Status cards with data-section classes -->
+    <div class="status-cards">
+      <div class="status-card data-section">
+        <div class="status-label">Charging</div>
+        <div class="status-value" id="charging-status">--</div>
+      </div>
+      <div class="status-card data-section">
+        <div class="status-label">Plugged In</div>
+        <div class="status-value" id="plugged-status">--</div>
+      </div>
+      <div class="status-card data-section">
+        <div class="status-label">Last Seen</div>
+        <div class="status-value" id="last-seen">--</div>
+      </div>
+      <div class="status-card data-section">
+        <div class="status-label">Charging Power</div>
+        <div class="status-value" id="charging-power">--</div>
+      </div>
+    </div>
+    
+    <!-- Location section with data-section class -->
+    <div class="location-container data-section">
+      <div class="location-label">Location</div>
+      <div class="location-value" id="address">--</div>
+    </div>
+    
+    <!-- Charging controls with data-section class -->
+    <div class="charging-controls data-section">
+      <button id="startCharging" class="charging-button start-charging" disabled>Start Charging</button>
+      <button id="stopCharging" class="charging-button stop-charging" disabled>Stop Charging</button>
+    </div>
+  </div>
+</body>
 </html>
