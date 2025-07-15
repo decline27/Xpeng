@@ -4,5 +4,6 @@
     "getable": true,
     "setable": false,
     "icon": "assets/capabilities/last-seen.svg",
-    "uiComponent": "sensor"
+    "uiComponent": "sensor",
+    "insights": false
 }

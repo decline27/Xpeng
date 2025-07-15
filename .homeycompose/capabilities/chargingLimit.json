@@ -7,5 +7,6 @@
     "min": 0,
     "max": 100,
     "icon": "assets/capabilities/charging.svg",
-    "uiComponent": "sensor"
+    "uiComponent": "sensor",
+    "insights": true
 }

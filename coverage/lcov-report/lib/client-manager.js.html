@@ -3,7 +3,7 @@
 <html lang="en">
 
 <head>
-    <title>Code coverage report for lib/enode-oauth.js</title>
+    <title>Code coverage report for lib/client-manager.js</title>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="../prettify.css" />
     <link rel="stylesheet" href="../base.css" />
@@ -19,34 +19,34 @@
 <body>
 <div class='wrapper'>
     <div class='pad1'>
-        <h1><a href="../index.html">All files</a> / <a href="index.html">lib</a> enode-oauth.js</h1>
+        <h1><a href="../index.html">All files</a> / <a href="index.html">lib</a> client-manager.js</h1>
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">3.88% </span>
+                <span class="strong">6.2% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>4/103</span>
+                <span class='fraction'>8/129</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">1.92% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/33</span>
+                <span class='fraction'>2/104</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">9.09% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/16</span>
+                <span class='fraction'>2/22</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">3.92% </span>
+                <span class="strong">6.55% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>4/102</span>
+                <span class='fraction'>8/122</span>
             </div>
         
             
@@ -402,9 +402,69 @@
 <a name='L337'></a><a href='#L337'>337</a>
 <a name='L338'></a><a href='#L338'>338</a>
 <a name='L339'></a><a href='#L339'>339</a>
-<a name='L340'></a><a href='#L340'>340</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
+<a name='L340'></a><a href='#L340'>340</a>
+<a name='L341'></a><a href='#L341'>341</a>
+<a name='L342'></a><a href='#L342'>342</a>
+<a name='L343'></a><a href='#L343'>343</a>
+<a name='L344'></a><a href='#L344'>344</a>
+<a name='L345'></a><a href='#L345'>345</a>
+<a name='L346'></a><a href='#L346'>346</a>
+<a name='L347'></a><a href='#L347'>347</a>
+<a name='L348'></a><a href='#L348'>348</a>
+<a name='L349'></a><a href='#L349'>349</a>
+<a name='L350'></a><a href='#L350'>350</a>
+<a name='L351'></a><a href='#L351'>351</a>
+<a name='L352'></a><a href='#L352'>352</a>
+<a name='L353'></a><a href='#L353'>353</a>
+<a name='L354'></a><a href='#L354'>354</a>
+<a name='L355'></a><a href='#L355'>355</a>
+<a name='L356'></a><a href='#L356'>356</a>
+<a name='L357'></a><a href='#L357'>357</a>
+<a name='L358'></a><a href='#L358'>358</a>
+<a name='L359'></a><a href='#L359'>359</a>
+<a name='L360'></a><a href='#L360'>360</a>
+<a name='L361'></a><a href='#L361'>361</a>
+<a name='L362'></a><a href='#L362'>362</a>
+<a name='L363'></a><a href='#L363'>363</a>
+<a name='L364'></a><a href='#L364'>364</a>
+<a name='L365'></a><a href='#L365'>365</a>
+<a name='L366'></a><a href='#L366'>366</a>
+<a name='L367'></a><a href='#L367'>367</a>
+<a name='L368'></a><a href='#L368'>368</a>
+<a name='L369'></a><a href='#L369'>369</a>
+<a name='L370'></a><a href='#L370'>370</a>
+<a name='L371'></a><a href='#L371'>371</a>
+<a name='L372'></a><a href='#L372'>372</a>
+<a name='L373'></a><a href='#L373'>373</a>
+<a name='L374'></a><a href='#L374'>374</a>
+<a name='L375'></a><a href='#L375'>375</a>
+<a name='L376'></a><a href='#L376'>376</a>
+<a name='L377'></a><a href='#L377'>377</a>
+<a name='L378'></a><a href='#L378'>378</a>
+<a name='L379'></a><a href='#L379'>379</a>
+<a name='L380'></a><a href='#L380'>380</a>
+<a name='L381'></a><a href='#L381'>381</a>
+<a name='L382'></a><a href='#L382'>382</a>
+<a name='L383'></a><a href='#L383'>383</a>
+<a name='L384'></a><a href='#L384'>384</a>
+<a name='L385'></a><a href='#L385'>385</a>
+<a name='L386'></a><a href='#L386'>386</a>
+<a name='L387'></a><a href='#L387'>387</a>
+<a name='L388'></a><a href='#L388'>388</a>
+<a name='L389'></a><a href='#L389'>389</a>
+<a name='L390'></a><a href='#L390'>390</a>
+<a name='L391'></a><a href='#L391'>391</a>
+<a name='L392'></a><a href='#L392'>392</a>
+<a name='L393'></a><a href='#L393'>393</a>
+<a name='L394'></a><a href='#L394'>394</a>
+<a name='L395'></a><a href='#L395'>395</a>
+<a name='L396'></a><a href='#L396'>396</a>
+<a name='L397'></a><a href='#L397'>397</a>
+<a name='L398'></a><a href='#L398'>398</a>
+<a name='L399'></a><a href='#L399'>399</a>
+<a name='L400'></a><a href='#L400'>400</a>
+<a name='L401'></a><a href='#L401'>401</a>
+<a name='L402'></a><a href='#L402'>402</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -412,24 +472,15 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">48x</span>
+<span class="cline-any cline-yes">48x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">48x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -437,33 +488,41 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">48x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">48x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">48x</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -474,16 +533,17 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -498,11 +558,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -513,15 +568,12 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -530,43 +582,43 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -578,16 +630,18 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -598,7 +652,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -611,10 +664,19 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -625,6 +687,10 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -633,21 +699,32 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -656,13 +733,22 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -674,15 +760,32 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -690,11 +793,21 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -703,11 +816,14 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -718,368 +834,438 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">const fetch = require('node-fetch');
-const Homey = require('homey');
-const { URLSearchParams } = require('url');
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">const Homey = require('homey');
 &nbsp;
 /**
- * OAuth2 client for Enode API
- * Uses Homey's built-in OAuth2 functionality
+ * ClientManager handles multiple Enode clients
+ * This allows the app to support unlimited clients for scaling beyond the 25-vehicle limit per client
  */
-class EnodeOAuth2 {
-<span class="fstat-no" title="function not covered" >  co</span>nstructor(options) {
-<span class="cstat-no" title="statement not covered" >    this.clientId = options.clientId;</span>
-<span class="cstat-no" title="statement not covered" >    this.clientSecret = options.clientSecret;</span>
-<span class="cstat-no" title="statement not covered" >    this.redirectUri = options.redirectUri || 'https://callback.athom.com/oauth2/callback';</span>
-<span class="cstat-no" title="statement not covered" >    this.homey = options.homey;</span>
-<span class="cstat-no" title="statement not covered" >    this.logger = options.logger || console;</span>
+class ClientManager {
+  constructor(homey) {
+    this.homey = homey;
+    this.logger = homey.log || console.log;
 &nbsp;
-    // Token storage
-<span class="cstat-no" title="statement not covered" >    this.token = null;</span>
-<span class="cstat-no" title="statement not covered" >    this.refreshToken = null;</span>
-<span class="cstat-no" title="statement not covered" >    this.tokenExpiresAt = null;</span>
+    // Settings keys
+    this.SETTINGS_KEYS = {
+      // Client registry - stores all client information
+      CLIENT_REGISTRY: 'enode_client_registry',
 &nbsp;
-    // API endpoints
-<span class="cstat-no" title="statement not covered" >    this.apiBaseUrl = 'https://enode-api.production.enode.io';</span>
-<span class="cstat-no" title="statement not covered" >    this.oauthBaseUrl = 'https://oauth.production.enode.io';</span>
-<span class="cstat-no" title="statement not covered" >    this.authorizationUrl = 'https://link.enode.com';</span>
+      // Vehicle client mapping
+      VEHICLE_CLIENT_MAPPING: 'vehicle_client_mapping',
 &nbsp;
-    // Default scopes
-<span class="cstat-no" title="statement not covered" >    this.scopes = [</span>
-      'vehicle:read:data',
-      'vehicle:read:location',
-      'vehicle:control:charging'
-    ];
+      // Default client for new vehicles
+      DEFAULT_CLIENT: 'default_client'
+    };
+&nbsp;
+    // Client identifiers for backward compatibility
+    this.LEGACY_CLIENTS = {
+      PRIMARY: 'primary',
+      SECONDARY: 'secondary'
+    };
+&nbsp;
+    // Initialize client registry if not exists
+    this._initializeRegistry();
   }
 &nbsp;
   /**
-   * Initialize the OAuth2 client with Homey
-   *
-   * Note: Homey doesn't support registerWebhook, so we don't register a callback.
-   * Instead, we rely on the redirect URL to handle the OAuth2 flow.
-   * The token is obtained directly from the Enode API using the client credentials.
+   * Initialize the client registry if it doesn't exist
+   * @private
    */
-<span class="fstat-no" title="function not covered" >  in</span>it() {
-<span class="cstat-no" title="statement not covered" >    this.logger.log('Initializing Enode OAuth2 client');</span>
-    // No webhook registration needed for this implementation
+  _initializeRegistry() {
+    const registry = this.homey.settings.get(this.SETTINGS_KEYS.CLIENT_REGISTRY);
+<span class="cstat-no" title="statement not covered" >    if (!registry) {</span>
+      // Create initial registry with primary and secondary clients for backward compatibility
+      const initialRegistry = <span class="cstat-no" title="statement not covered" >{</span>
+        // Use array for future sorting/filtering capabilities
+        clients: []
+      };
+<span class="cstat-no" title="statement not covered" >      this.homey.settings.set(this.SETTINGS_KEYS.CLIENT_REGISTRY, initialRegistry);</span>
+    }
+&nbsp;
+    // Initialize vehicle-to-client mapping if it doesn't exist
+    const mapping = <span class="cstat-no" title="statement not covered" >this.homey.settings.get(this.SETTINGS_KEYS.VEHICLE_CLIENT_MAPPING);</span>
+<span class="cstat-no" title="statement not covered" >    if (!mapping) {</span>
+<span class="cstat-no" title="statement not covered" >      this.homey.settings.set(this.SETTINGS_KEYS.VEHICLE_CLIENT_MAPPING, {});</span>
+    }
+&nbsp;
+    // Set default client for new vehicles if not set
+    const defaultClient = <span class="cstat-no" title="statement not covered" >this.homey.settings.get(this.SETTINGS_KEYS.DEFAULT_CLIENT);</span>
+<span class="cstat-no" title="statement not covered" >    if (!defaultClient) {</span>
+      // Initially set to secondary client ID for new vehicles
+<span class="cstat-no" title="statement not covered" >      this._migrateAndSetDefaultClient();</span>
+    }
   }
 &nbsp;
   /**
-   * Generate an authorization URL for the user to connect their XPENG account
-   * @param {string} userId - Unique user ID for this session
-   * @returns {Promise&lt;string&gt;} The authorization URL
+   * Migrate existing primary and secondary clients to the new registry format
+   * and set the default client
+   * @private
    */
-<span class="fstat-no" title="function not covered" >  as</span>ync generateAuthUrl(userId) {
+<span class="fstat-no" title="function not covered" >  _m</span>igrateAndSetDefaultClient() {
 <span class="cstat-no" title="statement not covered" >    try {</span>
-      // Get a machine token for API access
-      const machineToken = <span class="cstat-no" title="statement not covered" >await this.getMachineToken();</span>
+      // Get existing credentials from env.json or settings
+      const primaryClientId = <span class="cstat-no" title="statement not covered" >Homey.env.ENODE_CLIENT_ID ||</span>
+                             this.homey.settings.get('enode_client_id');
+      const primaryClientSecret = <span class="cstat-no" title="statement not covered" >Homey.env.ENODE_CLIENT_SECRET ||</span>
+                                 this.homey.settings.get('enode_client_secret');
 &nbsp;
-      // Generate a link URL
-      const response = <span class="cstat-no" title="statement not covered" >await fetch(`${this.apiBaseUrl}/users/${userId}/link`, {</span>
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${machineToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          vendorType: 'vehicle',
-          scopes: this.scopes,
-          language: 'en-US',
-          redirectUri: this.redirectUri,
-        }),
-      });
+      const secondaryClientId = <span class="cstat-no" title="statement not covered" >Homey.env.ENODE_CLIENT_ID_SECONDARY ||</span>
+                               this.homey.settings.get('enode_client_id_secondary');
+      const secondaryClientSecret = <span class="cstat-no" title="statement not covered" >Homey.env.ENODE_CLIENT_SECRET_SECONDARY ||</span>
+                                   this.homey.settings.get('enode_client_secret_secondary');
 &nbsp;
-<span class="cstat-no" title="statement not covered" >      if (!response.ok) {</span>
-        const errorText = <span class="cstat-no" title="statement not covered" >await response.text();</span>
-<span class="cstat-no" title="statement not covered" >        throw new Error(`Failed to generate link: ${response.status} ${errorText}`);</span>
+      // Add primary client if credentials exist
+<span class="cstat-no" title="statement not covered" >      if (primaryClientId &amp;&amp; primaryClientSecret) {</span>
+<span class="cstat-no" title="statement not covered" >        this.addClient(</span>
+          this.LEGACY_CLIENTS.PRIMARY,
+          'Primary Client',
+          primaryClientId,
+          primaryClientSecret,
+          true
+        );
       }
 &nbsp;
-      const data = <span class="cstat-no" title="statement not covered" >await response.json();</span>
-<span class="cstat-no" title="statement not covered" >      if (!data.linkUrl) {</span>
-<span class="cstat-no" title="statement not covered" >        throw new Error('Link URL missing from response');</span>
-      }
+      // Add secondary client if credentials exist
+<span class="cstat-no" title="statement not covered" >      if (secondaryClientId &amp;&amp; secondaryClientSecret) {</span>
+<span class="cstat-no" title="statement not covered" >        this.addClient(</span>
+          this.LEGACY_CLIENTS.SECONDARY,
+          'Secondary Client',
+          secondaryClientId,
+          secondaryClientSecret,
+          true
+        );
 &nbsp;
-<span class="cstat-no" title="statement not covered" >      return data.linkUrl;</span>
+        // Set secondary as default for new vehicles (matching previous behavior)
+<span class="cstat-no" title="statement not covered" >        this.homey.settings.set(this.SETTINGS_KEYS.DEFAULT_CLIENT, this.LEGACY_CLIENTS.SECONDARY);</span>
+      } else <span class="cstat-no" title="statement not covered" >if (primaryClientId &amp;&amp; primaryClientSecret) {</span>
+        // If no secondary client, set primary as default
+<span class="cstat-no" title="statement not covered" >        this.homey.settings.set(this.SETTINGS_KEYS.DEFAULT_CLIENT, this.LEGACY_CLIENTS.PRIMARY);</span>
+      }
     } catch (error) {
-<span class="cstat-no" title="statement not covered" >      this.logger.error('Error generating auth URL:', error);</span>
-<span class="cstat-no" title="statement not covered" >      throw error;</span>
+<span class="cstat-no" title="statement not covered" >      this.logger('Error during client migration:', error);</span>
     }
   }
 &nbsp;
   /**
-   * Exchange an authorization code for an access token
-   * @param {string} code - The authorization code
-   * @returns {Promise&lt;Object&gt;} The token response
+   * Add a new client to the registry
+   * @param {string} clientId - The client identifier (for internal use)
+   * @param {string} name - Human-readable name for the client
+   * @param {string} enodeClientId - The Enode client ID
+   * @param {string} enodeClientSecret - The Enode client secret
+   * @param {boolean} isLegacy - Whether this is a legacy client (primary/secondary)
+   * @returns {boolean} Success status
    */
-<span class="fstat-no" title="function not covered" >  as</span>ync getTokenByCode(code) {
-<span class="cstat-no" title="statement not covered" >    try {</span>
-      const params = <span class="cstat-no" title="statement not covered" >new URLSearchParams();</span>
-<span class="cstat-no" title="statement not covered" >      params.append('grant_type', 'authorization_code');</span>
-<span class="cstat-no" title="statement not covered" >      params.append('code', code);</span>
-<span class="cstat-no" title="statement not covered" >      params.append('redirect_uri', this.redirectUri);</span>
-&nbsp;
-      const response = <span class="cstat-no" title="statement not covered" >await fetch(`${this.oauthBaseUrl}/oauth2/token`, {</span>
-        method: 'POST',
-        headers: {
-          'Authorization': `Basic ${Buffer.from(`${this.clientId}:${this.clientSecret}`).toString('base64')}`,
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: params.toString(),
-      });
-&nbsp;
-<span class="cstat-no" title="statement not covered" >      if (!response.ok) {</span>
-        const errorText = <span class="cstat-no" title="statement not covered" >await response.text();</span>
-<span class="cstat-no" title="statement not covered" >        throw new Error(`Token exchange failed: ${response.status} ${errorText}`);</span>
-      }
-&nbsp;
-      const tokenData = <span class="cstat-no" title="statement not covered" >await response.json();</span>
-<span class="cstat-no" title="statement not covered" >      this.saveToken(tokenData);</span>
-<span class="cstat-no" title="statement not covered" >      return tokenData;</span>
-    } catch (error) {
-<span class="cstat-no" title="statement not covered" >      this.logger.error('Error exchanging code for token:', error);</span>
-<span class="cstat-no" title="statement not covered" >      throw error;</span>
-    }
-  }
-&nbsp;
-  /**
-   * Save the token data
-   * @param {Object} tokenData - The token data from the OAuth2 server
-   */
-<span class="fstat-no" title="function not covered" >  sa</span>veToken(tokenData) {
-<span class="cstat-no" title="statement not covered" >    this.token = tokenData.access_token;</span>
-<span class="cstat-no" title="statement not covered" >    this.refreshToken = tokenData.refresh_token;</span>
-&nbsp;
-    // Calculate token expiration time
-    const expiresIn = <span class="cstat-no" title="statement not covered" >tokenData.expires_in || 3600;</span>
-<span class="cstat-no" title="statement not covered" >    this.tokenExpiresAt = Date.now() + (expiresIn * 1000) - 60000; </span>// 1 minute buffer
-&nbsp;
-<span class="cstat-no" title="statement not covered" >    this.logger.log('Token saved, expires in:', expiresIn, 'seconds');</span>
-  }
-&nbsp;
-  /**
-   * Get a valid access token, refreshing if necessary
-   * @returns {Promise&lt;string&gt;} The access token
-   */
-<span class="fstat-no" title="function not covered" >  as</span>ync getAccessToken() {
-    // If token is expired or missing, try to refresh
-<span class="cstat-no" title="statement not covered" >    if (!this.token || Date.now() &gt;= this.tokenExpiresAt) {</span>
-<span class="cstat-no" title="statement not covered" >      if (this.refreshToken) {</span>
-<span class="cstat-no" title="statement not covered" >        await this.refreshAccessToken();</span>
-      } else {
-<span class="cstat-no" title="statement not covered" >        throw new Error('No valid token available and no refresh token to get a new one');</span>
-      }
+<span class="fstat-no" title="function not covered" >  ad</span>dClient(clientId, name, enodeClientId, enodeClientSecret, isLegacy = <span class="branch-0 cbranch-no" title="branch not covered" >false)</span> {
+<span class="cstat-no" title="statement not covered" >    if (!clientId || !name || !enodeClientId || !enodeClientSecret) {</span>
+<span class="cstat-no" title="statement not covered" >      throw new Error('All client parameters are required');</span>
     }
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    return this.token;</span>
-  }
+    const registry = <span class="cstat-no" title="statement not covered" >this.homey.settings.get(this.SETTINGS_KEYS.CLIENT_REGISTRY) || { clients: [] };</span>
 &nbsp;
-  /**
-   * Refresh the access token using the refresh token
-   * @returns {Promise&lt;Object&gt;} The new token data
-   */
-<span class="fstat-no" title="function not covered" >  as</span>ync refreshAccessToken() {
-<span class="cstat-no" title="statement not covered" >    try {</span>
-      const params = <span class="cstat-no" title="statement not covered" >new URLSearchParams();</span>
-<span class="cstat-no" title="statement not covered" >      params.append('grant_type', 'refresh_token');</span>
-<span class="cstat-no" title="statement not covered" >      params.append('refresh_token', this.refreshToken);</span>
+    // Check if client already exists
+    const existingClientIndex = <span class="cstat-no" title="statement not covered" >registry.clients.findIndex(<span class="fstat-no" title="function not covered" >c </span>=&gt; <span class="cstat-no" title="statement not covered" >c.id === clientId)</span>;</span>
 &nbsp;
-      const response = <span class="cstat-no" title="statement not covered" >await fetch(`${this.oauthBaseUrl}/oauth2/token`, {</span>
-        method: 'POST',
-        headers: {
-          'Authorization': `Basic ${Buffer.from(`${this.clientId}:${this.clientSecret}`).toString('base64')}`,
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: params.toString(),
-      });
+    const clientData = <span class="cstat-no" title="statement not covered" >{</span>
+      id: clientId,
+      name: name,
+      enodeClientId: enodeClientId,
+      enodeClientSecret: enodeClientSecret,
+      isLegacy: isLegacy,
+      addedAt: new Date().toISOString(),
+      vehicleCount: 0 // Will be updated when vehicles are associated
+    };
 &nbsp;
-<span class="cstat-no" title="statement not covered" >      if (!response.ok) {</span>
-        const errorText = <span class="cstat-no" title="statement not covered" >await response.text();</span>
-<span class="cstat-no" title="statement not covered" >        throw new Error(`Token refresh failed: ${response.status} ${errorText}`);</span>
-      }
-&nbsp;
-      const tokenData = <span class="cstat-no" title="statement not covered" >await response.json();</span>
-<span class="cstat-no" title="statement not covered" >      this.saveToken(tokenData);</span>
-<span class="cstat-no" title="statement not covered" >      return tokenData;</span>
-    } catch (error) {
-<span class="cstat-no" title="statement not covered" >      this.logger.error('Error refreshing token:', error);</span>
-      // Clear tokens on refresh failure
-<span class="cstat-no" title="statement not covered" >      this.token = null;</span>
-<span class="cstat-no" title="statement not covered" >      this.refreshToken = null;</span>
-<span class="cstat-no" title="statement not covered" >      this.tokenExpiresAt = null;</span>
-<span class="cstat-no" title="statement not covered" >      throw error;</span>
+<span class="cstat-no" title="statement not covered" >    if (existingClientIndex &gt;= 0) {</span>
+      // Update existing client
+<span class="cstat-no" title="statement not covered" >      registry.clients[existingClientIndex] = {</span>
+        ...registry.clients[existingClientIndex],
+        ...clientData,
+        updatedAt: new Date().toISOString()
+      };
+    } else {
+      // Add new client
+<span class="cstat-no" title="statement not covered" >      registry.clients.push(clientData);</span>
     }
+&nbsp;
+<span class="cstat-no" title="statement not covered" >    this.homey.settings.set(this.SETTINGS_KEYS.CLIENT_REGISTRY, registry);</span>
+<span class="cstat-no" title="statement not covered" >    this.logger(`Client ${clientId} added/updated in registry`);</span>
+<span class="cstat-no" title="statement not covered" >    return true;</span>
   }
 &nbsp;
   /**
-   * Get a machine token for API access (client credentials flow)
-   * @returns {Promise&lt;string&gt;} The machine token
+   * Remove a client from the registry
+   * @param {string} clientId - The client identifier to remove
+   * @returns {boolean} Success status
    */
-<span class="fstat-no" title="function not covered" >  as</span>ync getMachineToken() {
-<span class="cstat-no" title="statement not covered" >    try {</span>
-      const response = <span class="cstat-no" title="statement not covered" >await fetch(`${this.oauthBaseUrl}/oauth2/token`, {</span>
-        method: 'POST',
-        headers: {
-          'Authorization': `Basic ${Buffer.from(`${this.clientId}:${this.clientSecret}`).toString('base64')}`,
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: 'grant_type=client_credentials',
-      });
-&nbsp;
-<span class="cstat-no" title="statement not covered" >      if (!response.ok) {</span>
-        const errorText = <span class="cstat-no" title="statement not covered" >await response.text();</span>
-<span class="cstat-no" title="statement not covered" >        throw new Error(`Failed to get machine token: ${response.status} ${errorText}`);</span>
-      }
-&nbsp;
-      const data = <span class="cstat-no" title="statement not covered" >await response.json();</span>
-<span class="cstat-no" title="statement not covered" >      if (!data.access_token) {</span>
-<span class="cstat-no" title="statement not covered" >        throw new Error('Access token missing from response');</span>
-      }
-&nbsp;
-<span class="cstat-no" title="statement not covered" >      return data.access_token;</span>
-    } catch (error) {
-<span class="cstat-no" title="statement not covered" >      this.logger.error('Error getting machine token:', error);</span>
-<span class="cstat-no" title="statement not covered" >      throw error;</span>
+<span class="fstat-no" title="function not covered" >  re</span>moveClient(clientId) {
+<span class="cstat-no" title="statement not covered" >    if (!clientId) {</span>
+<span class="cstat-no" title="statement not covered" >      throw new Error('Client ID is required');</span>
     }
-  }
 &nbsp;
-  /**
-   * Make an authenticated API request
-   * @param {string} endpoint - API endpoint (without base URL)
-   * @param {Object} options - Fetch options
-   * @returns {Promise&lt;Object&gt;} The API response
-   */
-<span class="fstat-no" title="function not covered" >  as</span>ync apiRequest(endpoint, options = <span class="branch-0 cbranch-no" title="branch not covered" >{})</span> {
-<span class="cstat-no" title="statement not covered" >    try {</span>
-      const token = <span class="cstat-no" title="statement not covered" >await this.getAccessToken();</span>
-&nbsp;
-      const response = <span class="cstat-no" title="statement not covered" >await fetch(`${this.apiBaseUrl}${endpoint}`, {</span>
-        ...options,
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          ...options.headers,
-        },
-      });
-&nbsp;
-<span class="cstat-no" title="statement not covered" >      if (!response.ok) {</span>
-        const errorText = <span class="cstat-no" title="statement not covered" >await response.text();</span>
-<span class="cstat-no" title="statement not covered" >        throw new Error(`API request failed: ${response.status} ${errorText}`);</span>
-      }
-&nbsp;
-<span class="cstat-no" title="statement not covered" >      return await response.json();</span>
-    } catch (error) {
-<span class="cstat-no" title="statement not covered" >      this.logger.error(`API request to ${endpoint} failed:`, error);</span>
-<span class="cstat-no" title="statement not covered" >      throw error;</span>
+    // Don't allow removing legacy clients
+<span class="cstat-no" title="statement not covered" >    if (clientId === this.LEGACY_CLIENTS.PRIMARY || clientId === this.LEGACY_CLIENTS.SECONDARY) {</span>
+<span class="cstat-no" title="statement not covered" >      throw new Error('Cannot remove legacy clients');</span>
     }
+&nbsp;
+    const registry = <span class="cstat-no" title="statement not covered" >this.homey.settings.get(this.SETTINGS_KEYS.CLIENT_REGISTRY) || { clients: [] };</span>
+&nbsp;
+    // Filter out the client to remove
+<span class="cstat-no" title="statement not covered" >    registry.clients = registry.clients.filter(<span class="fstat-no" title="function not covered" >c </span>=&gt; <span class="cstat-no" title="statement not covered" >c.id !== clientId)</span>;</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >    this.homey.settings.set(this.SETTINGS_KEYS.CLIENT_REGISTRY, registry);</span>
+<span class="cstat-no" title="statement not covered" >    this.logger(`Client ${clientId} removed from registry`);</span>
+<span class="cstat-no" title="statement not covered" >    return true;</span>
   }
 &nbsp;
   /**
-   * Get the user's vehicles
-   * @returns {Promise&lt;Array&gt;} List of vehicles
+   * Get all registered clients
+   * @returns {Array} Array of client objects
    */
-<span class="fstat-no" title="function not covered" >  as</span>ync getVehicles() {
-    const response = <span class="cstat-no" title="statement not covered" >await this.apiRequest('/vehicles');</span>
-<span class="cstat-no" title="statement not covered" >    return response.data || [];</span>
+<span class="fstat-no" title="function not covered" >  ge</span>tAllClients() {
+    const registry = <span class="cstat-no" title="statement not covered" >this.homey.settings.get(this.SETTINGS_KEYS.CLIENT_REGISTRY) || { clients: [] };</span>
+<span class="cstat-no" title="statement not covered" >    return registry.clients;</span>
   }
 &nbsp;
   /**
-   * Get data for a specific vehicle
-   * @param {string} vehicleId - The vehicle ID
-   * @returns {Promise&lt;Object&gt;} Vehicle data
+   * Get a specific client by ID
+   * @param {string} clientId - The client identifier
+   * @returns {Object|null} The client object or null if not found
    */
-<span class="fstat-no" title="function not covered" >  as</span>ync getVehicleData(vehicleId) {
-<span class="cstat-no" title="statement not covered" >    return this.apiRequest(`/vehicles/${vehicleId}`);</span>
-  }
-&nbsp;
-  /**
-   * Start charging a vehicle
-   * @param {string} vehicleId - The vehicle ID
-   * @returns {Promise&lt;Object&gt;} Command result
-   */
-<span class="fstat-no" title="function not covered" >  as</span>ync startCharging(vehicleId) {
-<span class="cstat-no" title="statement not covered" >    return this.apiRequest(`/vehicles/${vehicleId}/charging/start`, {</span>
-      method: 'POST',
-    });
-  }
-&nbsp;
-  /**
-   * Stop charging a vehicle
-   * @param {string} vehicleId - The vehicle ID
-   * @returns {Promise&lt;Object&gt;} Command result
-   */
-<span class="fstat-no" title="function not covered" >  as</span>ync stopCharging(vehicleId) {
-<span class="cstat-no" title="statement not covered" >    return this.apiRequest(`/vehicles/${vehicleId}/charging/stop`, {</span>
-      method: 'POST',
-    });
-  }
-&nbsp;
-  /**
-   * Set the charging limit for a vehicle
-   * @param {string} vehicleId - The vehicle ID
-   * @param {number} limit - The charging limit (0-100)
-   * @returns {Promise&lt;Object&gt;} Command result
-   */
-<span class="fstat-no" title="function not covered" >  as</span>ync setChargingLimit(vehicleId, limit) {
-<span class="cstat-no" title="statement not covered" >    return this.apiRequest(`/vehicles/${vehicleId}/charging/limit`, {</span>
-      method: 'POST',
-      body: JSON.stringify({ limit }),
-    });
-  }
-&nbsp;
-  /**
-   * Load token data from storage
-   * @param {Object} tokenData - The token data to load
-   */
-<span class="fstat-no" title="function not covered" >  lo</span>adToken(tokenData) {
-<span class="cstat-no" title="statement not covered" >    if (tokenData) {</span>
-<span class="cstat-no" title="statement not covered" >      this.token = tokenData.token;</span>
-<span class="cstat-no" title="statement not covered" >      this.refreshToken = tokenData.refreshToken;</span>
-<span class="cstat-no" title="statement not covered" >      this.tokenExpiresAt = tokenData.expiresAt;</span>
-&nbsp;
-<span class="cstat-no" title="statement not covered" >      this.logger.log('Token loaded from storage');</span>
+<span class="fstat-no" title="function not covered" >  ge</span>tClient(clientId) {
+<span class="cstat-no" title="statement not covered" >    if (!clientId) {</span>
+<span class="cstat-no" title="statement not covered" >      return null;</span>
     }
+&nbsp;
+    const registry = <span class="cstat-no" title="statement not covered" >this.homey.settings.get(this.SETTINGS_KEYS.CLIENT_REGISTRY) || { clients: [] };</span>
+<span class="cstat-no" title="statement not covered" >    return registry.clients.find(<span class="fstat-no" title="function not covered" >c </span>=&gt; <span class="cstat-no" title="statement not covered" >c.id === clientId)</span> || null;</span>
   }
 &nbsp;
   /**
-   * Get the current token data for storage
-   * @returns {Object|null} The token data or null if no token
+   * Get credentials for a specific client
+   * @param {string} clientId - The client identifier
+   * @returns {Object} The credentials object with enodeClientId and enodeClientSecret
    */
-<span class="fstat-no" title="function not covered" >  ge</span>tTokenData() {
-<span class="cstat-no" title="statement not covered" >    if (!this.token) <span class="cstat-no" title="statement not covered" >return null;</span></span>
+<span class="fstat-no" title="function not covered" >  ge</span>tClientCredentials(clientId = <span class="branch-0 cbranch-no" title="branch not covered" >null)</span> {
+    // If no client specified, use the default client
+<span class="cstat-no" title="statement not covered" >    if (!clientId) {</span>
+<span class="cstat-no" title="statement not covered" >      clientId = this.getDefaultClient();</span>
+    }
+&nbsp;
+    const client = <span class="cstat-no" title="statement not covered" >this.getClient(clientId);</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >    if (!client) {</span>
+<span class="cstat-no" title="statement not covered" >      throw new Error(`Unknown client ID: ${clientId}`);</span>
+    }
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    return {</span>
-      token: this.token,
-      refreshToken: this.refreshToken,
-      expiresAt: this.tokenExpiresAt,
+      clientId: client.enodeClientId,
+      clientSecret: client.enodeClientSecret,
+      clientIdentifier: client.id
     };
+  }
+&nbsp;
+  /**
+   * Get the best client for a new vehicle
+   * This fills each client to 25 vehicles before moving to the next one
+   * @returns {string} The client ID to use
+   */
+<span class="fstat-no" title="function not covered" >  ge</span>tClientForNewVehicle() {
+    // Get all clients
+    const registry = <span class="cstat-no" title="statement not covered" >this.homey.settings.get(this.SETTINGS_KEYS.CLIENT_REGISTRY) || { clients: [] };</span>
+    const clients = <span class="cstat-no" title="statement not covered" >registry.clients || [];</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >    if (clients.length === 0) {</span>
+<span class="cstat-no" title="statement not covered" >      return this.LEGACY_CLIENTS.PRIMARY;</span>
+    }
+&nbsp;
+    // Get vehicle-client mapping to count vehicles per client
+    const mapping = <span class="cstat-no" title="statement not covered" >this.homey.settings.get(this.SETTINGS_KEYS.VEHICLE_CLIENT_MAPPING) || {};</span>
+&nbsp;
+    // Count vehicles per client
+    const vehicleCounts = <span class="cstat-no" title="statement not covered" >{};</span>
+<span class="cstat-no" title="statement not covered" >    clients.forEach(<span class="fstat-no" title="function not covered" >cl</span>ient =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >      vehicleCounts[client.id] = 0;</span>
+    });
+&nbsp;
+    // Count existing vehicles
+<span class="cstat-no" title="statement not covered" >    Object.values(mapping).forEach(<span class="fstat-no" title="function not covered" >cl</span>ientId =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >      if (vehicleCounts[clientId] !== undefined) {</span>
+<span class="cstat-no" title="statement not covered" >        vehicleCounts[clientId]++;</span>
+      }
+    });
+&nbsp;
+    // Find the first client that isn't full (less than 25 vehicles)
+    const MAX_VEHICLES_PER_CLIENT = <span class="cstat-no" title="statement not covered" >25;</span>
+&nbsp;
+    // Sort clients to ensure we fill in order (primary, secondary, client_3, etc.)
+    const sortedClients = <span class="cstat-no" title="statement not covered" >[...clients].sort(<span class="fstat-no" title="function not covered" >(a</span>, b) =&gt; {</span>
+      // Primary first
+<span class="cstat-no" title="statement not covered" >      if (a.id === this.LEGACY_CLIENTS.PRIMARY) <span class="cstat-no" title="statement not covered" >return -1;</span></span>
+<span class="cstat-no" title="statement not covered" >      if (b.id === this.LEGACY_CLIENTS.PRIMARY) <span class="cstat-no" title="statement not covered" >return 1;</span></span>
+      // Secondary second
+<span class="cstat-no" title="statement not covered" >      if (a.id === this.LEGACY_CLIENTS.SECONDARY) <span class="cstat-no" title="statement not covered" >return -1;</span></span>
+<span class="cstat-no" title="statement not covered" >      if (b.id === this.LEGACY_CLIENTS.SECONDARY) <span class="cstat-no" title="statement not covered" >return 1;</span></span>
+      // Then by client ID (assuming format like client_3, client_4, etc.)
+<span class="cstat-no" title="statement not covered" >      return a.id.localeCompare(b.id);</span>
+    });
+&nbsp;
+<span class="cstat-no" title="statement not covered" >    for (const client of sortedClients) {</span>
+      const count = <span class="cstat-no" title="statement not covered" >vehicleCounts[client.id] || 0;</span>
+<span class="cstat-no" title="statement not covered" >      if (count &lt; MAX_VEHICLES_PER_CLIENT) {</span>
+<span class="cstat-no" title="statement not covered" >        this.logger(`Selected client ${client.id} with ${count}/${MAX_VEHICLES_PER_CLIENT} vehicles for new vehicle`);</span>
+<span class="cstat-no" title="statement not covered" >        return client.id;</span>
+      }
+    }
+&nbsp;
+    // If all clients are full, use the last one as fallback
+    const lastClient = <span class="cstat-no" title="statement not covered" >sortedClients[sortedClients.length - 1];</span>
+<span class="cstat-no" title="statement not covered" >    this.logger(`All clients are full, using ${lastClient.id} as fallback`);</span>
+<span class="cstat-no" title="statement not covered" >    return lastClient.id;</span>
+  }
+&nbsp;
+  /**
+   * Get the default client for new vehicles
+   * @returns {string} The default client ID
+   */
+<span class="fstat-no" title="function not covered" >  ge</span>tDefaultClient() {
+    // Check if a default client is explicitly set in settings
+    const defaultClient = <span class="cstat-no" title="statement not covered" >this.homey.settings.get(this.SETTINGS_KEYS.DEFAULT_CLIENT);</span>
+<span class="cstat-no" title="statement not covered" >    if (defaultClient) {</span>
+<span class="cstat-no" title="statement not covered" >      return defaultClient;</span>
+    }
+&nbsp;
+    // Otherwise, use the fill-to-capacity strategy
+<span class="cstat-no" title="statement not covered" >    return this.getClientForNewVehicle();</span>
+  }
+&nbsp;
+  /**
+   * Set the default client for new vehicles
+   * @param {string} clientId - The client identifier
+   */
+<span class="fstat-no" title="function not covered" >  se</span>tDefaultClient(clientId) {
+<span class="cstat-no" title="statement not covered" >    if (!clientId) {</span>
+<span class="cstat-no" title="statement not covered" >      throw new Error('Client ID is required');</span>
+    }
+&nbsp;
+    // Verify client exists
+    const client = <span class="cstat-no" title="statement not covered" >this.getClient(clientId);</span>
+<span class="cstat-no" title="statement not covered" >    if (!client) {</span>
+<span class="cstat-no" title="statement not covered" >      throw new Error(`Invalid client ID: ${clientId}`);</span>
+    }
+&nbsp;
+<span class="cstat-no" title="statement not covered" >    this.homey.settings.set(this.SETTINGS_KEYS.DEFAULT_CLIENT, clientId);</span>
+<span class="cstat-no" title="statement not covered" >    this.logger(`Default client set to: ${clientId}`);</span>
+  }
+&nbsp;
+  /**
+   * Associate a vehicle with a specific client
+   * @param {string} vehicleId - The vehicle ID or VIN
+   * @param {string} clientId - The client identifier
+   */
+<span class="fstat-no" title="function not covered" >  se</span>tVehicleClient(vehicleId, clientId) {
+<span class="cstat-no" title="statement not covered" >    if (!vehicleId) {</span>
+<span class="cstat-no" title="statement not covered" >      throw new Error('Vehicle ID is required');</span>
+    }
+&nbsp;
+    // Verify client exists
+    const client = <span class="cstat-no" title="statement not covered" >this.getClient(clientId);</span>
+<span class="cstat-no" title="statement not covered" >    if (!client) {</span>
+<span class="cstat-no" title="statement not covered" >      throw new Error(`Invalid client ID: ${clientId}`);</span>
+    }
+&nbsp;
+    const mapping = <span class="cstat-no" title="statement not covered" >this.homey.settings.get(this.SETTINGS_KEYS.VEHICLE_CLIENT_MAPPING) || {};</span>
+<span class="cstat-no" title="statement not covered" >    mapping[vehicleId] = clientId;</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >    this.homey.settings.set(this.SETTINGS_KEYS.VEHICLE_CLIENT_MAPPING, mapping);</span>
+<span class="cstat-no" title="statement not covered" >    this.logger(`Vehicle ${vehicleId} associated with client: ${clientId}`);</span>
+  }
+&nbsp;
+  /**
+   * Get the client associated with a vehicle
+   * @param {string} vehicleId - The vehicle ID or VIN
+   * @returns {string} The client identifier
+   */
+<span class="fstat-no" title="function not covered" >  ge</span>tVehicleClient(vehicleId) {
+<span class="cstat-no" title="statement not covered" >    if (!vehicleId) {</span>
+<span class="cstat-no" title="statement not covered" >      return this.getDefaultClient();</span>
+    }
+&nbsp;
+    const mapping = <span class="cstat-no" title="statement not covered" >this.homey.settings.get(this.SETTINGS_KEYS.VEHICLE_CLIENT_MAPPING) || {};</span>
+&nbsp;
+    // If vehicle is not in mapping, use default client
+<span class="cstat-no" title="statement not covered" >    return mapping[vehicleId] || this.getDefaultClient();</span>
+  }
+&nbsp;
+  /**
+   * Get credentials for a specific vehicle
+   * @param {string} vehicleId - The vehicle ID or VIN
+   * @returns {Object} The credentials object
+   */
+<span class="fstat-no" title="function not covered" >  ge</span>tVehicleCredentials(vehicleId) {
+    const clientId = <span class="cstat-no" title="statement not covered" >this.getVehicleClient(vehicleId);</span>
+<span class="cstat-no" title="statement not covered" >    return this.getClientCredentials(clientId);</span>
+  }
+&nbsp;
+  /**
+   * Check if all clients are properly configured
+   * @returns {Object} Status of all clients
+   */
+<span class="fstat-no" title="function not covered" >  ch</span>eckClientsStatus() {
+    const clients = <span class="cstat-no" title="statement not covered" >this.getAllClients();</span>
+    const status = <span class="cstat-no" title="statement not covered" >{</span>
+      totalClients: clients.length,
+      configuredClients: 0,
+      clients: {}
+    };
+&nbsp;
+<span class="cstat-no" title="statement not covered" >    clients.forEach(<span class="fstat-no" title="function not covered" >cl</span>ient =&gt; {</span>
+      const isConfigured = <span class="cstat-no" title="statement not covered" >!!(client.enodeClientId &amp;&amp; client.enodeClientSecret);</span>
+<span class="cstat-no" title="statement not covered" >      status.clients[client.id] = {</span>
+        name: client.name,
+        isConfigured: isConfigured
+      };
+&nbsp;
+<span class="cstat-no" title="statement not covered" >      if (isConfigured) {</span>
+<span class="cstat-no" title="statement not covered" >        status.configuredClients++;</span>
+      }
+    });
+&nbsp;
+<span class="cstat-no" title="statement not covered" >    return status;</span>
   }
 }
 &nbsp;
-module.exports = EnodeOAuth2;
+module.exports = ClientManager;
 &nbsp;</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->

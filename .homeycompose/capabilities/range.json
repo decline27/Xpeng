@@ -6,5 +6,6 @@
     "setable": false,
     "decimals": 1,
     "icon": "assets/capabilities/range.svg",
-    "uiComponent": "sensor"
+    "uiComponent": "sensor",
+    "insights": true
 }

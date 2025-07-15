@@ -657,6 +657,72 @@
     "actions": [
       {
         "title": {
+          "en": "Predict Charging Time"
+        },
+        "hint": {
+          "en": "Predict time to complete charging based on current power delivery and battery level"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=cars"
+          }
+        ],
+        "tokens": [
+          {
+            "name": "charging_time_minutes",
+            "type": "number",
+            "title": {
+              "en": "Charging Time (minutes)"
+            },
+            "example": 120
+          },
+          {
+            "name": "charging_time_hours",
+            "type": "number",
+            "title": {
+              "en": "Charging Time (hours)"
+            },
+            "example": 2
+          }
+        ],
+        "platforms": [
+          "local"
+        ],
+        "id": "predict_charging_time"
+      },
+      {
+        "title": {
+          "en": "Predict Range"
+        },
+        "hint": {
+          "en": "Predict vehicle range based on historical data and current battery level"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=cars"
+          }
+        ],
+        "tokens": [
+          {
+            "name": "predicted_range",
+            "type": "number",
+            "title": {
+              "en": "Predicted Range (km)"
+            },
+            "example": 250
+          }
+        ],
+        "platforms": [
+          "local"
+        ],
+        "id": "predict_range"
+      },
+      {
+        "title": {
           "en": "Refresh Vehicle Data"
         },
         "hint": {
@@ -720,7 +786,7 @@
       "name": {
         "en": "XPENG Car"
       },
-      "class": "other",
+      "class": "sensor",
       "capabilities": [
         "batteryLevel",
         "batteryCapacity",
@@ -766,6 +832,26 @@
           "template": "add_devices"
         }
       ],
+      "capabilitiesOptions": {
+        "batteryLevel": {
+          "preventInsights": false
+        },
+        "batteryCapacity": {
+          "preventInsights": false
+        },
+        "range": {
+          "preventInsights": false
+        },
+        "odometer": {
+          "preventInsights": false
+        },
+        "chargingLimit": {
+          "preventInsights": false
+        },
+        "pluggedInStatus": {
+          "preventInsights": false
+        }
+      },
       "energy": {
         "batteries": [
           "INTERNAL"
@@ -855,13 +941,18 @@
       "getable": true,
       "setable": false,
       "icon": "assets/capabilities/battery.svg",
-      "uiComponent": "sensor"
+      "uiComponent": "sensor",
+      "insights": true
     },
     "batteryLevel": {
-      "type": "string",
+      "type": "number",
       "title": {
         "en": "Battery Level"
       },
+      "units": "%",
+      "min": 0,
+      "max": 100,
+      "decimals": 1,
       "getable": true,
       "setable": false,
       "uiComponent": "sensor",
@@ -881,7 +972,8 @@
       "min": 0,
       "max": 100,
       "icon": "assets/capabilities/charging.svg",
-      "uiComponent": "sensor"
+      "uiComponent": "sensor",
+      "insights": true
     },
     "chargingStatus": {
       "type": "string",
@@ -892,7 +984,7 @@
       "setable": false,
       "uiComponent": "sensor",
       "icon": "/assets/charging.svg",
-      "insights": true,
+      "insights": false,
       "uiQuickAction": true,
       "statusIndicator": true
     },
@@ -904,7 +996,8 @@
       "getable": true,
       "setable": false,
       "icon": "assets/capabilities/last-seen.svg",
-      "uiComponent": "sensor"
+      "uiComponent": "sensor",
+      "insights": false
     },
     "location": {
       "type": "string",
@@ -931,7 +1024,8 @@
       "min": 0,
       "units": {
         "en": "km"
-      }
+      },
+      "insights": true
     },
     "pluggedInStatus": {
       "type": "boolean",
@@ -947,7 +1041,8 @@
         "en": "Unplugged"
       },
       "icon": "assets/capabilities/charging.svg",
-      "uiComponent": "sensor"
+      "uiComponent": "sensor",
+      "insights": true
     },
     "powerDeliveryState": {
       "id": "powerDeliveryState",
@@ -955,6 +1050,8 @@
       "type": "string",
       "getable": true,
       "setable": false,
+      "uiComponent": "sensor",
+      "insights": false,
       "options": {
         "choices": [
           "UNPLUGGED",
@@ -973,7 +1070,8 @@
       "setable": false,
       "decimals": 1,
       "icon": "assets/capabilities/range.svg",
-      "uiComponent": "sensor"
+      "uiComponent": "sensor",
+      "insights": true
     },
     "vehicleBrand": {
       "type": "string",

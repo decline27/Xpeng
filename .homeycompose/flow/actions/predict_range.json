@@ -1,0 +1,26 @@
+{
+  "title": {
+    "en": "Predict Range"
+  },
+  "hint": {
+    "en": "Predict vehicle range based on historical data and current battery level"
+  },
+  "args": [
+    {
+      "type": "device",
+      "name": "device",
+      "filter": "driver_id=cars"
+    }
+  ],
+  "tokens": [
+    {
+      "name": "predicted_range",
+      "type": "number",
+      "title": {
+        "en": "Predicted Range (km)"
+      },
+      "example": 250
+    }
+  ],
+  "platforms": ["local"]
+}
