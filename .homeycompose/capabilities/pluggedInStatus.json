@@ -6,5 +6,6 @@
     "title_true": { "en": "Plugged In" },
     "title_false": { "en": "Unplugged" },
     "icon": "assets/capabilities/charging.svg",
-    "uiComponent": "sensor"
+    "uiComponent": "sensor",
+    "insights": true
 }

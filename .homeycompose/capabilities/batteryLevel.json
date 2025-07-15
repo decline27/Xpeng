@@ -1,8 +1,12 @@
 {
-  "type": "string",
+  "type": "number",
   "title": {
     "en": "Battery Level"
   },
+  "units": "%",
+  "min": 0,
+  "max": 100,
+  "decimals": 1,
   "getable": true,
   "setable": false,
   "uiComponent": "sensor",

@@ -132,7 +132,7 @@ describe('VehicleStore', () => {
     const processed = vehicleStore.processDynamicData(vehicleData);
     
     expect(processed).toEqual({
-      batteryLevel: '75%',
+      batteryLevel: 75,
       range: undefined, // Not in test data
       chargingStatus: 'Charging',
       pluggedInStatus: true,
@@ -176,7 +176,7 @@ describe('VehicleStore', () => {
   test('should handle cache operations correctly', () => {
     jest.useFakeTimers();
     
-    const data = { batteryLevel: '75%', range: '300 km' };
+    const data = { batteryLevel: 75, range: '300 km' };
     vehicleStore.setCachedData(data);
     
     // Should be able to retrieve the data

@@ -136,7 +136,7 @@ describe('Flow Capabilities', () => {
         batteryCapacity: 80.5
       }),
       processDynamicData: jest.fn().mockReturnValue({
-        batteryLevel: '75%',
+        batteryLevel: 75,
         range: '300 km',
         chargingStatus: 'Charging',
         pluggedInStatus: true,
@@ -148,7 +148,7 @@ describe('Flow Capabilities', () => {
       }),
       setCachedData: jest.fn(),
       getCachedData: jest.fn().mockReturnValue({
-        batteryLevel: '75%',
+        batteryLevel: 75,
         range: '300 km',
         chargingStatus: 'Charging',
         pluggedInStatus: true,
@@ -191,7 +191,7 @@ describe('Flow Capabilities', () => {
       });
       
       // Update mock data
-      const oldBatteryLevel = '75%';
+      const oldBatteryLevel = 75;
       device.getCapabilityValue = jest.fn().mockImplementation((capability) => {
         if (capability === 'batteryLevel') return oldBatteryLevel;
         return null;
@@ -199,7 +199,7 @@ describe('Flow Capabilities', () => {
       
       // Process the data update
       await device.updateCapabilities({
-        batteryLevel: '80%',
+        batteryLevel: 80,
         range: '320 km',
         chargingStatus: 'Charging',
         pluggedInStatus: true
@@ -225,7 +225,7 @@ describe('Flow Capabilities', () => {
       device.getCapabilityValue = jest.fn().mockImplementation((capability) => {
         switch (capability) {
           case 'batteryLevel':
-            return '75%';
+            return 75;
           case 'pluggedInStatus':
             return true;
           case 'chargingStatus':
@@ -237,7 +237,7 @@ describe('Flow Capabilities', () => {
       
       // Update to charging state
       await device.updateCapabilities({
-        batteryLevel: '75%',
+        batteryLevel: 75,
         range: '300 km',
         chargingStatus: 'Charging', // Now charging
         pluggedInStatus: true
@@ -275,7 +275,7 @@ describe('Flow Capabilities', () => {
       
       // Update to not charging state
       await device.updateCapabilities({
-        batteryLevel: '75%',
+        batteryLevel: 75,
         range: '300 km',
         chargingStatus: 'Connected', // Now just connected, not charging
         pluggedInStatus: true
@@ -313,7 +313,7 @@ describe('Flow Capabilities', () => {
       
       // Update to plugged in state
       await device.updateCapabilities({
-        batteryLevel: '75%',
+        batteryLevel: 75,
         range: '300 km',
         chargingStatus: 'Connected',
         pluggedInStatus: true // Now plugged in
@@ -424,15 +424,15 @@ describe('Flow Capabilities', () => {
     test('battery_level condition should compare correctly', () => {
       // Set up device with battery level
       device.getCapabilityValue = jest.fn().mockImplementation((capability) => {
-        if (capability === 'batteryLevel') return '75%';
+        if (capability === 'batteryLevel') return 75;
         return null;
       });
       
       // Test equals condition
-      expect(device.getCapabilityValue('batteryLevel')).toBe('75%');
+      expect(device.getCapabilityValue('batteryLevel')).toBe(75);
       
       // In a real condition check, we would process '75%' to a number and compare
-      const batteryLevelNum = parseInt(device.getCapabilityValue('batteryLevel'), 10);
+      const batteryLevelNum = device.getCapabilityValue('batteryLevel');
       expect(batteryLevelNum).toBe(75);
       expect(batteryLevelNum > 50).toBe(true);
       expect(batteryLevelNum < 90).toBe(true);
@@ -563,7 +563,7 @@ describe('Flow Capabilities', () => {
       // Test battery level change
       {
         const batteryChanges = new Map();
-        batteryChanges.set('batteryLevel', { oldValue: '75%', newValue: '80%' });
+        batteryChanges.set('batteryLevel', { oldValue: 75, newValue: 80 });
         await handleFlowTriggers(batteryChanges);
         expect(device.triggerFlow).toHaveBeenCalledWith('battery_level_changed', { battery_level: 80 });
       }

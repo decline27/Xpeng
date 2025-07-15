@@ -5,7 +5,7 @@
     "setable": false,
     "uiComponent": "sensor",
     "icon": "/assets/charging.svg",
-    "insights": true,
+    "insights": false,
     "uiQuickAction": true,
     "statusIndicator": true
 }

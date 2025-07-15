@@ -1,0 +1,34 @@
+{
+  "title": {
+    "en": "Predict Charging Time"
+  },
+  "hint": {
+    "en": "Predict time to complete charging based on current power delivery and battery level"
+  },
+  "args": [
+    {
+      "type": "device",
+      "name": "device",
+      "filter": "driver_id=cars"
+    }
+  ],
+  "tokens": [
+    {
+      "name": "charging_time_minutes",
+      "type": "number",
+      "title": {
+        "en": "Charging Time (minutes)"
+      },
+      "example": 120
+    },
+    {
+      "name": "charging_time_hours",
+      "type": "number",
+      "title": {
+        "en": "Charging Time (hours)"
+      },
+      "example": 2
+    }
+  ],
+  "platforms": ["local"]
+}

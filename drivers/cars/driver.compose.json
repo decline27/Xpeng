@@ -3,7 +3,7 @@
   "name": {
     "en": "XPENG Car"
   },
-  "class": "other",
+  "class": "sensor",
   "capabilities": [
     "batteryLevel",
     "batteryCapacity",
@@ -49,6 +49,26 @@
       "template": "add_devices"
     }
   ],
+  "capabilitiesOptions": {
+    "batteryLevel": {
+      "preventInsights": false
+    },
+    "batteryCapacity": {
+      "preventInsights": false
+    },
+    "range": {
+      "preventInsights": false
+    },
+    "odometer": {
+      "preventInsights": false
+    },
+    "chargingLimit": {
+      "preventInsights": false
+    },
+    "pluggedInStatus": {
+      "preventInsights": false
+    }
+  },
   "energy": {
     "batteries": [
       "INTERNAL"

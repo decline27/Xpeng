@@ -424,9 +424,24 @@ class XpengCarDevice extends Homey.Device {
                 changedCapabilities.set(capability, { oldValue: oldBool, newValue: newBool });
               }
             }
-            // Handle other capabilities normally
+            // Handle other capabilities normally with Insights support
             else {
-              await this.setCapabilityValue(capability, value);
+              // Use specialized methods for key metrics to ensure Insights logging
+              if (capability === 'batteryLevel') {
+                await this.updateBatteryLevel(value);
+              } else if (capability === 'range') {
+                await this.updateRange(value);
+              } else if (capability === 'odometer') {
+                await this.updateOdometer(value);
+              } else if (capability === 'batteryCapacity') {
+                await this.updateBatteryCapacity(value);
+              } else if (capability === 'chargingLimit') {
+                await this.updateChargingLimit(value);
+              } else if (capability === 'lastSeen') {
+                await this.updateLastSeen(value);
+              } else {
+                await this.setCapabilityValue(capability, value);
+              }
               updatedCapabilities++;
 
               // Store capability changes for flow triggers
@@ -466,8 +481,8 @@ class XpengCarDevice extends Homey.Device {
       // Battery level changed
       if (changedCapabilities.has('batteryLevel')) {
         const { newValue } = changedCapabilities.get('batteryLevel');
-        // Extract numeric value from percentage string (e.g., "75%")
-        const numericValue = parseInt(newValue, 10);
+        // batteryLevel is now a numeric value
+        const numericValue = typeof newValue === 'number' ? newValue : parseFloat(newValue);
         if (!isNaN(numericValue)) {
           this.log(`Triggering battery_level_changed flow: ${numericValue}%`);
           await this.homey.flow.getDeviceTriggerCard('battery_level_changed')
@@ -717,6 +732,216 @@ class XpengCarDevice extends Homey.Device {
 
       this.error(`Failed to refresh data for ${this.getName()}: ${handled.original}`);
       return false;
+    }
+  }
+
+  // Step 1: Specialized methods for Insights logging
+  async updateBatteryLevel(batteryValue) {
+    try {
+      await this.setCapabilityValue('batteryLevel', batteryValue);
+      // Insights will automatically log this if enabled (preventInsights: false)
+      this.log(`Battery level updated to ${batteryValue} - logged to Insights`);
+    } catch (error) {
+      this.error('Failed to update battery level:', error);
+      throw error;
+    }
+  }
+
+  async updateRange(rangeValue) {
+    try {
+      await this.setCapabilityValue('range', rangeValue);
+      // Insights will automatically log this if enabled
+      this.log(`Range updated to ${rangeValue} - logged to Insights`);
+    } catch (error) {
+      this.error('Failed to update range:', error);
+      throw error;
+    }
+  }
+
+  async updateOdometer(odometerValue) {
+    try {
+      await this.setCapabilityValue('odometer', odometerValue);
+      // Insights will automatically log this if enabled
+      this.log(`Odometer updated to ${odometerValue} - logged to Insights`);
+    } catch (error) {
+      this.error('Failed to update odometer:', error);
+      throw error;
+    }
+  }
+
+  async updateBatteryCapacity(capacityValue) {
+    try {
+      await this.setCapabilityValue('batteryCapacity', capacityValue);
+      // Insights will automatically log this if enabled
+      this.log(`Battery capacity updated to ${capacityValue} - logged to Insights`);
+    } catch (error) {
+      this.error('Failed to update battery capacity:', error);
+      throw error;
+    }
+  }
+
+  async updateChargingLimit(limitValue) {
+    try {
+      await this.setCapabilityValue('chargingLimit', limitValue);
+      // Insights will automatically log this if enabled
+      this.log(`Charging limit updated to ${limitValue} - logged to Insights`);
+    } catch (error) {
+      this.error('Failed to update charging limit:', error);
+      throw error;
+    }
+  }
+
+  async updatePluggedInStatus(pluggedValue) {
+    try {
+      await this.setCapabilityValue('pluggedInStatus', pluggedValue);
+      // Insights will automatically log this if enabled
+      this.log(`Plugged in status updated to ${pluggedValue} - logged to Insights`);
+    } catch (error) {
+      this.error('Failed to update plugged in status:', error);
+      throw error;
+    }
+  }
+
+  async updateLastSeen(lastSeenValue) {
+    try {
+      await this.setCapabilityValue('lastSeen', lastSeenValue);
+      // Insights will automatically log this if enabled
+      this.log(`Last seen updated to ${lastSeenValue} - logged to Insights`);
+    } catch (error) {
+      this.error('Failed to update last seen:', error);
+      throw error;
+    }
+  }
+
+  // Step 2: Energy Tracking for Homey Energy integration
+  getEnergy() {
+    try {
+      const powerDeliveryState = this.getCapabilityValue('powerDeliveryState') || 0;
+      const chargingStatus = this.getCapabilityValue('chargingStatus');
+      
+      // Convert power delivery state to watts
+      // powerDeliveryState is typically in kW, convert to watts
+      let watts = 0;
+      if (chargingStatus === 'Charging' && powerDeliveryState > 0) {
+        watts = powerDeliveryState * 1000; // Convert kW to watts
+      }
+      
+      this.log(`Energy tracking - Power: ${watts}W, Status: ${chargingStatus}`);
+      
+      return {
+        type: 'car',
+        watts: watts
+      };
+    } catch (error) {
+      this.error('Failed to get energy data:', error);
+      return {
+        type: 'car',
+        watts: 0
+      };
+    }
+  }
+
+  setEnergy(options) {
+    try {
+      // Handle setting energy-related states if needed
+      // This method is called by Homey Energy when energy settings change
+      this.log('Energy options updated:', options);
+      
+      // Store energy-related settings if provided
+      if (options && typeof options === 'object') {
+        // Could store energy preferences or settings here
+        this.log('Processing energy settings update');
+      }
+    } catch (error) {
+      this.error('Failed to set energy options:', error);
+    }
+  }
+
+  // Step 3: Predictive Features using Insights data
+  async predictRange() {
+    try {
+      // Get historical battery level and range data from Insights
+      const batteryLogs = await this.homey.insights.getLogs({
+        uri: `homey:device:${this.getData().id}`,
+        capability: 'batteryLevel',
+        resolution: 'lastHour',
+        start: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // Last 7 days
+        end: new Date()
+      });
+      
+      const rangeLogs = await this.homey.insights.getLogs({
+        uri: `homey:device:${this.getData().id}`,
+        capability: 'range',
+        resolution: 'lastHour',
+        start: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // Last 7 days
+        end: new Date()
+      });
+      
+      if (!batteryLogs || !rangeLogs || batteryLogs.length < 2 || rangeLogs.length < 2) {
+        this.log('Insufficient data for range prediction');
+        return this.getCapabilityValue('range'); // Return current range as fallback
+      }
+      
+      // Calculate average efficiency (range per battery percentage)
+      let totalEfficiency = 0;
+      let validSamples = 0;
+      
+      for (let i = 1; i < Math.min(batteryLogs.length, rangeLogs.length); i++) {
+        const batteryDiff = batteryLogs[i].v - batteryLogs[i-1].v;
+        const rangeDiff = rangeLogs[i].v - rangeLogs[i-1].v;
+        
+        if (batteryDiff !== 0) {
+          const efficiency = Math.abs(rangeDiff / batteryDiff);
+          if (efficiency > 0 && efficiency < 10) { // Sanity check
+            totalEfficiency += efficiency;
+            validSamples++;
+          }
+        }
+      }
+      
+      if (validSamples === 0) {
+        this.log('No valid efficiency samples for prediction');
+        return this.getCapabilityValue('range');
+      }
+      
+      const avgEfficiency = totalEfficiency / validSamples;
+      const currentBattery = this.getCapabilityValue('batteryLevel') || 0;
+      const predictedRange = Math.round(currentBattery * avgEfficiency);
+      
+      this.log(`Range prediction: ${predictedRange} km (efficiency: ${avgEfficiency.toFixed(2)} km/%, battery: ${currentBattery}%)`);
+      
+      return predictedRange;
+    } catch (error) {
+      this.error('Failed to predict range:', error);
+      return this.getCapabilityValue('range') || 0;
+    }
+  }
+
+  async predictChargingTime() {
+    try {
+      const currentBattery = this.getCapabilityValue('batteryLevel') || 0;
+      const chargingLimit = this.getCapabilityValue('chargingLimit') || 100;
+      const powerDeliveryState = this.getCapabilityValue('powerDeliveryState') || 0;
+      const batteryCapacity = this.getCapabilityValue('batteryCapacity') || 100;
+      
+      if (powerDeliveryState <= 0 || currentBattery >= chargingLimit) {
+        return 0; // Not charging or already at limit
+      }
+      
+      // Calculate remaining capacity to charge
+      const remainingPercent = chargingLimit - currentBattery;
+      const remainingCapacity = (remainingPercent / 100) * batteryCapacity; // kWh
+      
+      // Estimate charging time in hours
+      const chargingTimeHours = remainingCapacity / powerDeliveryState;
+      const chargingTimeMinutes = Math.round(chargingTimeHours * 60);
+      
+      this.log(`Charging time prediction: ${chargingTimeMinutes} minutes (${remainingPercent}% remaining, ${powerDeliveryState}kW power)`);
+      
+      return chargingTimeMinutes;
+    } catch (error) {
+      this.error('Failed to predict charging time:', error);
+      return 0;
     }
   }
 

@@ -97,7 +97,7 @@ class XpengDriver extends Homey.Driver {
       try {
         const { device, value, comparison } = args;
         const batteryValue = device.getCapabilityValue('batteryLevel');
-        const batteryLevel = parseInt(batteryValue, 10);
+        const batteryLevel = typeof batteryValue === 'number' ? batteryValue : parseFloat(batteryValue);
 
         this.log(`Battery level check: ${batteryValue} (${batteryLevel}) ${comparison} ${value}`);
 

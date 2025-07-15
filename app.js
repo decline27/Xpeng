@@ -130,8 +130,61 @@ module.exports = class XPengApp extends Homey.App {
       } catch (error) {
         Logger.error('Error initializing Enode clients:', error);
       }
+
+      // Register flow actions for advanced analytics
+      this.registerFlowActions();
+
     } catch (error) {
       Logger.error('Initialization error:', error);
+    }
+  }
+
+  /**
+   * Register flow actions for advanced analytics features
+   */
+  registerFlowActions() {
+    try {
+      // Register predict range flow action
+      this.homey.flow.getActionCard('predict_range')
+        .registerRunListener(async (args) => {
+          try {
+            const device = args.device;
+            const predictedRange = await device.predictRange();
+            
+            Logger.log(`Range prediction for ${device.getName()}: ${predictedRange} km`);
+            
+            return {
+              predicted_range: predictedRange
+            };
+          } catch (error) {
+            Logger.error('Error in predict_range flow action:', error);
+            throw new Error(`Failed to predict range: ${error.message}`);
+          }
+        });
+
+      // Register predict charging time flow action
+      this.homey.flow.getActionCard('predict_charging_time')
+        .registerRunListener(async (args) => {
+          try {
+            const device = args.device;
+            const chargingTimeMinutes = await device.predictChargingTime();
+            const chargingTimeHours = Math.round((chargingTimeMinutes / 60) * 100) / 100;
+            
+            Logger.log(`Charging time prediction for ${device.getName()}: ${chargingTimeMinutes} minutes (${chargingTimeHours} hours)`);
+            
+            return {
+              charging_time_minutes: chargingTimeMinutes,
+              charging_time_hours: chargingTimeHours
+            };
+          } catch (error) {
+            Logger.error('Error in predict_charging_time flow action:', error);
+            throw new Error(`Failed to predict charging time: ${error.message}`);
+          }
+        });
+
+      Logger.log('Advanced analytics flow actions registered successfully');
+    } catch (error) {
+      Logger.error('Error registering flow actions:', error);
     }
   }
 };
