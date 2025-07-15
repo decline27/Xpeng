@@ -154,5 +154,8 @@
   },
   "1.2.52": {
     "en": "Updated the loading of the widget"
+  },
+  "1.2.53": {
+    "en": "Fixed Insights configuration and batteryLevel double percentage display by converting batteryLevel to numeric type with proper units, disabling Insights for string capabilities, and updating all flow triggers, conditions, and test cases accordingly."
   }
 }
