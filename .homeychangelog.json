@@ -160,5 +160,14 @@
   },
   "1.2.54": {
     "en": "fixed error in enode connection."
+  },
+  "1.2.55": {
+    "en": "Bug fix"
+  },
+  "1.2.56": {
+    "en": "Bug fixes"
+  },
+  "1.2.57": {
+    "en": "bug hunting"
   }
 }
