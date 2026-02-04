@@ -590,10 +590,13 @@ class XpengDriver extends Homey.Driver {
         // Check if we have any vehicles to show
         if (vehicles.length === 0) {
           throw new Error(
-            'No XPENG vehicles found. Please make sure you have:\n\n' +
-            '1. Completed the connection process by clicking the link and authorizing in your browser\n' +
-            '2. Waited a few minutes for the connection to be established\n' +
-            '3. If problems persist, try clicking "Generate Connection Link" again'
+            'No vehicles linked to your account yet.\n\n' +
+            'NEXT STEPS:\n' +
+            '1. Click "Generate Connection Link" to get your personal linking URL\n' +
+            '2. Open the link in your browser and sign in with your XPENG account\n' +
+            '3. Authorize the connection to link your vehicle\n' +
+            '4. Wait 1-2 minutes, then return here and continue\n\n' +
+            'If you already completed these steps, please wait a few minutes and try again.'
           );
         }
 
@@ -740,6 +743,78 @@ class XpengDriver extends Homey.Driver {
         this.error('Failed to save pairing statistics:', error);
       }
 
+      return true;
+    });
+  }
+
+  /**
+   * Handles the device repair process
+   * @param {Object} session - The repair session object
+   * @param {Object} device - The device being repaired
+   */
+  async onRepair(session, device) {
+    this.log(`Repairing device: ${device.getName()}`);
+    let savedCredentials = false;
+
+    // Use the same handlers as pairing, focusing on the link generation
+
+    // Handler to get stored credentials status
+    session.setHandler('get_stored_credentials', async () => {
+      const storedClientId = this.homey.settings.get('enode_client_id') || Homey.env.ENODE_CLIENT_ID;
+      const storedClientSecret = this.homey.settings.get('enode_client_secret') || Homey.env.ENODE_CLIENT_SECRET;
+
+      return {
+        hasCredentials: !!(storedClientId && storedClientSecret)
+      };
+    });
+
+    // Validating API credentials
+    session.setHandler('save_credentials', async () => {
+      try {
+        this.clientId = Homey.env.ENODE_CLIENT_ID || this.homey.settings.get('enode_client_id');
+        this.clientSecret = Homey.env.ENODE_CLIENT_SECRET || this.homey.settings.get('enode_client_secret');
+
+        if (!this.clientId || !this.clientSecret) {
+          throw new Error('API Credentials not configured in env.json');
+        }
+
+        // Validate credentials
+        await this.enodeApi.getAccessToken();
+
+        savedCredentials = true;
+        return true;
+      } catch (error) {
+        throw new Error(`Credential validation failed: ${error.message}`);
+      }
+    });
+
+    // Generate link for the existing user ID of the device
+    session.setHandler('get_link', async () => {
+      try {
+        const deviceData = device.getData();
+        const vehicleInfo = device.getStoreValue('vehicleInfo');
+        const userId = vehicleInfo?.userId || `homey-${this.homey.id || 'homey'}-${this.homey.settings.get('installation_id')}`;
+
+        this.log(`Generating repair link for user ID: ${userId}`);
+
+        // Generate the vehicle link
+        const linkUrl = await this.enodeApi.generateVehicleLink(userId);
+        return { linkUrl };
+      } catch (error) {
+        this.error('Failed to generate repair link:', error);
+        throw new Error(`Problem generating link: ${error.message}`);
+      }
+    });
+
+    // Handle repair completion
+    session.setHandler('complete', async () => {
+      this.log(`Repair process completed for ${device.getName()}`);
+      // Refresh data to confirm link is working
+      try {
+        await device.refreshData();
+      } catch (error) {
+        this.error('Failed to refresh data after repair:', error);
+      }
       return true;
     });
   }
