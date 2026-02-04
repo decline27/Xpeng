@@ -788,10 +788,36 @@ class XpengDriver extends Homey.Driver {
       }
     });
 
+    // Add authentication status check (required by UI polling)
+    session.setHandler('check_auth_status', async () => {
+      try {
+        const vehicleInfo = device.getStoreValue('vehicleInfo');
+        const userId = vehicleInfo?.userId || `homey-${this.homey.id || 'homey'}-${this.homey.settings.get('installation_id')}`;
+
+        // Fetch vehicles from Enode API
+        const allVehicles = await this.enodeApi.getVehicles();
+
+        // Check if ANY vehicle exists for this user (same logic as onPair)
+        const userVehicles = allVehicles.filter(vehicle =>
+          vehicle.userId === userId ||
+          (vehicle.user && vehicle.user.id === userId)
+        );
+
+        this.log(`Repair auth check: Found ${userVehicles.length} vehicles for user ID ${userId}`);
+
+        return {
+          isAuthenticated: userVehicles.length > 0,
+          vehicleCount: userVehicles.length
+        };
+      } catch (error) {
+        this.error('Error checking repair auth status:', error);
+        return { isAuthenticated: false, vehicleCount: 0 };
+      }
+    });
+
     // Generate link for the existing user ID of the device
     session.setHandler('get_link', async () => {
       try {
-        const deviceData = device.getData();
         const vehicleInfo = device.getStoreValue('vehicleInfo');
         const userId = vehicleInfo?.userId || `homey-${this.homey.id || 'homey'}-${this.homey.settings.get('installation_id')}`;
 
@@ -804,6 +830,22 @@ class XpengDriver extends Homey.Driver {
         this.error('Failed to generate repair link:', error);
         throw new Error(`Problem generating link: ${error.message}`);
       }
+    });
+
+    // Handle device list (required by UI to proceed to final step)
+    session.setHandler('list_devices', async () => {
+      // In repair mode, we just want to confirm the device still exists or can be matched
+      // We'll return the current device as the only option
+      const vin = device.getData()?.vin;
+      const vehicleInfo = device.getStoreValue('vehicleInfo');
+
+      return [{
+        name: device.getName(),
+        data: device.getData(),
+        store: {
+          vehicleInfo: vehicleInfo
+        }
+      }];
     });
 
     // Handle repair completion
