@@ -1,0 +1,286 @@
+--- Enode Connection Cleanup ---
+Mode: DRY RUN (no changes will be made)
+To execute changes, use: --disconnect-inactive and/or --disconnect-orphaned
+[XPENG] Client primary added/updated in registry
+[XPENG] Client secondary added/updated in registry
+[XPENG] Client client_3 added/updated in registry
+[XPENG] Client client_4 added/updated in registry
+[XPENG] Client client_5 added/updated in registry
+Generating Enode cleanup report...
+[XPENG] Found 5 clients in registry
+[XPENG] Vehicle JTMAABAAX0A044005 associated with client: primary
+[XPENG] Vehicle L1N****B8PB006507 associated with client: primary
+[XPENG] Vehicle L1N****A0RB068283 associated with client: primary
+[XPENG] Vehicle L1N****B0SB005229 associated with client: primary
+[XPENG] Vehicle L1N****A5SB106161 associated with client: primary
+[XPENG] Vehicle L1N****B5RB017936 associated with client: primary
+[XPENG] Vehicle L1N****BXPB009165 associated with client: primary
+[XPENG] Vehicle L1N****B5PB007159 associated with client: primary
+[XPENG] Vehicle L1N****B1PB008602 associated with client: primary
+[XPENG] Vehicle L1N****B9RB016031 associated with client: primary
+[XPENG] Vehicle L1N****B6RB016360 associated with client: primary
+[XPENG] Vehicle L1N****B0PB019106 associated with client: primary
+[XPENG] Vehicle L1N****B3RB013125 associated with client: primary
+[XPENG] Vehicle L1N****B3RB013125 associated with client: primary
+[XPENG] Vehicle L1N****B0RB013454 associated with client: primary
+[XPENG] Vehicle L1N****A5RB060101 associated with client: primary
+[XPENG] Vehicle L1N****B5PB026696 associated with client: primary
+[XPENG] Vehicle L1N****B3PB007256 associated with client: primary
+[XPENG] Vehicle L1N****BXPB007948 associated with client: primary
+[XPENG] Vehicle L1N****A6RB059538 associated with client: primary
+[XPENG] Vehicle L1N****B1PB008602 associated with client: primary
+[XPENG] Vehicle L1N****A6RB059538 associated with client: primary
+[XPENG] Vehicle L1N****A6RB059538 associated with client: primary
+[XPENG] Vehicle L1N****A6RB059538 associated with client: primary
+[XPENG] Vehicle L1N****A6RB059538 associated with client: primary
+[XPENG] Added 25 vehicles from client primary
+[XPENG] Vehicle L1N****B3RB013125 associated with client: secondary
+[XPENG] Vehicle L1N****A8SB105828 associated with client: secondary
+[XPENG] Vehicle L1N****B6RB020487 associated with client: secondary
+[XPENG] Vehicle L1N****B1PB008602 associated with client: secondary
+[XPENG] Vehicle L1N****B9PB006659 associated with client: secondary
+[XPENG] Vehicle L1N****A3RB063448 associated with client: secondary
+[XPENG] Vehicle L1N****B8RB013945 associated with client: secondary
+[XPENG] Vehicle L1N****B5PB007159 associated with client: secondary
+[XPENG] Vehicle L1N****A5RB095821 associated with client: secondary
+[XPENG] Vehicle L1N****B1RB046155 associated with client: secondary
+[XPENG] Vehicle L1N****B8PB006507 associated with client: secondary
+[XPENG] Vehicle L1N****B0PB019106 associated with client: secondary
+[XPENG] Vehicle L1N****B0SB005229 associated with client: secondary
+[XPENG] Vehicle L1N****B0PB006520 associated with client: secondary
+[XPENG] Vehicle L1N****A3RB074160 associated with client: secondary
+[XPENG] Vehicle L1N****B8PB006619 associated with client: secondary
+[XPENG] Vehicle L1N****A6RB096069 associated with client: secondary
+[XPENG] Vehicle L1N****A4RB069811 associated with client: secondary
+[XPENG] Vehicle L1N****A5RB069526 associated with client: secondary
+[XPENG] Vehicle L1N****B8PB007124 associated with client: secondary
+[XPENG] Vehicle L1N****A6SB106878 associated with client: secondary
+[XPENG] Vehicle L1N****A6RB072421 associated with client: secondary
+[XPENG] Vehicle L1N****A6RB059538 associated with client: secondary
+[XPENG] Vehicle L1N****A5RB072555 associated with client: secondary
+[XPENG] Vehicle L1N****A6RB059538 associated with client: secondary
+[XPENG] Added 25 vehicles from client secondary
+[XPENG] Vehicle L1N****A5SB105995 associated with client: client_3
+[XPENG] Vehicle L1N****BXRB012103 associated with client: client_3
+[XPENG] Vehicle L1N****AXRB080070 associated with client: client_3
+[XPENG] Vehicle L1N****B1RB046155 associated with client: client_3
+[XPENG] Vehicle L1N****B7PB006742 associated with client: client_3
+[XPENG] Vehicle L1N****A2RB075347 associated with client: client_3
+[XPENG] Vehicle L1N****B4MA062692 associated with client: client_3
+[XPENG] Vehicle L1N****A2RB075347 associated with client: client_3
+[XPENG] Vehicle L1N****B8PB008578 associated with client: client_3
+[XPENG] Vehicle L1N****A8SB112391 associated with client: client_3
+[XPENG] Vehicle L1N****B8SB005253 associated with client: client_3
+[XPENG] Vehicle L1N****A3SB118051 associated with client: client_3
+[XPENG] Vehicle L1N****A3RB074160 associated with client: client_3
+[XPENG] Vehicle L1N****B1PB008891 associated with client: client_3
+[XPENG] Vehicle L1N****B6PB007848 associated with client: client_3
+[XPENG] Vehicle L1N****A6RB072421 associated with client: client_3
+[XPENG] Vehicle L1N****A6SB120716 associated with client: client_3
+[XPENG] Vehicle L1N****B5RB020934 associated with client: client_3
+[XPENG] Vehicle L1N****A8SB116540 associated with client: client_3
+[XPENG] Vehicle L1N****B7PB011679 associated with client: client_3
+[XPENG] Vehicle L1N****A9RB100597 associated with client: client_3
+[XPENG] Vehicle L1N****A0RB060152 associated with client: client_3
+[XPENG] Vehicle L1N****B9RB016854 associated with client: client_3
+[XPENG] Vehicle L1N****A6RB072421 associated with client: client_3
+[XPENG] Vehicle L1N****A6RB096069 associated with client: client_3
+[XPENG] Added 25 vehicles from client client_3
+[XPENG] Vehicle L1N****A3SB151342 associated with client: client_4
+[XPENG] Vehicle L1N****AXSB133758 associated with client: client_4
+[XPENG] Vehicle JTMAABAAX0A044005 associated with client: client_4
+[XPENG] Vehicle L1N****A0RB093152 associated with client: client_4
+[XPENG] Vehicle JTMAABAAX0A044005 associated with client: client_4
+[XPENG] Vehicle JTMAABAAX0A044005 associated with client: client_4
+[XPENG] Vehicle L1N****B9PB011960 associated with client: client_4
+[XPENG] Vehicle JTMAABAAX0A044005 associated with client: client_4
+[XPENG] Vehicle L1N****A7RB065803 associated with client: client_4
+[XPENG] Vehicle L1N****A7RB058253 associated with client: client_4
+[XPENG] Vehicle L1N****A4RB069811 associated with client: client_4
+[XPENG] Vehicle L1N****A9RB080495 associated with client: client_4
+[XPENG] Vehicle L1N****B9PB007410 associated with client: client_4
+[XPENG] Vehicle L1N****B9RB020001 associated with client: client_4
+[XPENG] Vehicle L1N****B4PB006424 associated with client: client_4
+[XPENG] Vehicle L1N****A5RB059577 associated with client: client_4
+[XPENG] Vehicle L1N****A4RB058467 associated with client: client_4
+[XPENG] Vehicle L1N****A0SB112384 associated with client: client_4
+[XPENG] Vehicle L1N****A6RB072421 associated with client: client_4
+[XPENG] Vehicle L1N****B0MA062107 associated with client: client_4
+[XPENG] Vehicle L1N****A6RB096069 associated with client: client_4
+[XPENG] Vehicle L1N****A7RB101134 associated with client: client_4
+[XPENG] Vehicle L1N****B7PA013037 associated with client: client_4
+[XPENG] Vehicle L1N****A7RB101134 associated with client: client_4
+[XPENG] Vehicle L1N****B6PA020044 associated with client: client_4
+[XPENG] Added 25 vehicles from client client_4
+[XPENG] Vehicle L1N****B2PB007166 associated with client: client_5
+[XPENG] Vehicle L1N****B5RB027804 associated with client: client_5
+[XPENG] Vehicle L1N****A4RB069789 associated with client: client_5
+[XPENG] Vehicle L1N****AXRB100916 associated with client: client_5
+[XPENG] Vehicle L1N****B6PB007834 associated with client: client_5
+[XPENG] Vehicle L1N****B6PB007834 associated with client: client_5
+[XPENG] Vehicle L1N****A7RB058253 associated with client: client_5
+[XPENG] Vehicle L1N****B6RB020487 associated with client: client_5
+[XPENG] Vehicle L1N****A1RB070060 associated with client: client_5
+[XPENG] Vehicle L1N****B8PB006538 associated with client: client_5
+[XPENG] Vehicle L1N****A1SB151937 associated with client: client_5
+[XPENG] Vehicle L1N****AXRB101113 associated with client: client_5
+[XPENG] Vehicle L1N****B9SD062100 associated with client: client_5
+[XPENG] Vehicle L1N****AXRB064774 associated with client: client_5
+[XPENG] Vehicle L1N****A0SB147524 associated with client: client_5
+[XPENG] Vehicle L1N****A0SB147524 associated with client: client_5
+[XPENG] Vehicle L1N****B0RB031260 associated with client: client_5
+[XPENG] Vehicle L1N****A7SB107196 associated with client: client_5
+[XPENG] Vehicle L1N****A9RB064801 associated with client: client_5
+[XPENG] Vehicle L1N****A9RB064801 associated with client: client_5
+[XPENG] Vehicle L1N****B4SD054213 associated with client: client_5
+[XPENG] Vehicle L1N****B2PB008821 associated with client: client_5
+[XPENG] Vehicle L1N****B0RB013454 associated with client: client_5
+[XPENG] Vehicle L1N****A6RB072421 associated with client: client_5
+[XPENG] Vehicle L1N****B6RB016360 associated with client: client_5
+[XPENG] Added 25 vehicles from client client_5
+[XPENG] Skipping security filter for 125 vehicles
+Found 125 total vehicles in Enode accounts (security filter bypassed)
+Found 0 vehicles currently installed in Homey
+
+--- Summary ---
+Total Enode Vehicles: 125
+Active Homey Devices: 0
+Orphaned Connections: 81
+Inactive Connections: 44
+Active Connections:   0
+
+--- Per-Client Breakdown ---
+Client: primary      | Total: 25 | Active:  0 | Inactive: 18 | Orphaned:  7
+Client: secondary    | Total: 25 | Active:  0 | Inactive:  8 | Orphaned: 17
+Client: client_3     | Total: 25 | Active:  0 | Inactive: 10 | Orphaned: 15
+Client: client_4     | Total: 25 | Active:  0 | Inactive:  5 | Orphaned: 20
+Client: client_5     | Total: 25 | Active:  0 | Inactive:  3 | Orphaned: 22
+
+--- Inactive Connections (>30 days since last seen) ---
+- XPENG G9 (ID: 2afd4f1d-fa09-49a9-a296-9cfb73faf5d9, User: homey-homey-mabkjohfrxi7p) - Last seen: 2025-06-08T15:30:20.880Z (240 days ago)
+- XPENG G9 (ID: 7ba8be51-d9e5-46c9-9f79-68226bd09a92, User: homey-homey-ma6ofdzyjij6v) - Last seen: 2025-06-07T13:28:44.183Z (241 days ago)
+- XPENG G6 (ID: 07807209-b71a-4128-9ccb-dc78ae3eeb0d, User: homey-homey-ma9xs8fn219yg) - Last seen: 2025-05-05T17:47:51.947Z (274 days ago)
+- XPENG G9 (ID: 55fdc869-cef2-4771-8187-228b45cb3977, User: homey-homey-ma6ku78kjfjtp) - Last seen: 2025-08-02T07:42:58.199Z (185 days ago)
+- XPENG G9 (ID: 8178827d-da07-48a8-8ba4-589ad67540b0, User: homey-homey-ma6j6yvdl1kb9) - Last seen: 2025-06-10T15:34:20.289Z (238 days ago)
+- XPENG G9 (ID: 66978d59-c1a8-4e0a-bac8-f4bdb91d00be, User: homey-homey-ma5rgegsetxta) - Last seen: 2025-06-14T10:19:31.327Z (234 days ago)
+- XPENG G9 (ID: e5f7a39b-8065-404d-8fe9-3edc7b654d33, User: homey-homey-ma4wa2h1xngpz) - Last seen: 2025-10-30T12:22:13.083Z (96 days ago)
+- XPENG G9 (ID: 1bfbcd07-41a1-432f-b8d1-f832f0e7015f, User: homey-homey-ma3lrxbb5a3w4) - Last seen: 2025-06-07T13:33:01.749Z (241 days ago)
+- XPENG G9 (ID: ed13960d-453d-4161-aadb-463aeb12cded, User: homey-homey-ma2uw5br4nq9h) - Last seen: 2025-06-08T12:37:36.484Z (240 days ago)
+- XPENG G9 (ID: f62970ec-b476-4085-a50d-428d2fdadf3e, User: homey-homey-ma2umy4cbyj9j) - Last seen: 2025-04-29T18:42:49.976Z (280 days ago)
+- XPENG G9 (ID: eeaa7c43-14f6-4c42-b924-c2f389b06012, User: homey-homey-ma2llti33gtaw) - Last seen: 2025-10-30T19:11:26.628Z (96 days ago)
+- XPENG G9 (ID: 4155ac91-d54f-4f85-aa0a-d6399628200b, User: homey-homey-ma1klwjtmcbrt) - Last seen: 2025-07-14T12:30:02.922Z (204 days ago)
+- XPENG G6 (ID: 5861cb85-7831-471a-8fd5-38e971257810, User: homey-homey-ma1k46gqssipg) - Last seen: 2025-05-10T13:40:44.287Z (269 days ago)
+- XPENG G9 (ID: 41d2b4b2-1254-4a76-a956-30f197da1811, User: homey-homey) - Last seen: 2025-04-28T21:13:42.302Z (281 days ago)
+- XPENG G6 (ID: eef55777-0d69-4f0f-8982-f74c0eb55212, User: homey-1745754360133) - Last seen: 2025-04-27T11:46:22.926Z (282 days ago)
+- XPENG G6 (ID: 9066738d-b61f-43cb-84ae-4e095bf86aa6, User: homey-1745753523998) - Last seen: 2025-04-27T11:45:38.303Z (282 days ago)
+- XPENG G6 (ID: 1df40827-ed3b-4a93-907d-c792083d8198, User: f975994d-59b2-405b-b076-7678eb69edae) - Last seen: 2025-04-27T11:23:42.769Z (282 days ago)
+- XPENG G6 (ID: b17b85c4-7075-44c3-b4ce-9cc9402a6f31, User: your_userID) - Last seen: 2025-09-24T13:34:20.656Z (132 days ago)
+- XPENG G9 (ID: fd48ff66-14ca-48c4-8ef9-a392b555cdf8, User: homey-homey-mbyfpdymjilv4) - Last seen: 2025-11-23T18:29:57.777Z (72 days ago)
+- XPENG G9 (ID: 8362d10b-8cc7-4cad-a3d2-5aba66949c5a, User: homey-homey-mbop4szu4b4qj) - Last seen: 2025-09-11T07:10:58.295Z (145 days ago)
+- XPENG G6 (ID: 3cb3bc7b-5a69-4f2a-904e-4dc8a91c90e0, User: homey-homey-mbjsfm2pedb3k) - Last seen: 2025-06-12T15:15:22.698Z (236 days ago)
+- XPENG G6 (ID: 3dad6ad1-c1d2-4375-9161-4a6fb90318d2, User: homey-homey-mbb74zhe9mvrn) - Last seen: 2025-07-13T20:02:49.672Z (205 days ago)
+- XPENG G6 (ID: 82a3bf19-4d26-43e3-8acc-c53ad4a03ba5, User: homey-homey-mbf5o8j494dy6) - Last seen: 2025-07-03T09:46:16.486Z (215 days ago)
+- XPENG G9 (ID: af6e6177-79df-4323-aeb0-89c94ec4bf68, User: homey-homey-mb98iqok7p1us) - Last seen: 2025-12-21T14:56:23.897Z (44 days ago)
+- XPENG G6 (ID: 95a4fb6c-9b51-494c-b400-5823430fe080, User: homey-homey-map57rl5v9fvq) - Last seen: 2025-07-30T19:47:27.200Z (188 days ago)
+- XPENG G6 (ID: a5062a5d-e68b-4c66-8331-f524aaa07ee4, User: homey-homey-maktcndtw443p) - Last seen: 2025-05-14T16:41:11.411Z (265 days ago)
+- XPENG P7 (ID: b6dca480-bec3-43ff-8a29-bf994418d182, User: homey-homey-mf60nk6l9mp0x) - Last seen: 2025-12-12T09:36:10.947Z (53 days ago)
+- XPENG G6 (ID: b37db3f5-a153-47de-b983-0107335b7a6b, User: homey-homey-md1id0nrr24v8) - Last seen: 2025-09-08T18:42:48.410Z (148 days ago)
+- XPENG G9 (ID: 4d923f3c-ee99-49fe-bb41-756d46552bdc, User: homey-homey-mf2b52u23285k) - Last seen: 2025-10-16T23:04:39.676Z (110 days ago)
+- XPENG G9 (ID: 8252a2b3-7aa6-4217-8688-3dd6d19c23fb, User: homey-homey-mex8ek1r5rv4f) - Last seen: 2025-12-31T10:08:55.983Z (34 days ago)
+- XPENG G6 (ID: f206fa97-c671-4883-b620-eb09f837ea15, User: homey-homey-mer0ooao4wa4u) - Last seen: 2025-10-26T14:26:03.612Z (100 days ago)
+- XPENG G6 (ID: 774f0445-5c86-4f62-a102-701cbaa702e8, User: homey-homey-mea667jhayjr7) - Last seen: 2025-10-02T17:29:33.372Z (124 days ago)
+- XPENG G6 (ID: fdf1f80b-4783-4aab-a5ad-584aaf00f82e, User: homey-homey-mdpvtnqw3uv6f) - Last seen: 2025-08-10T06:32:23.237Z (178 days ago)
+- XPENG G9 (ID: 47e4c6a7-5fd3-47c2-bd49-fc2753d6b596, User: homey-homey-mdkkska5wk8vw) - Last seen: 2025-10-26T06:36:25.600Z (101 days ago)
+- XPENG G6 (ID: da3059d5-41e5-4516-a9a0-6a5f49e44304, User: homey-homey-map57rl5v9fvq) - Last seen: 2025-08-13T16:06:26.700Z (174 days ago)
+- XPENG G6 (ID: 7d801d32-d293-41ba-ae25-d5e0d7053a3b, User: homey-homey-mdq1px315ia0f) - Last seen: 2025-08-03T11:10:24.336Z (184 days ago)
+- XPENG G6 (ID: 74e0d5ce-aa22-486e-b7d1-230acbc50d0b, User: homey-homey-mg3vwdsjgbxha) - Last seen: 2025-11-27T09:51:29.257Z (68 days ago)
+- XPENG G6 (ID: c4d85f64-a42c-4734-8375-c9776d947a06, User: homey-homey-mea667jhayjr7) - Last seen: 2025-10-30T18:51:51.547Z (96 days ago)
+- XPENG G6 (ID: 5fab4b5c-1849-4e05-b4db-e9e2818b4e7c, User: homey-homey-mdq1px315ia0f) - Last seen: 2025-10-19T10:49:24.929Z (107 days ago)
+- XPENG G6 (ID: 9b819c0c-f2c6-406d-b017-cb64d9058eb3, User: homey-homey-mg2q2rdp93u24) - Last seen: 2025-10-11T19:17:43.221Z (115 days ago)
+- XPENG G6 (ID: ef80d50d-9271-45e3-b053-5a4410e97a6d, User: homey-homey-mfp72o26ikofv) - Last seen: 2025-09-27T20:23:27.170Z (129 days ago)
+- XPENG G9 (ID: b924641a-599b-4678-ada4-81d206406ffd, User: homey-homey-mbchad40c0lgm) - Last seen: 2025-11-27T10:41:14.555Z (68 days ago)
+- XPENG G6 (ID: 5e132112-3dda-46a3-8bc8-1709c1095603, User: homey-homey-mgia2zmmdjur4) - Last seen: 2025-11-04T20:02:24.456Z (91 days ago)
+- XPENG G6 (ID: d96b7d8c-f42d-46c0-9297-f4aa66f26b8a, User: homey-homey-md87vqy8ga6n5) - Last seen: 2025-10-31T04:30:23.636Z (96 days ago)
+
+--- Orphaned Connections (Not in Homey but recently seen) ---
+- Toyota bZ4X (ID: 2ed00e5e-37eb-45d8-b3ad-a2180fa36a9c, User: homey-homey-mh0tqt48383k5) - Last seen: 2026-02-04T06:59:32.880Z
+- XPENG G6 (ID: 64880f9c-a4cc-4da5-ae00-59b1f9195e42, User: homey-homey-mabey71qux2kx) - Last seen: 2026-02-04T05:52:37.271Z
+- XPENG G9 (ID: 7335d7e6-2d37-4070-84c2-ed202f0a628b, User: homey-homey-ma73pmhuo0so1) - Last seen: 2026-02-04T05:20:16.919Z
+- XPENG G9 (ID: 4af7c356-2df0-477e-997e-73b5abdb991d, User: homey-homey-ma5l66qqwx21s) - Last seen: 2026-02-04T05:26:26.873Z
+- XPENG G6 (ID: 691a07dc-c591-40d9-8e6b-ff9ba7d5de76, User: homey-homey-ma2gtertlg75b) - Last seen: 2026-02-04T07:02:57.221Z
+- XPENG G9 (ID: 627579f3-9e49-4786-b267-4b027b11a086, User: homey-homey-ma2fiikxw2fs1) - Last seen: 2026-02-04T06:49:32.806Z
+- XPENG G9 (ID: 2bdb61b1-81cd-4a12-8c65-64ecc61a6994, User: homey-homey-ma2cqaji57yr5) - Last seen: 2026-02-04T06:47:52.344Z
+- XPENG G9 (ID: bdbc3c3e-2c62-45e6-a82e-aced46a7d0a7, User: homey-homey-mc7qsjgcmj2b9) - Last seen: 2026-02-04T07:05:06.711Z
+- XPENG G6 (ID: 3a84205c-3eb4-4896-8d86-bbbb531fac2a, User: homey-homey-mc1rtfehar6vy) - Last seen: 2026-02-04T07:08:05.064Z
+- XPENG G9 (ID: a30503c1-a7d1-49eb-b7fb-6ef3c45c32e4, User: homey-homey-ma5rgegsetxta) - Last seen: 2026-02-04T07:06:13.600Z
+- XPENG G9 (ID: d6b97566-0a6c-41ab-9926-0a8475c66ca9, User: homey-homey-mbtw1n4hnzmwt) - Last seen: 2026-02-04T06:59:30.638Z
+- XPENG G6 (ID: 8ad4a935-8427-408d-9bd7-0990ffcdb627, User: homey-homey-mbtspft5ohq14) - Last seen: 2026-02-04T07:01:54.495Z
+- XPENG G9 (ID: 65071e06-c130-4817-b039-4e2c4c804c3c, User: homey-homey-mar1gn1q73cjd) - Last seen: 2026-02-04T07:00:15.298Z
+- XPENG G9 (ID: c1bb28d2-67a0-47aa-b665-2b75da4eb393, User: homey-homey-ma6j6yvdl1kb9) - Last seen: 2026-02-04T07:05:29.751Z
+- XPENG G6 (ID: 72981b32-d32c-4379-8b92-84956197b237, User: homey-homey-mazh1xmedgz7x) - Last seen: 2026-02-04T07:07:46.360Z
+- XPENG G9 (ID: e8bba09c-e712-4aa5-ace8-5928ff0d6e50, User: homey-homey-mabkjohfrxi7p) - Last seen: 2026-02-04T06:58:56.500Z
+- XPENG G9 (ID: 95897806-99ec-47d8-a485-af58a9cd5fbc, User: homey-homey-mbma179lop9ir) - Last seen: 2026-02-04T07:02:59.598Z
+- XPENG G9 (ID: 7c1d707f-77bf-404a-954f-90d8f6e24846, User: homey-homey-ma6ofdzyjij6v) - Last seen: 2026-02-04T07:00:23.010Z
+- XPENG G9 (ID: df7c5a1c-4f84-4097-8b15-e49b70e073c6, User: homey-homey-mblseje6zh49e) - Last seen: 2026-02-04T05:19:14.692Z
+- XPENG G9 (ID: d11d794f-6995-4005-8b1f-634fc1d65d18, User: homey-homey-mbc03kke63kqy) - Last seen: 2026-02-04T07:00:34.091Z
+- XPENG G6 (ID: 00edbb7a-98e3-41f3-97dd-4728a9cadbb6, User: homey-homey-mbfnpmonchx3z) - Last seen: 2026-02-04T07:04:23.313Z
+- XPENG G6 (ID: 247f09be-c3cd-4f19-87c4-9352a814cb1a, User: homey-homey-mb51dfrqdvpcx) - Last seen: 2026-02-04T07:07:42.520Z
+- XPENG G6 (ID: 889cac40-547e-4a5d-b771-f7c6a383d494, User: homey-homey-mao66u0vxtbqg) - Last seen: 2026-02-04T06:58:23.079Z
+- XPENG G6 (ID: 8b90f1aa-dc95-4f96-a40b-606aa875969d, User: homey-homey-man11jgqbr946) - Last seen: 2026-02-04T06:28:18.022Z
+- XPENG G6 (ID: 21ab43bb-e04c-4d37-bc11-19c5c888ca84, User: homey-homey-mfm3lg0wfz3tn) - Last seen: 2026-02-04T06:49:52.952Z
+- XPENG G9 (ID: b00c3e91-f7c3-4f15-a418-0bd808ab566d, User: homey-homey-mflmwk229i4k7) - Last seen: 2026-02-04T04:54:05.175Z
+- XPENG G6 (ID: 65b473ea-605a-42b9-9202-6565712363b1, User: homey-homey-mfjqap7r2klge) - Last seen: 2026-02-04T07:00:29.258Z
+- XPENG G9 (ID: 1c85bd25-3eb6-448f-bb52-92f0d5f055d3, User: homey-homey-mbop4szu4b4qj) - Last seen: 2026-02-04T06:50:14.555Z
+- XPENG G9 (ID: fa35b48f-ef86-4d92-a6f3-951b82d943ef, User: homey-homey-mfduua7ym1x9k) - Last seen: 2026-02-04T06:46:05.496Z
+- XPENG G6 (ID: 7fb2648b-bfd9-43e1-9bca-718253fbcb35, User: homey-homey-mfbh2ci42hvw5) - Last seen: 2026-02-04T04:53:23.018Z
+- XPENG G6 (ID: 3a55cd65-cab9-42f5-90c2-dd6afd7b60f4, User: homey-homey-mcos7eftwg6mn) - Last seen: 2026-02-04T06:44:22.110Z
+- XPENG G6 (ID: 2c3a3f54-cd5b-4782-8d03-22f7c07317b7, User: homey-homey-mbjsfm2pedb3k) - Last seen: 2026-02-04T07:04:38.660Z
+- XPENG G9 (ID: 1b4560e8-23be-4aed-8127-dcf2fdbeeb47, User: homey-homey-mb986yu7d297o) - Last seen: 2026-02-04T07:01:50.752Z
+- XPENG G9 (ID: 2060acba-d8ba-4e0e-91ee-9541ed593e3f, User: homey-homey-mebrahtu4s8m2) - Last seen: 2026-02-04T07:06:42.839Z
+- XPENG G6 (ID: 9d6f4373-b7a9-444a-89eb-d9e536a2f95d, User: homey-homey-me8l1b91jy0mt) - Last seen: 2026-02-04T06:48:36.098Z
+- XPENG G9 (ID: f7060dea-15f4-44d0-9524-5b7ca64241e2, User: homey-homey-mcx4jpho4gn7z) - Last seen: 2026-02-04T07:01:11.652Z
+- XPENG G6 (ID: 6ab1cee0-6875-4958-90a0-d5616316ccaa, User: homey-homey-me2vwwjjbcthi) - Last seen: 2026-02-04T04:28:05.881Z
+- XPENG G9 (ID: e9795243-09d5-490d-93ee-95c0dd1bb09a, User: homey-homey-mdwzr31syqswp) - Last seen: 2026-02-04T06:49:33.835Z
+- XPENG G6 (ID: c4d8f7d5-2c83-41f0-a928-0970f5c4fd93, User: homey-homey-makpwym2q1sm0) - Last seen: 2026-02-04T05:18:08.057Z
+- XPENG  (ID: 776b3ea1-5e27-48ff-874d-1e4728d0a200, User: homey-homey-mh3u7q6tutgi9) - Last seen: 2026-02-04T05:02:19.003Z
+- XPENG  (ID: 0f4a7752-bbd2-4ac6-b5d7-5e200fb6f07e, User: homey-homey-mfvathqj7s985) - Last seen: 2026-02-04T06:47:41.091Z
+- Toyota bZ4X (ID: 69f39036-c876-47bd-b48d-6e62aa454b21, User: homey-homey-mh0tqt48383k5) - Last seen: 2026-02-04T07:07:05.125Z
+- XPENG G6 (ID: 358b1612-f94d-4391-bd1a-17939a5a94fc, User: homey-homey-mgyqvbcrv0z8u) - Last seen: 2026-02-04T06:57:35.232Z
+- Toyota bZ4X (ID: cfaf13e5-f523-40ae-a6f6-6ff6fd9b3715, User: homey-homey-mgxyg7y6ruulp) - Last seen: 2026-02-04T07:05:40.359Z
+- Toyota bZ4X (ID: dd49284e-df84-4e65-b045-f09106216e18, User: homey-homey-mgxsfxunzox9z) - Last seen: 2026-02-04T07:06:59.462Z
+- XPENG G9 (ID: 0129ef58-3871-4fc6-965b-5dfbc030b1ad, User: homey-homey-mgubikqxjh8aj) - Last seen: 2026-02-04T05:03:15.827Z
+- Toyota bZ4X (ID: 4c67145a-9ec6-483f-858e-0bc647a65503, User: homey-homey-mgtr7zjdn11q1) - Last seen: 2026-02-04T07:04:47.191Z
+- XPENG G6 (ID: 87641278-c052-4c8c-bab8-a58bbedd4371, User: homey-homey-mgtlq00axfk02) - Last seen: 2026-02-04T04:58:56.217Z
+- XPENG G6 (ID: fdfca991-53e7-450e-a88c-e4cd33328949, User: homey-homey-mbf5o8j494dy6) - Last seen: 2026-02-04T05:50:07.709Z
+- XPENG G6 (ID: 2f3dbf04-2e7c-4c71-a8b3-04db7bdb9608, User: homey-homey-mgiekmavnjun8) - Last seen: 2026-01-23T09:14:46.397Z
+- XPENG G9 (ID: bc652ad3-5e49-4faa-8594-c2f7c95c4943, User: homey-homey-mgi3jk0by31n8) - Last seen: 2026-02-04T07:07:16.091Z
+- XPENG G9 (ID: b64ef28a-5cca-4634-a40d-dd7d84a23cab, User: homey-homey-mggud6jm6g81f) - Last seen: 2026-02-04T07:01:52.980Z
+- XPENG G9 (ID: 484f40e8-1b92-4529-b396-4b67e5fd0ef3, User: homey-homey-mce4gztjde5hy) - Last seen: 2026-02-04T07:02:05.537Z
+- XPENG G6 (ID: 942cb488-7f9f-4ff0-8417-53c43c831da6, User: homey-homey-mb71toien9d4f) - Last seen: 2026-02-04T06:50:41.777Z
+- XPENG G6 (ID: 2f6c4cdc-f41e-4c61-bd4c-a2f8ad3afb06, User: homey-homey-mg9snfep2bsbt) - Last seen: 2026-02-04T06:46:21.526Z
+- XPENG G6 (ID: 477d8992-4a73-4969-b2ca-92d7ce2655a8, User: homey-homey-mcnvpk8hzboro) - Last seen: 2026-02-04T04:29:05.439Z
+- XPENG P7 (ID: ae3af408-0aa9-4a11-9371-2dd41a1d7afa, User: homey-homey-mg58htm1zj1bi) - Last seen: 2026-02-03T20:37:03.876Z
+- XPENG P7i (ID: a4e40e8d-79f0-420a-897f-815e063712f5, User: homey-homey-meaiv2nt4162r) - Last seen: 2026-02-04T06:57:16.766Z
+- XPENG P7i (ID: 6f3fe79d-cd66-4f57-bbba-f203ce31ea6e, User: homey-homey-mfoo5xtty3zza) - Last seen: 2026-02-04T05:16:57.397Z
+- XPENG G9 (ID: bf07bfd2-b02d-4b0e-92b0-83ecbbd60472, User: homey-homey-miummv37pg77q) - Last seen: 2026-02-04T06:52:56.548Z
+- XPENG G9 (ID: 4ca9e299-17cb-43eb-8dc0-e03e21b4c7bc, User: homey-homey-mirvmgw79j4k9) - Last seen: 2026-02-04T05:57:24.674Z
+- XPENG G6 (ID: d95ac7b4-1ae8-48da-98ca-ae0e2d90c36f, User: homey-homey-mioujrs5qw44z) - Last seen: 2026-02-04T06:44:32.778Z
+- XPENG G6 (ID: 8226b7ea-7368-4cca-b295-29ebfcdcb400, User: homey-homey-mijah393c0ukk) - Last seen: 2026-02-04T06:05:22.481Z
+- XPENG G9 (ID: 9aff30b9-ed2b-48ae-96b8-0d8392ee53c2, User: homey-homey-mihb09ub2w2cc) - Last seen: 2026-02-04T06:55:07.734Z
+- XPENG G6 (ID: 86acf76b-ab17-4841-9730-22df7d6d3bdf, User: homey-homey-mg3vwdsjgbxha) - Last seen: 2026-02-04T07:04:42.027Z
+- XPENG G9 (ID: 0551463e-bfd2-454d-94bf-2658e1d8846e, User: homey-homey-mic272j962ptz) - Last seen: 2026-02-04T05:19:44.949Z
+- XPENG G6 (ID: b645bebe-964c-4567-9c22-1eccb19d700a, User: homey-homey-mi7zs8fdedd68) - Last seen: 2026-01-05T10:22:06.266Z
+- XPENG G9 (ID: 841aeb97-fa2d-403d-8b90-8bfcddace005, User: homey-homey-mi4z4a41wkuq6) - Last seen: 2026-02-04T04:11:13.767Z
+- XPENG  (ID: e009d337-c320-41ca-a2d1-eb34cfcdb0cf, User: homey-homey-mi37l2hat8wxc) - Last seen: 2026-02-04T04:59:10.405Z
+- XPENG G6 (ID: ebc0aae5-f0dd-4067-8734-e256a039b01c, User: homey-homey-mcyf3u42iungm) - Last seen: 2026-02-04T06:53:52.471Z
+- XPENG  (ID: 3f2121aa-3255-4a87-b6e6-e6f19ff05604, User: homey-homey-mhud8hth1dvt2) - Last seen: 2026-01-06T06:49:46.136Z
+- XPENG G6 (ID: 6ec57511-0cef-4667-ba6c-f7b3cdcf023f, User: homey-homey-maydi102k6rc6) - Last seen: 2026-02-04T06:49:21.234Z
+- XPENG G6 (ID: c9bfd0e8-755b-4c05-8b72-d72b8c077917, User: homey-homey-mhl02h3txmv8t) - Last seen: 2026-02-04T04:21:36.608Z
+- XPENG G9 (ID: 763ee7d6-c859-4675-934f-d92c8a1abe1c, User: homey-homey-mhg8om44idbju) - Last seen: 2026-02-04T06:45:45.553Z
+- XPENG G6 (ID: 30cd1efa-73c8-46c2-9608-99b6c4778bb0, User: homey-homey-mh6igbssh06qx) - Last seen: 2026-02-04T05:25:13.814Z
+- XPENG G6 (ID: a6740893-a490-4179-a888-b664c63a1c5a, User: homey-homey-mhede4n3nvha5) - Last seen: 2026-02-04T06:47:26.892Z
+- XPENG  (ID: b40bbad4-4a13-4fe6-ba17-630cc1404809, User: homey-homey-mfxvnd05pwbw1) - Last seen: 2026-02-04T06:47:53.871Z
+- XPENG G9 (ID: a982e34f-7a91-46b5-b88f-8102bfb07bfa, User: homey-homey-mbamjtd4aurtv) - Last seen: 2026-02-04T04:57:20.723Z
+- XPENG G9 (ID: b7426fb8-67cc-4a4a-8c8d-85c673bd9d3a, User: homey-homey-mhdt24osl1epj) - Last seen: 2026-02-04T04:49:06.367Z
+- XPENG G6 (ID: 167ce9df-64a9-489f-955d-8fbef721fc3a, User: homey-homey-mea667jhayjr7) - Last seen: 2026-02-04T06:49:44.769Z
+- XPENG G9 (ID: c35d8661-81b4-4edc-8a75-157c01d9a64d, User: homey-homey-ma4wa2h1xngpz) - Last seen: 2026-02-04T07:03:44.136Z
