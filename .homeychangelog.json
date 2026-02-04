@@ -172,5 +172,8 @@
   },
   "1.2.58": {
     "en": " bug fix"
+  },
+  "1.2.59": {
+    "en": "New conection is now possible"
   }
 }
