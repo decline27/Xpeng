@@ -67,6 +67,9 @@ class XpengDriver extends Homey.Driver {
     // Battery level triggers
     this.batteryLevelChangedTrigger = this.homey.flow.getDeviceTriggerCard('battery_level_changed');
     this.batteryLowTrigger = this.homey.flow.getDeviceTriggerCard('battery_low');
+    this.batteryLowTrigger.registerRunListener(async (args, state) => {
+      return state.battery_level <= args.threshold;
+    });
 
     // Charging state triggers
     this.chargingStartedTrigger = this.homey.flow.getDeviceTriggerCard('charging_started');
@@ -82,6 +85,9 @@ class XpengDriver extends Homey.Driver {
 
     // Range triggers
     this.rangeLowTrigger = this.homey.flow.getDeviceTriggerCard('range_low');
+    this.rangeLowTrigger.registerRunListener(async (args, state) => {
+      return state.range <= args.threshold;
+    });
 
     // Location triggers
     this.locationChangedTrigger = this.homey.flow.getDeviceTriggerCard('location_changed');
@@ -106,11 +112,9 @@ class XpengDriver extends Homey.Driver {
         }
 
         switch (comparison) {
-          case 'lt': return batteryLevel < value;
-          case 'lte': return batteryLevel <= value;
-          case 'eq': return batteryLevel === value;
-          case 'gte': return batteryLevel >= value;
-          case 'gt': return batteryLevel > value;
+          case 'greater': return batteryLevel > value;
+          case 'lower': return batteryLevel < value;
+          case 'equals': return batteryLevel === value;
           default: return false;
         }
       } catch (error) {
@@ -163,11 +167,9 @@ class XpengDriver extends Homey.Driver {
         }
 
         switch (comparison) {
-          case 'lt': return range < value;
-          case 'lte': return range <= value;
-          case 'eq': return range === value;
-          case 'gte': return range >= value;
-          case 'gt': return range > value;
+          case 'greater': return range > value;
+          case 'lower': return range < value;
+          case 'equals': return range === value;
           default: return false;
         }
       } catch (error) {
@@ -176,18 +178,43 @@ class XpengDriver extends Homey.Driver {
       }
     });
 
-    // Location condition
+    // Location condition - check if car is within radius of given coordinates
     this.locationCondition = this.homey.flow.getConditionCard('location_check');
     this.locationCondition.registerRunListener(async (args, state) => {
       try {
-        const { device, location } = args;
+        const { device, latitude, longitude, radius } = args;
         const currentLocation = device.getCapabilityValue('location');
 
-        this.log(`Location check: "${currentLocation}" contains "${location}"`);
+        if (!currentLocation || currentLocation === 'Not Available') {
+          return false;
+        }
 
-        // This is a simplified check. In reality, you might want to do
-        // distance calculations between coordinates
-        return currentLocation && currentLocation.includes(location);
+        // Parse coordinates from format: "55.579°N, 12.951°E (55.578804,12.951104)"
+        const coordMatch = currentLocation.match(/\(([^,]+),([^)]+)\)/);
+        if (!coordMatch) {
+          return false;
+        }
+
+        const carLat = parseFloat(coordMatch[1]);
+        const carLng = parseFloat(coordMatch[2]);
+
+        if (isNaN(carLat) || isNaN(carLng)) {
+          return false;
+        }
+
+        // Haversine formula to calculate distance in meters
+        const R = 6371000; // Earth radius in meters
+        const dLat = (latitude - carLat) * Math.PI / 180;
+        const dLng = (longitude - carLng) * Math.PI / 180;
+        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+          Math.cos(carLat * Math.PI / 180) * Math.cos(latitude * Math.PI / 180) *
+          Math.sin(dLng / 2) * Math.sin(dLng / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        const distance = R * c;
+
+        this.log(`Location check: car at (${carLat},${carLng}), target (${latitude},${longitude}), distance: ${Math.round(distance)}m, radius: ${radius}m`);
+
+        return distance <= radius;
       } catch (error) {
         this.error('Error in location condition:', error);
         return false;

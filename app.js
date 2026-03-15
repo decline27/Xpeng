@@ -32,16 +32,6 @@ module.exports = class XPengApp extends Homey.App {
       }
 
       Logger.log('XPENG app initialized');
-      // Load configuration from environment variables or settings (NO default values for security)
-      this.clientId = process.env.ENODE_CLIENT_ID || this.homey.settings.get('enode_client_id');
-      this.clientSecret = process.env.ENODE_CLIENT_SECRET || this.homey.settings.get('enode_client_secret');
-
-      // Log security status (without exposing actual credentials)
-      Logger.log('Credential status:', {
-        hasEnvironmentClientId: !!process.env.ENODE_CLIENT_ID,
-        hasSettingsClientId: !!this.homey.settings.get('enode_client_id'),
-        ready: !!(this.clientId && this.clientSecret)
-      });
 
       // Initialize client manager
       this.clientManager = new ClientManager(this.homey);
@@ -87,30 +77,44 @@ module.exports = class XPengApp extends Homey.App {
 
         // Check for additional clients in env.json (format: ENODE_CLIENT_ID_3, ENODE_CLIENT_SECRET_3, etc.)
         // This allows for unlimited clients to be added
+        // Only access keys that exist in env.json to avoid Homey.env access warnings
+        const envKeys = Object.keys(Homey.env);
+        const validClientIds = ['primary', 'secondary'];
         let additionalClientsFound = false;
         for (let i = 3; i <= 10; i++) {
           const clientIdKey = `ENODE_CLIENT_ID_${i}`;
           const clientSecretKey = `ENODE_CLIENT_SECRET_${i}`;
 
+          // Check if keys exist before accessing to avoid Homey.env warnings
+          if (!envKeys.includes(clientIdKey) || !envKeys.includes(clientSecretKey)) {
+            break; // No more clients configured
+          }
+
           const clientId = Homey.env[clientIdKey];
           const clientSecret = Homey.env[clientSecretKey];
 
-          if (clientId && clientSecret) {
-            this.clientManager.addClient(
-              `client_${i}`,
-              `Enode Client ${i}`,
-              clientId,
-              clientSecret,
-              false
-            );
-            Logger.log(`Additional Enode client ${i} initialized`);
-            additionalClientsFound = true;
+          if (!clientId || !clientSecret) {
+            break; // Key exists but value is empty
           }
+
+          this.clientManager.addClient(
+            `client_${i}`,
+            `Enode Client ${i}`,
+            clientId,
+            clientSecret,
+            false
+          );
+          Logger.log(`Additional Enode client ${i} initialized`);
+          validClientIds.push(`client_${i}`);
+          additionalClientsFound = true;
         }
 
         if (!additionalClientsFound) {
           Logger.log('No additional Enode clients found in env.json');
         }
+
+        // Clean up stale clients from registry that are no longer in env.json
+        this.clientManager.removeStaleClients(validClientIds);
 
         // Check client status
         const clientStatus = this.clientManager.checkClientsStatus();

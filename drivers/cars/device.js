@@ -109,7 +109,7 @@ class XpengCarDevice extends Homey.Device {
               await this.setStoreValue('vehicleId', vehicleByVin.id);
 
               this.log(`Updated vehicle ID to ${this.vehicleId}`);
-              this.log(`Verified vehicle with VIN ${vin} exists in user's account:`, vehicleByVin);
+              this.log(`Verified vehicle with VIN ${vin} exists in user's account: ${vehicleByVin.information?.brand} ${vehicleByVin.information?.model}`);
               return;
             }
           }
@@ -122,7 +122,7 @@ class XpengCarDevice extends Homey.Device {
           return;
         }
 
-        this.log(`Verified vehicle ${this.vehicleId} exists in user's account:`, vehicle);
+        this.log(`Verified vehicle ${this.vehicleId} exists in user's account: ${vehicle.information?.brand} ${vehicle.information?.model}, reachable: ${vehicle.isReachable}`);
       } catch (error) {
         // Handle initialization error with user-friendly message
         const handled = ErrorHandler.translateError(error, 'vehicleVerification');
@@ -385,12 +385,12 @@ class XpengCarDevice extends Homey.Device {
       const changedCapabilities = new Map();
       const oldValues = {};
 
-      // Log the charge state for debugging
+      // Log the processed capability data for debugging
       this.log('Processing charge state:', {
-        isPluggedIn: data.chargeState?.isPluggedIn,
-        isCharging: data.chargeState?.isCharging,
-        batteryLevel: data.chargeState?.batteryLevel,
-        chargeLimit: data.chargeState?.chargeLimit
+        isPluggedIn: data.pluggedInStatus,
+        isCharging: data.chargingStatus,
+        batteryLevel: data.batteryLevel,
+        chargeLimit: data.chargingLimit
       });
 
       // First, store old values for comparison
@@ -488,12 +488,9 @@ class XpengCarDevice extends Homey.Device {
           await this.homey.flow.getDeviceTriggerCard('battery_level_changed')
             .trigger(this, { battery_level: numericValue });
 
-          // Check for low battery
-          if (numericValue <= 20) {
-            this.log('Triggering battery_low flow');
-            await this.homey.flow.getDeviceTriggerCard('battery_low')
-              .trigger(this, { battery_level: numericValue });
-          }
+          // Trigger battery_low - the run listener in driver.js filters by user threshold
+          await this.homey.flow.getDeviceTriggerCard('battery_low')
+            .trigger(this, { battery_level: numericValue });
         }
       }
 
@@ -503,12 +500,9 @@ class XpengCarDevice extends Homey.Device {
         // Extract numeric value from range string (e.g., "300 km")
         const numericValue = parseInt(newValue, 10);
         if (!isNaN(numericValue)) {
-          // Check for low range
-          if (numericValue <= 50) {
-            this.log('Triggering range_low flow');
-            await this.homey.flow.getDeviceTriggerCard('range_low')
-              .trigger(this, { range: numericValue });
-          }
+          // Trigger range_low - the run listener in driver.js filters by user threshold
+          await this.homey.flow.getDeviceTriggerCard('range_low')
+            .trigger(this, { range: numericValue });
         }
       }
 
@@ -947,9 +941,14 @@ class XpengCarDevice extends Homey.Device {
 
   // Set up adaptive polling intervals based on vehicle state
   setupAdaptivePolling() {
-    // Clear any existing polling
+    // Clear any existing polling and short poll timeout
     if (this.pollingInterval) {
       this.homey.clearInterval(this.pollingInterval);
+      this.pollingInterval = null;
+    }
+    if (this.shortPollTimeout) {
+      this.homey.clearTimeout(this.shortPollTimeout);
+      this.shortPollTimeout = null;
     }
 
     // Get current settings
@@ -964,18 +963,22 @@ class XpengCarDevice extends Homey.Device {
       try {
         // Check vehicle state to determine if we need more frequent polling
         const isCharging = this.getCapabilityValue('chargingStatus') === 'Charging';
-        const isPluggedIn = this.getCapabilityValue('pluggedInStatus');
 
         // If vehicle is charging, we'll poll again sooner (half the regular interval)
         if (isCharging) {
           this.log('Vehicle is charging - scheduling next poll sooner');
           // Cancel the regular interval temporarily
           this.homey.clearInterval(this.pollingInterval);
+          this.pollingInterval = null;
 
           // Poll once after a shorter delay
           this.shortPollTimeout = this.homey.setTimeout(async () => {
-            await this.pollVehicleData();
-            // Resume normal polling
+            try {
+              await this.pollVehicleData();
+            } catch (error) {
+              this.error('Error polling during charging:', error);
+            }
+            // Resume normal polling regardless of poll success/failure
             this.setupAdaptivePolling();
           }, Math.min(baseInterval / 2, 5 * 60 * 1000)); // Min of half time or 5 minutes
 
