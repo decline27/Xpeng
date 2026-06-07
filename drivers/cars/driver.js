@@ -2,6 +2,8 @@ const Homey = require('homey');
 const EnodeAPI = require('../../lib/enode-api');
 const EnodeOAuth2 = require('../../lib/enode-oauth');
 const AccountManager = require('../../lib/account-manager');
+const { resolveUserId, getUserIdCandidates } = require('../../lib/user-identity');
+const DuplicateReaper = require('../../lib/duplicate-reaper');
 
 class XpengDriver extends Homey.Driver {
   async onInit() {
@@ -419,25 +421,17 @@ class XpengDriver extends Homey.Driver {
     // Add a handler to check if the user has authenticated vehicles
     session.setHandler('check_auth_status', async () => {
       try {
-        // Get the installation ID to create a unique identifier
-        const installationId = this.homey.settings.get('installation_id');
-        if (!installationId) {
-          // Generate and save a unique installation ID if not already set
-          const newInstallationId = Date.now().toString();
-          this.homey.settings.set('installation_id', newInstallationId);
-        }
-
-        // Get the Homey ID and installation ID to create a unique user ID
-        const homeyId = this.homey.id || 'homey';
-        const userId = `homey-${homeyId}-${installationId || Date.now().toString()}`;
+        // Stable user ID (survives reinstall), plus legacy id for migration dual-matching.
+        const userId = await resolveUserId(this.homey);
+        const userIdCandidates = await getUserIdCandidates(this.homey);
 
         // Fetch vehicles from Enode API
         const allVehicles = await this.enodeApi.getVehicles();
 
-        // Filter vehicles by user ID
+        // Filter vehicles by user ID (stable or legacy)
         const userVehicles = allVehicles.filter(vehicle =>
-          vehicle.userId === userId ||
-          (vehicle.user && vehicle.user.id === userId)
+          userIdCandidates.includes(vehicle.userId) ||
+          (vehicle.user && userIdCandidates.includes(vehicle.user.id))
         );
 
         this.log(`Auth status check: Found ${userVehicles.length} vehicles for user ID ${userId}`);
@@ -470,25 +464,12 @@ class XpengDriver extends Homey.Driver {
           throw new Error('Credentials not set');
         }
 
-        // Get or create an installation ID (only generated once per app installation)
-        let installationId = this.homey.settings.get('installation_id');
-        if (!installationId) {
-          installationId = Date.now().toString(36) + Math.random().toString(36).substring(2, 7);
-          this.homey.settings.set('installation_id', installationId);
-          this.log('Created new installation ID:', installationId);
-        }
+        // Stable user ID (Homey Cloud ID based) so re-linking reuses the same Enode user
+        // instead of creating a duplicate. generateVehicleLink pins to the user's existing
+        // client if they already exist on one.
+        const userId = await resolveUserId(this.homey);
+        this.log(`Using stable user ID for vehicle link: ${userId}`);
 
-        // Use a consistent user ID based on the Homey device ID and installation ID
-        // This ensures we don't create duplicate entries in Enode and improves uniqueness
-        const homeyId = this.homey.id || 'homey';
-
-        // Create a more unique user ID by combining Homey ID and installation ID
-        const userId = `homey-${homeyId}-${installationId}`;
-
-        // Let the system automatically select the best client with available capacity
-        this.log(`Using user ID for vehicle link: ${userId} with auto-selected client`);
-
-        // Generate the vehicle link - let ClientManager auto-select the best client
         const linkUrl = await this.enodeApi.generateVehicleLink(userId);
         return { linkUrl };
       } catch (error) {
@@ -544,25 +525,16 @@ class XpengDriver extends Homey.Driver {
         // Log found vehicles for debugging
         this.log('Found vehicles:', allVehicles.map(v => ({ id: v.id, name: v.name, userId: v.userId })));
 
-        // Get the installation ID and Homey ID to create a unique identifier
-        const homeyId = this.homey.id || 'homey';
-        let installationId = this.homey.settings.get('installation_id');
-        if (!installationId) {
-          // If installation ID doesn't exist yet, create it
-          installationId = Date.now().toString(36) + Math.random().toString(36).substring(2, 7);
-          this.homey.settings.set('installation_id', installationId);
-          this.log('Created new installation ID during device listing:', installationId);
-        }
-
-        // Create a more unique user ID by combining Homey ID and installation ID
-        const userId = `homey-${homeyId}-${installationId}`;
-        this.log('Using user ID for vehicle filtering:', userId);
+        // Stable user ID plus legacy id, so users see their car across the migration.
+        const userId = await resolveUserId(this.homey);
+        const userIdCandidates = await getUserIdCandidates(this.homey);
+        this.log('Using user IDs for vehicle filtering:', userIdCandidates.join(', '));
 
         // SECURITY IMPROVEMENT: Filter vehicles by user ID
         // This ensures users only see their own vehicles
         const userVehicles = allVehicles.filter(vehicle =>
-          vehicle.userId === userId ||
-          (vehicle.user && vehicle.user.id === userId)
+          userIdCandidates.includes(vehicle.userId) ||
+          (vehicle.user && userIdCandidates.includes(vehicle.user.id))
         );
 
         // Get authorized VINs from settings
@@ -743,6 +715,10 @@ class XpengDriver extends Homey.Driver {
           } else {
             this.log(`VIN ${vin} already in authorized list`);
           }
+
+          // Auto-reap: now that this car is connected (freshly seen), remove any older stale
+          // copies of the same VIN that linger under other Enode users/clients. Non-fatal.
+          await this._autoReapDuplicates(vin);
         } else {
           this.log('No VIN found in device data during add_device');
         }
@@ -819,7 +795,7 @@ class XpengDriver extends Homey.Driver {
     session.setHandler('check_auth_status', async () => {
       try {
         const vehicleInfo = device.getStoreValue('vehicleInfo');
-        const userId = vehicleInfo?.userId || `homey-${this.homey.id || 'homey'}-${this.homey.settings.get('installation_id')}`;
+        const userId = vehicleInfo?.userId || await resolveUserId(this.homey);
 
         // Fetch vehicles from Enode API
         const allVehicles = await this.enodeApi.getVehicles();
@@ -846,7 +822,7 @@ class XpengDriver extends Homey.Driver {
     session.setHandler('get_link', async () => {
       try {
         const vehicleInfo = device.getStoreValue('vehicleInfo');
-        const userId = vehicleInfo?.userId || `homey-${this.homey.id || 'homey'}-${this.homey.settings.get('installation_id')}`;
+        const userId = vehicleInfo?.userId || await resolveUserId(this.homey);
 
         this.log(`Generating repair link for user ID: ${userId}`);
 
@@ -886,6 +862,40 @@ class XpengDriver extends Homey.Driver {
       }
       return true;
     });
+  }
+
+  /**
+   * Remove stale duplicate copies of a VIN after it has (re)connected. Keeps the freshly
+   * connected copy and only disconnects users whose every car is a stale duplicate (the
+   * reaper's safety rule). Controlled by the `auto_reap_enabled` setting (default ON); logs
+   * what it would do even when disabled. Never throws into the pairing flow.
+   * @param {string} vin
+   * @private
+   */
+  async _autoReapDuplicates(vin) {
+    try {
+      if (!vin) {
+        return;
+      }
+      const execute = this.homey.settings.get('auto_reap_enabled') !== false; // default ON
+      // Clear caches so the reaper scans fresh raw per-client data, not the dedup cache.
+      if (this.enodeApi && this.enodeApi.requestCache) {
+        this.enodeApi.requestCache.clear();
+      }
+      const result = await DuplicateReaper.reapForVin(this.enodeApi, vin, {
+        execute,
+        logger: this,
+      });
+      if (!result.targets || result.targets.length === 0) {
+        this.log(`Auto-reap: no stale duplicates for VIN ${vin}`);
+      } else if (execute) {
+        this.log(`Auto-reap: disconnected ${result.disconnected} stale copy(ies) of VIN ${vin} (failed ${result.failed})`);
+      } else {
+        this.log(`Auto-reap (log-only): ${result.targets.length} stale copy(ies) of VIN ${vin} would be removed`);
+      }
+    } catch (error) {
+      this.error(`Auto-reap failed for VIN ${vin}:`, error);
+    }
   }
 
   /**
