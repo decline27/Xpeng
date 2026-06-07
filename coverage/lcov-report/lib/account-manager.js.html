@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">11.68% </span>
+                <span class="strong">20.77% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>9/77</span>
+                <span class='fraction'>16/77</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">3.77% </span>
+                <span class="strong">11.32% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>2/53</span>
+                <span class='fraction'>6/53</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">10% </span>
+                <span class="strong">20% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>1/10</span>
+                <span class='fraction'>2/10</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">11.68% </span>
+                <span class="strong">20.77% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>9/77</span>
+                <span class='fraction'>16/77</span>
             </div>
         
             
@@ -346,18 +346,15 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">15x</span>
-<span class="cline-any cline-yes">15x</span>
+<span class="cline-any cline-yes">50x</span>
+<span class="cline-any cline-yes">50x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">15x</span>
-<span class="cline-any cline-yes">15x</span>
+<span class="cline-any cline-yes">50x</span>
+<span class="cline-any cline-yes">50x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">15x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">50x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -371,28 +368,31 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">15x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">50x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">35x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">35x</span>
+<span class="cline-any cline-yes">35x</span>
+<span class="cline-any cline-yes">33x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">35x</span>
+<span class="cline-any cline-yes">35x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">33x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -644,25 +644,25 @@ class AccountManager {
     this.clientManager = new ClientManager(homey);
 &nbsp;
     // Initialize account mapping if not exists
-<span class="cstat-no" title="statement not covered" >    this._initializeMapping();</span>
+    this._initializeMapping();
   }
 &nbsp;
   /**
    * Initialize the vehicle-to-account mapping if it doesn't exist
    * @private
    */
-<span class="fstat-no" title="function not covered" >  _i</span>nitializeMapping() {
+  _initializeMapping() {
     // For backward compatibility, ensure the old settings are still initialized
-    const mapping = <span class="cstat-no" title="statement not covered" >this.homey.settings.get(this.SETTINGS_KEYS.VEHICLE_ACCOUNT_MAPPING);</span>
-<span class="cstat-no" title="statement not covered" >    if (!mapping) {</span>
-<span class="cstat-no" title="statement not covered" >      this.homey.settings.set(this.SETTINGS_KEYS.VEHICLE_ACCOUNT_MAPPING, {});</span>
+    const mapping = this.homey.settings.get(this.SETTINGS_KEYS.VEHICLE_ACCOUNT_MAPPING);
+    if (!mapping) {
+      this.homey.settings.set(this.SETTINGS_KEYS.VEHICLE_ACCOUNT_MAPPING, {});
     }
 &nbsp;
     // Set default account for new vehicles if not set
-    const defaultAccount = <span class="cstat-no" title="statement not covered" >this.homey.settings.get(this.SETTINGS_KEYS.DEFAULT_ACCOUNT);</span>
-<span class="cstat-no" title="statement not covered" >    if (!defaultAccount) {</span>
+    const defaultAccount = this.homey.settings.get(this.SETTINGS_KEYS.DEFAULT_ACCOUNT);
+    if (!defaultAccount) {
       // Initially set to secondary account for new vehicles
-<span class="cstat-no" title="statement not covered" >      this.homey.settings.set(this.SETTINGS_KEYS.DEFAULT_ACCOUNT, this.ACCOUNT_2);</span>
+      this.homey.settings.set(this.SETTINGS_KEYS.DEFAULT_ACCOUNT, this.ACCOUNT_2);
     }
   }
 &nbsp;
@@ -880,7 +880,7 @@ module.exports = AccountManager;
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-07-15T10:36:49.093Z
+                at 2026-06-07T08:11:37.212Z
             </div>
         <script src="../prettify.js"></script>
         <script>
