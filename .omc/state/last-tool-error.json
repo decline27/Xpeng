@@ -1,0 +1,7 @@
+{
+  "tool_name": "Bash",
+  "tool_input_preview": "{\"command\":\"echo \\\"=== new commits ===\\\" && git log --oneline -4 && echo \\\"=== remaining unstaged (should be only coverage/.omc noise) ===\\\" && git status --short | grep -vE \\\"coverage/|\\\\.omc/\\\" && e...",
+  "error": "Exit code 1\n=== new commits ===\nb9d2952 chore(lint): adopt lean self-contained ESLint config\n5bda73d fix(widget): stop initWidget crashing on homey.get\nfee3d0c test(enode): align suite with current API and cover new modules\n4a04078 fix(enode): correct multi-client control, device init, and duplicate prevention\n=== remaining unstaged (should be only coverage/.omc noise) ===",
+  "timestamp": "2026-06-07T08:11:15.713Z",
+  "retry_count": 2
+}
