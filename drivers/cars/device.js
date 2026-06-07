@@ -86,43 +86,30 @@ class XpengCarDevice extends Homey.Device {
         const vehicle = vehicles.find(v => v.id === this.vehicleId);
 
         if (!vehicle) {
-          // Get the VIN from device data (using existing deviceData variable)
+          // The stored Enode vehicle id wasn't found. This happens when the car was re-linked
+          // (repair / app reinstall / duplicate cleanup) and got a NEW id. Recover by VIN.
           const vin = deviceData.vin;
+          const vehicleByVin = vin ? vehicles.find(v => v.information?.vin === vin) : null;
 
-          // If we have a VIN, try to find the vehicle by VIN
-          if (vin) {
-            this.log(`Vehicle ID ${this.vehicleId} not found, trying to find by VIN ${vin}`);
-            const vehicleByVin = vehicles.find(v => v.information?.vin === vin);
+          if (vehicleByVin) {
+            // Adopt the new id and CONTINUE initialising. Do NOT return here — returning would
+            // skip polling/health-check setup, leaving the device visible but never updating.
+            this.log(`Vehicle ID ${this.vehicleId} not found; recovered by VIN ${vin} -> ${vehicleByVin.id}`);
+            this.vehicleId = vehicleByVin.id;
+            await this.setSettings({ vehicleId: vehicleByVin.id });
+            await this.setStoreValue('vehicleId', vehicleByVin.id);
+            this.log(`Verified vehicle with VIN ${vin}: ${vehicleByVin.information?.brand} ${vehicleByVin.information?.model}`);
+          } else {
+            const notFoundError = new Error(`Vehicle ${this.vehicleId} not found in user's account`);
+            const handled = ErrorHandler.translateError(notFoundError, 'vehicleVerification');
 
-            if (vehicleByVin) {
-              // Update the vehicle ID to the new one
-              this.log(`Found vehicle with matching VIN but different ID: ${vehicleByVin.id}`);
-              this.vehicleId = vehicleByVin.id;
-
-              // Store the updated ID - we can't directly update the data
-              // but we can store it in settings and use it from now on
-              await this.setSettings({
-                vehicleId: vehicleByVin.id
-              });
-
-              // Also update the store
-              await this.setStoreValue('vehicleId', vehicleByVin.id);
-
-              this.log(`Updated vehicle ID to ${this.vehicleId}`);
-              this.log(`Verified vehicle with VIN ${vin} exists in user's account: ${vehicleByVin.information?.brand} ${vehicleByVin.information?.model}`);
-              return;
-            }
+            this.error(`Vehicle not found: ${vehicles.map(v => ({ id: v.id, name: v.name }))}`);
+            await this.setUnavailable(handled.message);
+            return;
           }
-
-          const notFoundError = new Error(`Vehicle ${this.vehicleId} not found in user's account`);
-          const handled = ErrorHandler.translateError(notFoundError, 'vehicleVerification');
-
-          this.error(`Vehicle not found: ${vehicles.map(v => ({ id: v.id, name: v.name }))}`);
-          await this.setUnavailable(handled.message);
-          return;
+        } else {
+          this.log(`Verified vehicle ${this.vehicleId} exists in user's account: ${vehicle.information?.brand} ${vehicle.information?.model}, reachable: ${vehicle.isReachable}`);
         }
-
-        this.log(`Verified vehicle ${this.vehicleId} exists in user's account: ${vehicle.information?.brand} ${vehicle.information?.model}, reachable: ${vehicle.isReachable}`);
       } catch (error) {
         // Handle initialization error with user-friendly message
         const handled = ErrorHandler.translateError(error, 'vehicleVerification');
@@ -282,7 +269,7 @@ class XpengCarDevice extends Homey.Device {
       // Get data with or without refresh
       let data;
       if (useRefresh) {
-        data = await this.enodeApi.refreshVehicleData(vehicleId, 2000);
+        data = await this.enodeApi.refreshVehicleData(vehicleId, 2000, accountId);
         // Only fallback to getVehicleData if refreshVehicleData returned null
         if (!data) {
           this.log('Refresh failed, using regular vehicle data fetch');
@@ -617,7 +604,7 @@ class XpengCarDevice extends Homey.Device {
         this.log('Starting charging for vehicle:', vehicleId);
       }
 
-      await this.enodeApi.startCharging(vehicleId);
+      await this.enodeApi.startCharging(vehicleId, accountId);
       await this.pollVehicleData(); // Update device status
     } catch (error) {
       // Use the ErrorHandler to handle and format the error
@@ -664,7 +651,7 @@ class XpengCarDevice extends Homey.Device {
         this.log('Stopping charging for vehicle:', vehicleId);
       }
 
-      await this.enodeApi.stopCharging(vehicleId);
+      await this.enodeApi.stopCharging(vehicleId, accountId);
       await this.pollVehicleData(); // Update device status
     } catch (error) {
       // Use the ErrorHandler to handle and format the error
