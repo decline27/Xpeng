@@ -181,5 +181,11 @@
   },
   "1.2.61": {
     "en": "Bug hunting"
+  },
+  "1.2.62": {
+    "en": "Fixes & improvements:"
+  },
+  "1.2.63": {
+    "en": "Fixed Start/Stop charging (the \"read only\" issue), fixed cars that never updated their data, and made connections more stable with automatic cleanup of old/duplicate links. Widget start-up fixed too. If a car looks stuck after updating, run Repair once."
   }
 }
