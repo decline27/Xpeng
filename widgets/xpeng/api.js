@@ -426,11 +426,20 @@ module.exports = {
    */
   async initWidget({ homey }) {
     try {
-      const settings = await homey.get('settings');
-      console.log('Widget initialized with settings:', settings);
-      
+      // Settings are optional for init and only informational here. The widget `homey` exposes
+      // `homey.settings` (not `homey.get`), so read defensively and never let it break init.
+      let settings = null;
+      try {
+        if (homey.settings && typeof homey.settings.get === 'function') {
+          settings = await homey.settings.get('settings');
+        }
+      } catch (settingsError) {
+        console.log('Widget settings not available, continuing:', settingsError.message);
+      }
+      console.log('Widget initialized', settings ? 'with settings' : '(no settings)');
+
       // Get initial data
-      await updateVehicleData({ homey });
+      await this.updateVehicleData({ homey });
       
       // Start prefetching mechanism
       this.schedulePrefetch(homey);
