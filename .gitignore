@@ -28,3 +28,9 @@ Thumbs.db
 *.tmp
 *.temp
 .cache/
+
+# Test coverage artifacts
+/coverage/
+
+# OMC tool state
+/.omc/
