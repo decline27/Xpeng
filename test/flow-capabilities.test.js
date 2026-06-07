@@ -372,17 +372,14 @@ describe('Flow Capabilities', () => {
       // Call the device action method
       await device.startCharging();
       
-      // Verify API was called
-      expect(startChargingMock).toHaveBeenCalledWith(
-        'test-client-id',
-        'test-client-secret',
-        'vehicle-123'
-      );
-      
+      // Verify API was called with the vehicle id and the stored account id (null here),
+      // so the command targets the client the vehicle is actually linked under.
+      expect(startChargingMock).toHaveBeenCalledWith('vehicle-123', null);
+
       // Verify data was polled after action
       expect(device.pollVehicleData).toHaveBeenCalled();
     });
-    
+
     test('stop_charging action should call the EnodeAPI correctly', async () => {
       // Create a custom implementation
       const stopChargingMock = jest.fn().mockResolvedValue({
@@ -397,17 +394,13 @@ describe('Flow Capabilities', () => {
       // Call the device action method
       await device.stopCharging();
       
-      // Verify API was called
-      expect(stopChargingMock).toHaveBeenCalledWith(
-        'test-client-id',
-        'test-client-secret',
-        'vehicle-123'
-      );
-      
+      // Verify API was called with the vehicle id and the stored account id (null here).
+      expect(stopChargingMock).toHaveBeenCalledWith('vehicle-123', null);
+
       // Verify data was polled after action
       expect(device.pollVehicleData).toHaveBeenCalled();
     });
-    
+
     test('refresh_data action should poll vehicle data', async () => {
       // Set up mock
       device.pollVehicleData = jest.fn().mockResolvedValue(true);

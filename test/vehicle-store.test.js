@@ -218,9 +218,10 @@ describe('VehicleStore', () => {
     
     const processed = vehicleStore.processDynamicData(minimalData);
     
-    // Should handle missing data gracefully
+    // Should handle missing data gracefully. With no chargeState, isPluggedIn/isCharging
+    // default to false, so the status is 'Not Connected' (consistent with getChargingStatus).
     expect(processed.batteryLevel).toBeUndefined();
-    expect(processed.chargingStatus).toBe('Unknown');
+    expect(processed.chargingStatus).toBe('Not Connected');
     expect(processed.pluggedInStatus).toBe(false);
     expect(processed.lastSeen).toContain('2023-01-01');
   });
