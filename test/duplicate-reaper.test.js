@@ -50,6 +50,26 @@ describe('duplicate-reaper', () => {
             ]);
         });
 
+        test('same user, same VIN on two clients → stale copy is safe (per-client delete)', async () => {
+            // Enode namespaces users per client, and disconnectUser(userId, clientId) deletes only
+            // that client's copy. A returning user whose car got re-linked onto a second client owns
+            // a stale copy on clientA and the live copy on clientB — deleting the clientA copy cannot
+            // harm the clientB copy, so it must be classified SAFE, not risky.
+            const api = makeApi({
+                clientA: [vehicle('v1', 'uSame', 'VIN1', '2020-01-01T00:00:00Z')],
+                clientB: [vehicle('v2', 'uSame', 'VIN1', '2026-01-01T00:00:00Z')],
+            });
+
+            const res = await DuplicateReaper.analyzeDuplicates(api);
+
+            expect(res.dupVins).toBe(1);
+            expect(res.staleCount).toBe(1);
+            expect(res.safe).toEqual([
+                { userId: 'uSame', clientId: 'clientA', vins: ['VIN1'] },
+            ]);
+            expect(res.risky).toEqual([]);
+        });
+
         test('no duplicates → nothing safe or risky', async () => {
             const api = makeApi({
                 clientA: [vehicle('v1', 'uA', 'VIN1', '2026-01-01T00:00:00Z')],
