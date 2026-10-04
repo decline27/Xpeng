@@ -4,6 +4,14 @@ const EnodeOAuth2 = require('../../lib/enode-oauth');
 const AccountManager = require('../../lib/account-manager');
 const { resolveUserId, getUserIdCandidates } = require('../../lib/user-identity');
 const DuplicateReaper = require('../../lib/duplicate-reaper');
+const {
+  compareNumber,
+  crossedBelow,
+  matchesChargingStatus,
+  parseCoordinates,
+  distanceMeters,
+  geofenceTransition
+} = require('../../lib/flow-logic');
 
 class XpengDriver extends Homey.Driver {
   async onInit() {
@@ -63,194 +71,83 @@ class XpengDriver extends Homey.Driver {
   }
 
   /**
-   * Register trigger flow cards
+   * Register trigger flow cards. The device fires the triggers with a state object; these
+   * run listeners decide, per flow, whether that flow should run.
    */
   registerTriggerCards() {
-    // Battery level triggers
     this.batteryLevelChangedTrigger = this.homey.flow.getDeviceTriggerCard('battery_level_changed');
+
+    // Runs once when the level drops below the flow's threshold, not on every low reading
     this.batteryLowTrigger = this.homey.flow.getDeviceTriggerCard('battery_low');
     this.batteryLowTrigger.registerRunListener(async (args, state) => {
-      return state.battery_level <= args.threshold;
+      return crossedBelow(state.previous_battery_level, state.battery_level, args.threshold);
     });
 
-    // Charging state triggers
     this.chargingStartedTrigger = this.homey.flow.getDeviceTriggerCard('charging_started');
     this.chargingStoppedTrigger = this.homey.flow.getDeviceTriggerCard('charging_stopped');
+
     this.chargingStatusChangedTrigger = this.homey.flow.getDeviceTriggerCard('charging_status_changed');
-
-    // Connection state triggers
-    this.pluggedInTrigger = this.homey.flow.getDeviceTriggerCard('plugged_in');
-    // Register trigger explicitly (for safety)
-    this.log('Registering plugged_in trigger card');
-
-    this.unpluggedTrigger = this.homey.flow.getDeviceTriggerCard('unplugged');
-
-    // Range triggers
-    this.rangeLowTrigger = this.homey.flow.getDeviceTriggerCard('range_low');
-    this.rangeLowTrigger.registerRunListener(async (args, state) => {
-      return state.range <= args.threshold;
+    this.chargingStatusChangedTrigger.registerRunListener(async (args, state) => {
+      return matchesChargingStatus(args.status, state.current_status);
     });
 
-    // Location triggers
+    this.pluggedInTrigger = this.homey.flow.getDeviceTriggerCard('plugged_in');
+    this.unpluggedTrigger = this.homey.flow.getDeviceTriggerCard('unplugged');
+
+    this.rangeLowTrigger = this.homey.flow.getDeviceTriggerCard('range_low');
+    this.rangeLowTrigger.registerRunListener(async (args, state) => {
+      return crossedBelow(state.previous_range, state.range, args.threshold);
+    });
+
+    // Geofence: runs when the car enters or exits the circle set on the card
     this.locationChangedTrigger = this.homey.flow.getDeviceTriggerCard('location_changed');
+    this.locationChangedTrigger.registerRunListener(async (args, state) => {
+      return geofenceTransition(state.previous, state.current, {
+        latitude: args.latitude,
+        longitude: args.longitude,
+        radius: args.radius
+      }, args.comparison);
+    });
   }
 
   /**
    * Register condition flow cards
    */
   registerConditionCards() {
-    // Battery level condition
     this.batteryLevelCondition = this.homey.flow.getConditionCard('battery_level');
-    this.batteryLevelCondition.registerRunListener(async (args, state) => {
-      try {
-        const { device, value, comparison } = args;
-        const batteryValue = device.getCapabilityValue('batteryLevel');
-        const batteryLevel = typeof batteryValue === 'number' ? batteryValue : parseFloat(batteryValue);
-
-        this.log(`Battery level check: ${batteryValue} (${batteryLevel}) ${comparison} ${value}`);
-
-        if (isNaN(batteryLevel)) {
-          return false;
-        }
-
-        switch (comparison) {
-          case 'greater': return batteryLevel > value;
-          case 'lower': return batteryLevel < value;
-          case 'equals': return batteryLevel === value;
-          default: return false;
-        }
-      } catch (error) {
-        this.error('Error in battery level condition:', error);
-        return false;
-      }
+    this.batteryLevelCondition.registerRunListener(async (args) => {
+      const { device, value, comparison } = args;
+      return compareNumber(device.getCapabilityValue('batteryLevel'), comparison, value);
     });
 
-    // Charging status condition
     this.isChargingCondition = this.homey.flow.getConditionCard('is_charging');
-    this.isChargingCondition.registerRunListener(async (args, state) => {
-      try {
-        const { device } = args;
-        const charging = device.getCapabilityValue('chargingStatus') === 'Charging';
-        this.log(`Is charging check: ${charging}`);
-        return charging;
-      } catch (error) {
-        this.error('Error in is charging condition:', error);
-        return false;
-      }
+    this.isChargingCondition.registerRunListener(async (args) => {
+      return args.device.getCapabilityValue('chargingStatus') === 'Charging';
     });
 
-    // Plugged in condition
     this.pluggedInCondition = this.homey.flow.getConditionCard('plugged_in_status');
-    this.pluggedInCondition.registerRunListener(async (args, state) => {
-      try {
-        const { device } = args;
-        const isPluggedIn = device.getCapabilityValue('pluggedInStatus') === true;
-        this.log(`Plugged in check: ${isPluggedIn}`);
-        return isPluggedIn;
-      } catch (error) {
-        this.error('Error in plugged in condition:', error);
-        return false;
-      }
+    this.pluggedInCondition.registerRunListener(async (args) => {
+      return args.device.getCapabilityValue('pluggedInStatus') === true;
     });
 
-    // Range condition
     this.rangeCondition = this.homey.flow.getConditionCard('range_check');
-    this.rangeCondition.registerRunListener(async (args, state) => {
-      try {
-        const { device, value, comparison } = args;
-        const rangeStr = device.getCapabilityValue('range');
-        const rangeMatch = rangeStr && rangeStr.match(/(\d+)/);
-        const range = rangeMatch ? parseInt(rangeMatch[1], 10) : NaN;
-
-        this.log(`Range check: ${rangeStr} (${range}) ${comparison} ${value}`);
-
-        if (isNaN(range)) {
-          return false;
-        }
-
-        switch (comparison) {
-          case 'greater': return range > value;
-          case 'lower': return range < value;
-          case 'equals': return range === value;
-          default: return false;
-        }
-      } catch (error) {
-        this.error('Error in range condition:', error);
-        return false;
-      }
+    this.rangeCondition.registerRunListener(async (args) => {
+      const { device, value, comparison } = args;
+      return compareNumber(device.getCapabilityValue('range'), comparison, value);
     });
 
     // Location condition - check if car is within radius of given coordinates
     this.locationCondition = this.homey.flow.getConditionCard('location_check');
-    this.locationCondition.registerRunListener(async (args, state) => {
-      try {
-        const { device, latitude, longitude, radius } = args;
-        const currentLocation = device.getCapabilityValue('location');
-
-        if (!currentLocation || currentLocation === 'Not Available') {
-          return false;
-        }
-
-        // Parse coordinates from format: "55.579°N, 12.951°E (55.578804,12.951104)"
-        const coordMatch = currentLocation.match(/\(([^,]+),([^)]+)\)/);
-        if (!coordMatch) {
-          return false;
-        }
-
-        const carLat = parseFloat(coordMatch[1]);
-        const carLng = parseFloat(coordMatch[2]);
-
-        if (isNaN(carLat) || isNaN(carLng)) {
-          return false;
-        }
-
-        // Haversine formula to calculate distance in meters
-        const R = 6371000; // Earth radius in meters
-        const dLat = (latitude - carLat) * Math.PI / 180;
-        const dLng = (longitude - carLng) * Math.PI / 180;
-        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-          Math.cos(carLat * Math.PI / 180) * Math.cos(latitude * Math.PI / 180) *
-          Math.sin(dLng / 2) * Math.sin(dLng / 2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        const distance = R * c;
-
-        this.log(`Location check: car at (${carLat},${carLng}), target (${latitude},${longitude}), distance: ${Math.round(distance)}m, radius: ${radius}m`);
-
-        return distance <= radius;
-      } catch (error) {
-        this.error('Error in location condition:', error);
-        return false;
-      }
+    this.locationCondition.registerRunListener(async (args) => {
+      const { device, latitude, longitude, radius } = args;
+      const car = parseCoordinates(device.getCapabilityValue('location'));
+      if (!car) return false;
+      return distanceMeters(car.latitude, car.longitude, latitude, longitude) <= radius;
     });
 
-    // Charging status specific condition
     this.chargingStatusCondition = this.homey.flow.getConditionCard('charging_status');
-    this.chargingStatusCondition.registerRunListener(async (args, state) => {
-      try {
-        const { device, status } = args;
-        const currentStatus = device.getCapabilityValue('chargingStatus');
-
-        this.log(`Charging status check: current "${currentStatus}" against "${status}"`);
-
-        // Match the status from dropdown to the actual device status
-        switch (status) {
-          case 'charging':
-            return currentStatus === 'Charging';
-          case 'not_charging':
-            return currentStatus === 'Connected' || currentStatus === 'Not Connected';
-          case 'charging_complete':
-            return currentStatus === 'Charge Complete';
-          case 'charging_scheduled':
-            return currentStatus === 'Scheduled';
-          case 'charging_error':
-            return currentStatus === 'Error';
-          default:
-            return false;
-        }
-      } catch (error) {
-        this.error('Error in charging status condition:', error);
-        return false;
-      }
+    this.chargingStatusCondition.registerRunListener(async (args) => {
+      return matchesChargingStatus(args.status, args.device.getCapabilityValue('chargingStatus'));
     });
   }
 

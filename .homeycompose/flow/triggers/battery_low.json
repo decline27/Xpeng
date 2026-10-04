@@ -7,7 +7,7 @@
     "en": "Battery level drops below [[threshold]]%"
   },
   "hint": {
-    "en": "Triggered when battery level drops below specified threshold"
+    "en": "Triggered once when the battery level drops below the threshold"
   },
   "args": [
     {

@@ -3,7 +3,7 @@
     "en": "Predict Range"
   },
   "hint": {
-    "en": "Predict vehicle range based on historical data and current battery level"
+    "en": "Predict the range after charging to the charge limit, based on the km per battery % this car has achieved recently"
   },
   "args": [
     {
@@ -17,10 +17,12 @@
       "name": "predicted_range",
       "type": "number",
       "title": {
-        "en": "Predicted Range (km)"
+        "en": "Predicted range at charge limit (km)"
       },
       "example": 250
     }
   ],
-  "platforms": ["local"]
+  "platforms": [
+    "local"
+  ]
 }

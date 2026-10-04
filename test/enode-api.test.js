@@ -247,7 +247,7 @@ describe('EnodeAPI', () => {
 
         test('should throw when the action times out', async () => {
             fetch.mockResolvedValue(okJson({ id: 'action-123', state: 'PENDING' }));
-            await expect(enodeApi.waitForAction('action-123', 10, 2)).rejects.toThrow('Action timed out after');
+            await expect(enodeApi.waitForAction('action-123', 10, 2)).rejects.toThrow('Action timeout');
         });
     });
 

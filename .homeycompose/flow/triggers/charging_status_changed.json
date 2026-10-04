@@ -7,7 +7,7 @@
     "en": "Charging status changed to [[status]]"
   },
   "hint": {
-    "en": "Triggered when charging status changes to specified state"
+    "en": "Triggered when the charging status changes to the selected status"
   },
   "args": [
     {
@@ -41,12 +41,6 @@
           }
         },
         {
-          "id": "charging_scheduled",
-          "title": {
-            "en": "Scheduled"
-          }
-        },
-        {
           "id": "charging_error",
           "title": {
             "en": "Error"
@@ -62,7 +56,7 @@
       "title": {
         "en": "Previous Status"
       },
-      "example": "not_charging"
+      "example": "Connected"
     },
     {
       "name": "current_status",
@@ -70,7 +64,7 @@
       "title": {
         "en": "Current Status"
       },
-      "example": "charging"
+      "example": "Charging"
     }
   ]
 }

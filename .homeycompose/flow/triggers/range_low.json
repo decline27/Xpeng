@@ -7,7 +7,7 @@
     "en": "Range drops below [[threshold]] km"
   },
   "hint": {
-    "en": "Triggered when remaining range drops below specified threshold"
+    "en": "Triggered once when the remaining range drops below the threshold"
   },
   "args": [
     {

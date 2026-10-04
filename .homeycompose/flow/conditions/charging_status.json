@@ -41,12 +41,6 @@
           }
         },
         {
-          "id": "charging_scheduled",
-          "title": {
-            "en": "Scheduled"
-          }
-        },
-        {
           "id": "charging_error",
           "title": {
             "en": "Error"

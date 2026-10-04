@@ -4,6 +4,14 @@ const EnodeOAuth2 = require('../../lib/enode-oauth');
 const VehicleStore = require('../../lib/vehicle-store');
 const AccountManager = require('../../lib/account-manager');
 const { shouldUseRefreshHint, nextPollDelayMs } = require('../../lib/polling');
+const {
+  parseCoordinates,
+  distanceMeters,
+  predictChargingMinutes,
+  updateEfficiency,
+  predictRangeAtLimit
+} = require('../../lib/flow-logic');
+const ErrorHandler = require('../../lib/errorHandler');
 
 class XpengCarDevice extends Homey.Device {
   async onInit() {
@@ -339,6 +347,12 @@ class XpengCarDevice extends Homey.Device {
       // Update capabilities
       await this.updateCapabilities(finalData);
 
+      // Learn the km per battery % for range predictions
+      const efficiency = updateEfficiency(this.getStoreValue('rangeEfficiency'), finalData);
+      if (efficiency !== null && efficiency !== undefined) {
+        await this.setStoreValue('rangeEfficiency', efficiency);
+      }
+
       // Store updated OAuth2 token data if available
       if (this.oAuth2Client) {
         const tokenData = this.oAuth2Client.getTokenData();
@@ -466,257 +480,143 @@ class XpengCarDevice extends Homey.Device {
   }
 
   /**
-   * Handle flow triggers based on capability changes
-   * @param {Map} changedCapabilities - Map of changed capabilities with old and new values
+   * Fire flow triggers for changed capabilities. Each trigger is isolated so one failing
+   * trigger cannot stop the others. Run listeners in driver.js decide per flow.
+   * @param {Map} changedCapabilities - capability id -> { oldValue, newValue }
    */
   async handleFlowTriggers(changedCapabilities) {
-    try {
-      // Battery level changed
-      if (changedCapabilities.has('batteryLevel')) {
-        const { newValue } = changedCapabilities.get('batteryLevel');
-        // batteryLevel is now a numeric value
-        const numericValue = typeof newValue === 'number' ? newValue : parseFloat(newValue);
-        if (!isNaN(numericValue)) {
-          this.log(`Triggering battery_level_changed flow: ${numericValue}%`);
-          await this.homey.flow.getDeviceTriggerCard('battery_level_changed')
-            .trigger(this, { battery_level: numericValue });
-
-          // Trigger battery_low - the run listener in driver.js filters by user threshold
-          await this.homey.flow.getDeviceTriggerCard('battery_low')
-            .trigger(this, { battery_level: numericValue });
-        }
+    const fire = async (cardId, tokens, state) => {
+      try {
+        await this.homey.flow.getDeviceTriggerCard(cardId).trigger(this, tokens, state);
+      } catch (error) {
+        this.error(`Failed to trigger ${cardId}:`, error.message);
       }
+    };
+    const toNumber = (value) => (typeof value === 'number' ? value : parseFloat(value));
 
-      // Range changed
-      if (changedCapabilities.has('range')) {
-        const { newValue } = changedCapabilities.get('range');
-        // Extract numeric value from range string (e.g., "300 km")
-        const numericValue = parseInt(newValue, 10);
-        if (!isNaN(numericValue)) {
-          // Trigger range_low - the run listener in driver.js filters by user threshold
-          await this.homey.flow.getDeviceTriggerCard('range_low')
-            .trigger(this, { range: numericValue });
-        }
-      }
-
-      // Charging status changed
-      if (changedCapabilities.has('chargingStatus')) {
-        const { oldValue, newValue } = changedCapabilities.get('chargingStatus');
-        this.log(`Charging status changed from ${oldValue} to ${newValue}`);
-
-        // Trigger general status changed flow
-        await this.homey.flow.getDeviceTriggerCard('charging_status_changed')
-          .trigger(this, {
-            status: newValue || 'Unknown',
-            previous_status: oldValue || 'Unknown',
-            current_status: newValue || 'Unknown'  // Add this for backward compatibility
-          });
-
-        // Handle specific charging state changes
-        if (newValue === 'Charging' && oldValue !== 'Charging') {
-          this.log('Triggering charging_started flow');
-          await this.homey.flow.getDeviceTriggerCard('charging_started')
-            .trigger(this);
-        } else if (oldValue === 'Charging' && newValue !== 'Charging') {
-          this.log('Triggering charging_stopped flow');
-          await this.homey.flow.getDeviceTriggerCard('charging_stopped')
-            .trigger(this);
-        }
-      }
-
-      // Plugged in status changed
-      if (changedCapabilities.has('pluggedInStatus')) {
-        const { oldValue, newValue } = changedCapabilities.get('pluggedInStatus');
-        this.log(`Plugged in status changed from ${oldValue} to ${newValue}`);
-
-        // Check the type of values and log them for debugging
-        this.log('Value types:', {
-          oldValueType: typeof oldValue,
-          newValueType: typeof newValue,
-          oldValue: String(oldValue),
-          newValue: String(newValue)
+    if (changedCapabilities.has('batteryLevel')) {
+      const { oldValue, newValue } = changedCapabilities.get('batteryLevel');
+      const level = toNumber(newValue);
+      if (!isNaN(level)) {
+        await fire('battery_level_changed', { battery_level: level });
+        await fire('battery_low', { battery_level: level }, {
+          battery_level: level,
+          previous_battery_level: oldValue === undefined ? null : toNumber(oldValue)
         });
-
-        if (newValue === true && oldValue !== true) {
-          this.log('Triggering plugged_in flow');
-          try {
-            const triggerCard = this.homey.flow.getDeviceTriggerCard('plugged_in');
-            this.log('Trigger card found:', !!triggerCard);
-
-            // Make sure we're passing the device correctly
-            this.log('Device info:', {
-              id: this.id,
-              name: this.getName(),
-              hasCapabilities: !!this.hasCapability
-            });
-
-            await triggerCard.trigger(this);
-            this.log('Plugged in trigger completed successfully');
-          } catch (triggerError) {
-            this.error('Error triggering plugged_in flow:', triggerError);
-          }
-        } else if (newValue === false && oldValue !== false) {
-          this.log('Triggering unplugged flow');
-          try {
-            await this.homey.flow.getDeviceTriggerCard('unplugged')
-              .trigger(this);
-            this.log('Unplugged trigger completed successfully');
-          } catch (triggerError) {
-            this.error('Error triggering unplugged flow:', triggerError);
-          }
-        }
       }
+    }
 
-      // Location changed
-      if (changedCapabilities.has('location')) {
-        const { newValue } = changedCapabilities.get('location');
-        this.log(`Location changed to ${newValue}`);
-
-        // Extract coordinates for distance calculation if available
-        let distance = 0;
-        if (newValue && typeof newValue === 'string') {
-          const coordMatch = newValue.match(/\(([^,]+),([^)]+)\)/);
-          if (coordMatch && coordMatch.length >= 3) {
-            // Just set a placeholder distance for now
-            distance = 0.1; // 100 meters as placeholder
-          }
-        }
-
-        await this.homey.flow.getDeviceTriggerCard('location_changed')
-          .trigger(this, {
-            location: newValue || 'Unknown',
-            distance: distance
-          });
+    if (changedCapabilities.has('range')) {
+      const { oldValue, newValue } = changedCapabilities.get('range');
+      const range = toNumber(newValue);
+      if (!isNaN(range)) {
+        await fire('range_low', { range }, {
+          range,
+          previous_range: oldValue === undefined ? null : toNumber(oldValue)
+        });
       }
+    }
 
-    } catch (error) {
-      this.error('Failed to handle flow triggers:', error);
+    if (changedCapabilities.has('chargingStatus')) {
+      const { oldValue, newValue } = changedCapabilities.get('chargingStatus');
+      this.log(`Charging status changed from ${oldValue} to ${newValue}`);
+
+      await fire('charging_status_changed', {
+        previous_status: oldValue || 'Unknown',
+        current_status: newValue || 'Unknown'
+      }, { current_status: newValue });
+
+      if (newValue === 'Charging' && oldValue !== 'Charging') {
+        await fire('charging_started');
+      } else if (oldValue === 'Charging' && newValue !== 'Charging') {
+        await fire('charging_stopped');
+      }
+    }
+
+    if (changedCapabilities.has('pluggedInStatus')) {
+      const { oldValue, newValue } = changedCapabilities.get('pluggedInStatus');
+      if (newValue === true && oldValue !== true) {
+        await fire('plugged_in');
+      } else if (newValue === false && oldValue !== false) {
+        await fire('unplugged');
+      }
+    }
+
+    if (changedCapabilities.has('location')) {
+      const { oldValue, newValue } = changedCapabilities.get('location');
+      const previous = parseCoordinates(oldValue);
+      const current = parseCoordinates(newValue);
+      if (current) {
+        const distance = previous
+          ? Math.round(distanceMeters(previous.latitude, previous.longitude, current.latitude, current.longitude))
+          : 0;
+        await fire('location_changed', { distance }, { previous, current });
+      }
     }
   }
 
+  /**
+   * Start charging. Throws a user-friendly error the flow can show.
+   */
   async startCharging() {
-    try {
-      // Use the stored vehicle ID
-      const vehicleId = this.vehicleId;
-      if (!vehicleId) {
-        throw new Error('Missing vehicle ID');
-      }
-
-      // Get the account ID for this vehicle
-      const accountId = this.getStoreValue('accountId');
-      if (accountId) {
-        this.log(`Starting charging for vehicle ${vehicleId} using account ${accountId}`);
-      } else {
-        this.log('Starting charging for vehicle:', vehicleId);
-      }
-
-      await this.enodeApi.startCharging(vehicleId, accountId);
-      await this.pollVehicleData(); // Update device status
-    } catch (error) {
-      // Use the ErrorHandler to handle and format the error
-      const ErrorHandler = require('../../lib/errorHandler');
-
-      // Create a reporter function to display errors to the user (if possible)
-      const reporter = (translatedError) => {
-        // Show in device activity log if available
-        if (this.homey && this.homey.notifications) {
-          this.homey.notifications.createNotification({
-            excerpt: ErrorHandler.formatErrorMessage(translatedError)
-          });
-        }
-      };
-
-      // Handle the error with context
-      const handled = ErrorHandler.handleError(
-        error,
-        'startCharging',
-        reporter
-      );
-
-      // Log additional context (useful for troubleshooting)
-      this.error(`Failed to start charging for ${this.getName()}: ${handled.original}`);
-
-      // Rethrow with user-friendly message
-      throw new Error(`${handled.message} ${handled.suggestion}`);
-    }
+    await this.sendChargingCommand('START');
   }
 
+  /**
+   * Stop charging. Throws a user-friendly error the flow can show.
+   */
   async stopCharging() {
+    await this.sendChargingCommand('STOP');
+  }
+
+  /**
+   * Send a charging command, then refresh the device. A failed refresh after a successful
+   * command is only logged: the command itself worked.
+   * @param {'START'|'STOP'} action
+   */
+  async sendChargingCommand(action) {
+    const context = action === 'START' ? 'startCharging' : 'stopCharging';
+    const accountId = this.getStoreValue('accountId');
+
     try {
-      // Use the stored vehicle ID
-      const vehicleId = this.vehicleId;
-      if (!vehicleId) {
+      if (!this.vehicleId) {
         throw new Error('Missing vehicle ID');
       }
+      this.log(`Sending ${action} for vehicle ${this.vehicleId}${accountId ? ` (account ${accountId})` : ''}`);
 
-      // Get the account ID for this vehicle
-      const accountId = this.getStoreValue('accountId');
-      if (accountId) {
-        this.log(`Stopping charging for vehicle ${vehicleId} using account ${accountId}`);
+      if (action === 'START') {
+        await this.enodeApi.startCharging(this.vehicleId, accountId);
       } else {
-        this.log('Stopping charging for vehicle:', vehicleId);
+        await this.enodeApi.stopCharging(this.vehicleId, accountId);
       }
-
-      await this.enodeApi.stopCharging(vehicleId, accountId);
-      await this.pollVehicleData(); // Update device status
     } catch (error) {
-      // Use the ErrorHandler to handle and format the error
-      const ErrorHandler = require('../../lib/errorHandler');
+      const handled = ErrorHandler.translateError(error, context);
+      this.error(`Failed to ${action.toLowerCase()} charging for ${this.getName()}: ${handled.original}`);
+      if (this.homey && this.homey.notifications) {
+        this.homey.notifications.createNotification({
+          excerpt: `${this.getName()}: ${ErrorHandler.formatErrorMessage(handled)}`
+        }).catch((notifyError) => this.error('Failed to create notification:', notifyError.message));
+      }
+      throw new Error(ErrorHandler.formatErrorMessage(handled));
+    }
 
-      // Create a reporter function to display errors to the user (if possible)
-      const reporter = (translatedError) => {
-        // Show in device activity log if available
-        if (this.homey && this.homey.notifications) {
-          this.homey.notifications.createNotification({
-            excerpt: ErrorHandler.formatErrorMessage(translatedError)
-          });
-        }
-      };
-
-      // Handle the error with context
-      const handled = ErrorHandler.handleError(
-        error,
-        'stopCharging',
-        reporter
-      );
-
-      // Log additional context
-      this.error(`Failed to stop charging for ${this.getName()}: ${handled.original}`);
-
-      // Rethrow with user-friendly message
-      throw new Error(`${handled.message} ${handled.suggestion}`);
+    try {
+      await this.pollVehicleData();
+    } catch (error) {
+      this.error(`Charging ${action} sent, but refreshing the device failed:`, error.message);
     }
   }
 
-  // Add method to force immediate refresh
+  /**
+   * Fetch fresh data now. Returns false on failure; the caller (flow or widget) shows the error.
+   * @returns {Promise<boolean>}
+   */
   async refreshData() {
     try {
       await this.pollVehicleData();
       return true;
     } catch (error) {
-      // Use the ErrorHandler to handle and format the error
-      const ErrorHandler = require('../../lib/errorHandler');
-
-      // Create a reporter function to display errors to the user (if possible)
-      const reporter = (translatedError) => {
-        // For refresh errors, we can use a different notification mechanism
-        // since this is less critical than charging errors
-        if (this.homey && this.homey.notifications) {
-          this.homey.notifications.createNotification({
-            excerpt: `Data refresh: ${ErrorHandler.formatErrorMessage(translatedError)}`,
-            options: { excerpt: { containsHtml: false } }
-          });
-        }
-      };
-
-      // Handle the error but don't rethrow (non-critical operation)
-      const handled = ErrorHandler.handleError(
-        error,
-        'refreshData',
-        reporter,
-        false // don't rethrow
-      );
-
+      const handled = ErrorHandler.translateError(error, 'refreshData');
       this.error(`Failed to refresh data for ${this.getName()}: ${handled.original}`);
       return false;
     }
@@ -800,136 +700,31 @@ class XpengCarDevice extends Homey.Device {
     }
   }
 
-  // Step 2: Energy Tracking for Homey Energy integration
-  getEnergy() {
-    try {
-      const powerDeliveryState = this.getCapabilityValue('powerDeliveryState') || 0;
-      const chargingStatus = this.getCapabilityValue('chargingStatus');
-      
-      // Convert power delivery state to watts
-      // powerDeliveryState is typically in kW, convert to watts
-      let watts = 0;
-      if (chargingStatus === 'Charging' && powerDeliveryState > 0) {
-        watts = powerDeliveryState * 1000; // Convert kW to watts
-      }
-      
-      this.log(`Energy tracking - Power: ${watts}W, Status: ${chargingStatus}`);
-      
-      return {
-        type: 'car',
-        watts: watts
-      };
-    } catch (error) {
-      this.error('Failed to get energy data:', error);
-      return {
-        type: 'car',
-        watts: 0
-      };
-    }
-  }
-
-  setEnergy(options) {
-    try {
-      // Handle setting energy-related states if needed
-      // This method is called by Homey Energy when energy settings change
-      this.log('Energy options updated:', options);
-      
-      // Store energy-related settings if provided
-      if (options && typeof options === 'object') {
-        // Could store energy preferences or settings here
-        this.log('Processing energy settings update');
-      }
-    } catch (error) {
-      this.error('Failed to set energy options:', error);
-    }
-  }
-
-  // Step 3: Predictive Features using Insights data
+  /**
+   * Predicted range after charging to the charge limit, using the km per battery % this car
+   * has achieved over recent polls.
+   * @returns {Promise<number>} km
+   */
   async predictRange() {
-    try {
-      // Get historical battery level and range data from Insights
-      const batteryLogs = await this.homey.insights.getLogs({
-        uri: `homey:device:${this.getData().id}`,
-        capability: 'batteryLevel',
-        resolution: 'lastHour',
-        start: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // Last 7 days
-        end: new Date()
-      });
-      
-      const rangeLogs = await this.homey.insights.getLogs({
-        uri: `homey:device:${this.getData().id}`,
-        capability: 'range',
-        resolution: 'lastHour',
-        start: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // Last 7 days
-        end: new Date()
-      });
-      
-      if (!batteryLogs || !rangeLogs || batteryLogs.length < 2 || rangeLogs.length < 2) {
-        this.log('Insufficient data for range prediction');
-        return this.getCapabilityValue('range'); // Return current range as fallback
-      }
-      
-      // Calculate average efficiency (range per battery percentage)
-      let totalEfficiency = 0;
-      let validSamples = 0;
-      
-      for (let i = 1; i < Math.min(batteryLogs.length, rangeLogs.length); i++) {
-        const batteryDiff = batteryLogs[i].v - batteryLogs[i-1].v;
-        const rangeDiff = rangeLogs[i].v - rangeLogs[i-1].v;
-        
-        if (batteryDiff !== 0) {
-          const efficiency = Math.abs(rangeDiff / batteryDiff);
-          if (efficiency > 0 && efficiency < 10) { // Sanity check
-            totalEfficiency += efficiency;
-            validSamples++;
-          }
-        }
-      }
-      
-      if (validSamples === 0) {
-        this.log('No valid efficiency samples for prediction');
-        return this.getCapabilityValue('range');
-      }
-      
-      const avgEfficiency = totalEfficiency / validSamples;
-      const currentBattery = this.getCapabilityValue('batteryLevel') || 0;
-      const predictedRange = Math.round(currentBattery * avgEfficiency);
-      
-      this.log(`Range prediction: ${predictedRange} km (efficiency: ${avgEfficiency.toFixed(2)} km/%, battery: ${currentBattery}%)`);
-      
-      return predictedRange;
-    } catch (error) {
-      this.error('Failed to predict range:', error);
-      return this.getCapabilityValue('range') || 0;
-    }
+    return predictRangeAtLimit({
+      efficiency: this.getStoreValue('rangeEfficiency'),
+      chargeLimit: this.getCapabilityValue('chargingLimit'),
+      batteryLevel: this.getCapabilityValue('batteryLevel'),
+      range: this.getCapabilityValue('range')
+    });
   }
 
+  /**
+   * Minutes until the charge limit is reached at the current charge power.
+   * @returns {Promise<number>}
+   */
   async predictChargingTime() {
-    try {
-      const currentBattery = this.getCapabilityValue('batteryLevel') || 0;
-      const chargingLimit = this.getCapabilityValue('chargingLimit') || 100;
-      const powerDeliveryState = this.getCapabilityValue('powerDeliveryState') || 0;
-      const batteryCapacity = this.getCapabilityValue('batteryCapacity') || 100;
-      
-      if (powerDeliveryState <= 0 || currentBattery >= chargingLimit) {
-        return 0; // Not charging or already at limit
-      }
-      
-      // Calculate remaining capacity to charge
-      const remainingPercent = chargingLimit - currentBattery;
-      const remainingCapacity = (remainingPercent / 100) * batteryCapacity; // kWh
-      
-      // Estimate charging time in hours
-      const chargingTimeHours = remainingCapacity / powerDeliveryState;
-      const chargingTimeMinutes = Math.round(chargingTimeHours * 60);
-      
-      this.log(`Charging time prediction: ${chargingTimeMinutes} minutes (${remainingPercent}% remaining, ${powerDeliveryState}kW power)`);
-      
-      return chargingTimeMinutes;
-    } catch (error) {
-      this.error('Failed to predict charging time:', error);
-      return 0;
-    }
+    return predictChargingMinutes({
+      batteryLevel: this.getCapabilityValue('batteryLevel'),
+      chargeLimit: this.getCapabilityValue('chargingLimit'),
+      capacityKwh: this.getCapabilityValue('batteryCapacity'),
+      powerW: this.getCapabilityValue('measure_power')
+    });
   }
 
   /**

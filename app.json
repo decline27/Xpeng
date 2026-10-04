@@ -71,7 +71,7 @@
           "en": "Battery level drops below [[threshold]]%"
         },
         "hint": {
-          "en": "Triggered when battery level drops below specified threshold"
+          "en": "Triggered once when the battery level drops below the threshold"
         },
         "args": [
           {
@@ -129,7 +129,7 @@
           "en": "Charging status changed to [[status]]"
         },
         "hint": {
-          "en": "Triggered when charging status changes to specified state"
+          "en": "Triggered when the charging status changes to the selected status"
         },
         "args": [
           {
@@ -163,12 +163,6 @@
                 }
               },
               {
-                "id": "charging_scheduled",
-                "title": {
-                  "en": "Scheduled"
-                }
-              },
-              {
                 "id": "charging_error",
                 "title": {
                   "en": "Error"
@@ -184,7 +178,7 @@
             "title": {
               "en": "Previous Status"
             },
-            "example": "not_charging"
+            "example": "Connected"
           },
           {
             "name": "current_status",
@@ -192,7 +186,7 @@
             "title": {
               "en": "Current Status"
             },
-            "example": "charging"
+            "example": "Charging"
           }
         ]
       },
@@ -215,16 +209,16 @@
       {
         "id": "location_changed",
         "title": {
-          "en": "Car location matches coordinate",
-          "no": "Bil posisjon matcher koordinat"
+          "en": "Car enters or leaves an area",
+          "no": "Bilen kjører inn i eller ut av et område"
         },
         "titleFormatted": {
           "en": "Car [[comparison]] within [[radius]]m of coordinates ([[latitude]], [[longitude]])",
           "no": "Bilen [[comparison]] innenfor [[radius]]m av koordinater ([[latitude]], [[longitude]])"
         },
         "hint": {
-          "en": "Triggered when the car's location is within the specified radius of given coordinates",
-          "no": "Utløses når bilens posisjon er innenfor angitt radius fra gitte koordinater"
+          "en": "Triggered when the car moves into or out of the circle around the given coordinates",
+          "no": "Utløses når bilen kjører inn i eller ut av sirkelen rundt de gitte koordinatene"
         },
         "args": [
           {
@@ -304,10 +298,10 @@
             "name": "distance",
             "type": "number",
             "title": {
-              "en": "Distance",
-              "no": "Avstand"
+              "en": "Distance moved (m)",
+              "no": "Avstand kjørt (m)"
             },
-            "example": 50
+            "example": 850
           }
         ]
       },
@@ -336,7 +330,7 @@
           "en": "Range drops below [[threshold]] km"
         },
         "hint": {
-          "en": "Triggered when remaining range drops below specified threshold"
+          "en": "Triggered once when the remaining range drops below the threshold"
         },
         "args": [
           {
@@ -483,12 +477,6 @@
                 "id": "charging_complete",
                 "title": {
                   "en": "Charging Complete"
-                }
-              },
-              {
-                "id": "charging_scheduled",
-                "title": {
-                  "en": "Scheduled"
                 }
               },
               {
@@ -697,7 +685,7 @@
           "en": "Predict Range"
         },
         "hint": {
-          "en": "Predict vehicle range based on historical data and current battery level"
+          "en": "Predict the range after charging to the charge limit, based on the km per battery % this car has achieved recently"
         },
         "args": [
           {
@@ -711,7 +699,7 @@
             "name": "predicted_range",
             "type": "number",
             "title": {
-              "en": "Predicted Range (km)"
+              "en": "Predicted range at charge limit (km)"
             },
             "example": 250
           }
