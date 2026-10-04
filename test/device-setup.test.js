@@ -136,6 +136,7 @@ describe('onSettings', () => {
         device.pollVehicleData = jest.fn().mockResolvedValue(true);
 
         await device.onSettings({ oldSettings: { updateInterval: 10 }, newSettings: { updateInterval: 20 }, changedKeys: ['updateInterval'] });
+        await homey.setTimeout.mock.calls.find(([, ms]) => ms === 0)[0]();
 
         expect(homey.setTimeout).toHaveBeenLastCalledWith(expect.any(Function), 20 * MIN);
     });
@@ -198,5 +199,60 @@ describe('health check', () => {
         await device.runHealthCheck();
 
         expect(homey.notifications.createNotification).toHaveBeenCalledTimes(2);
+    });
+});
+
+describe('review follow-ups', () => {
+    test('adopting a re-linked vehicle also adopts its Enode client', async () => {
+        const { device, store } = makeDevice({ store: { accountId: 'primary' } });
+        await device.setVehicleId('new-id', 'secondary');
+        expect(store.vehicleId).toBe('new-id');
+        expect(store.accountId).toBe('secondary');
+    });
+
+    test('adopting a vehicle with an unknown client clears the stale one', async () => {
+        const { device, store } = makeDevice({ store: { accountId: 'primary' } });
+        await device.setVehicleId('new-id');
+        expect(store.accountId).toBeUndefined();
+    });
+
+    test('VIN recovery adopts the client of the recovered vehicle', async () => {
+        const harness = prepareInit(makeDevice({
+            store: { vehicleId: 'old-id', accountId: 'primary' },
+            enodeApi: { getVehicles: jest.fn().mockResolvedValue([{ id: 'new-id', _clientId: 'secondary', information: { vin: 'VIN123' } }]) },
+        }));
+        await harness.device.onInit();
+        expect(harness.store.vehicleId).toBe('new-id');
+        expect(harness.store.accountId).toBe('secondary');
+    });
+
+    test('onSettings returns before the refresh runs, so saving is fast and labels are not overwritten', async () => {
+        const { device, homey } = makeDevice({ capabilities: { chargingStatus: 'Connected' } });
+        device.pollVehicleData = jest.fn().mockResolvedValue(true);
+
+        await device.onSettings({ oldSettings: {}, newSettings: { updateInterval: 20 }, changedKeys: ['updateInterval'] });
+        expect(device.pollVehicleData).not.toHaveBeenCalled();
+
+        const deferred = homey.setTimeout.mock.calls.find(([, ms]) => ms === 0)[0];
+        await deferred();
+        expect(device.pollVehicleData).toHaveBeenCalled();
+        expect(homey.setTimeout).toHaveBeenLastCalledWith(expect.any(Function), 20 * MIN);
+    });
+
+    test('changing the distance unit does not fire a one-off range_low', async () => {
+        const { device, getTrigger } = makeDevice();
+        await device.onSettings({ oldSettings: {}, newSettings: { distanceUnit: 'mi' }, changedKeys: ['distanceUnit'] });
+        await device.handleFlowTriggers(new Map([['range', { oldValue: 100, newValue: 62 }]]));
+        expect(getTrigger('range_low').trigger).not.toHaveBeenCalled();
+
+        await device.handleFlowTriggers(new Map([['range', { oldValue: 62, newValue: 40 }]]));
+        expect(getTrigger('range_low').trigger).toHaveBeenCalled();
+    });
+
+    test('a leftover measure_power capability is removed so Energy does not double count', async () => {
+        const { device } = prepareInit(makeDevice());
+        device.hasCapability = jest.fn((id) => id === 'measure_power' || id !== 'nothing');
+        await device.onInit();
+        expect(device.removeCapability).toHaveBeenCalledWith('measure_power');
     });
 });

@@ -229,3 +229,16 @@ describe('Logger', () => {
         expect(Logger.formatMessage('Failed:', { error: new Error('nested boom') })).toContain('nested boom');
     });
 });
+
+describe('Enode outage at startup', () => {
+    test('getVehicles throws when every client is unreachable, instead of returning no cars', async () => {
+        const api = new EnodeAPI(makeHomey());
+        api.clientManager.addClient('primary', 'Primary', 'cid', 'sec', true);
+        api.getAccessToken = jest.fn().mockResolvedValue('token');
+        api.retryBaseDelayMs = 1;
+        fetch.mockRejectedValue(new Error('ECONNRESET'));
+
+        await expect(api.getVehicles()).rejects.toThrow(/ECONNRESET|unreachable/);
+        api.destroy();
+    });
+});

@@ -334,6 +334,14 @@ class XpengDriver extends Homey.Driver {
    */
   async onRepair(session, device) {
     this.log(`Repairing device: ${device.getName()}`);
+    const vin = device.getData().vin;
+    const oldVehicleId = device.vehicleId;
+    let linkCreatedAt = Date.now();
+
+    // The re-linked car: same VIN, and either a new Enode id or seen since the link was made.
+    // The old link usually still exists, so "any car of this user" would match too early.
+    const findRelinked = (vehicles) => vehicles.find(v => v.information?.vin === vin
+      && (v.id !== oldVehicleId || (v.lastSeen && Date.parse(v.lastSeen) >= linkCreatedAt)));
 
     const ownVehicles = async () => {
       const candidates = await getUserIdCandidates(this.homey);
@@ -349,6 +357,7 @@ class XpengDriver extends Homey.Driver {
       try {
         const userId = await resolveUserId(this.homey);
         const linkUrl = await this.enodeApi.generateVehicleLink(userId);
+        linkCreatedAt = Date.now();
         return { linkUrl };
       } catch (error) {
         this.error('Failed to generate repair link:', error);
@@ -361,8 +370,8 @@ class XpengDriver extends Homey.Driver {
         if (this.enodeApi.requestCache) {
           this.enodeApi.requestCache.clear();
         }
-        const vehicles = await ownVehicles();
-        return { isAuthenticated: vehicles.length > 0, vehicleCount: vehicles.length };
+        const relinked = findRelinked(await ownVehicles());
+        return { isAuthenticated: !!relinked, vehicleCount: relinked ? 1 : 0 };
       } catch (error) {
         this.error('Error checking repair auth status:', error);
         return { isAuthenticated: false, vehicleCount: 0 };
@@ -370,17 +379,19 @@ class XpengDriver extends Homey.Driver {
     });
 
     session.setHandler('repair_complete', async () => {
-      const vin = device.getData().vin;
       if (this.enodeApi.requestCache) {
         this.enodeApi.requestCache.clear();
       }
-      const vehicle = (await ownVehicles()).find(v => v.information?.vin === vin);
+      const vehicle = findRelinked(await ownVehicles());
       if (!vehicle) {
         throw new Error('Your car was not found in Enode yet. Finish connecting it in the browser, wait a minute and try again.');
       }
 
-      await device.setVehicleId(vehicle.id);
-      await device.refreshData();
+      await device.setVehicleId(vehicle.id, vehicle._clientId);
+      const refreshed = await device.refreshData();
+      if (!refreshed) {
+        throw new Error('The car is connected, but Homey could not fetch its data yet. Wait a minute and press Finish again.');
+      }
       await device.setAvailable();
       this.log(`Repair completed for ${device.getName()}: now using vehicle ${vehicle.id}`);
       return { success: true, vehicleId: vehicle.id };

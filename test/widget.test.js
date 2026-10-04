@@ -187,3 +187,12 @@ describe('widget API', () => {
         expect(widgetApi.prefetchVehicleData).toBeUndefined();
     });
 });
+
+describe('findDevice id matching', () => {
+    test('also matches devices that expose their Homey id as a property', () => {
+        const a = { id: 'a', getCapabilityValue: () => null };
+        const b = { __id: 'b', getCapabilityValue: () => null };
+        expect(findDevice([a, b], 'b')).toBe(b);
+        expect(findDevice([a, b], 'a')).toBe(a);
+    });
+});

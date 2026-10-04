@@ -29,6 +29,7 @@ function makeDevice() {
     return {
         getName: () => 'XPENG G6',
         getData: () => ({ id: 'old-id', vin: 'VIN123' }),
+        vehicleId: 'old-id',
         getStoreValue: jest.fn(),
         setVehicleId: jest.fn().mockResolvedValue(),
         refreshData: jest.fn().mockResolvedValue(true),
@@ -37,7 +38,8 @@ function makeDevice() {
 }
 
 describe('driver repair', () => {
-    const relinked = { id: 'new-id', userId: 'homey_stable', information: { vin: 'VIN123' } };
+    const relinked = { id: 'new-id', _clientId: 'secondary', userId: 'homey_stable', information: { vin: 'VIN123' } };
+    const stillOld = { id: 'old-id', _clientId: 'primary', userId: 'homey_stable', lastSeen: '2020-01-01T00:00:00Z', information: { vin: 'VIN123' } };
 
     test('offers a fresh Enode link for the user', async () => {
         const driver = makeDriver([relinked]);
@@ -63,7 +65,7 @@ describe('driver repair', () => {
         await driver.onRepair(session, device);
 
         await expect(session.handlers.repair_complete()).resolves.toEqual({ success: true, vehicleId: 'new-id' });
-        expect(device.setVehicleId).toHaveBeenCalledWith('new-id');
+        expect(device.setVehicleId).toHaveBeenCalledWith('new-id', 'secondary');
         expect(device.refreshData).toHaveBeenCalled();
     });
 
@@ -75,6 +77,26 @@ describe('driver repair', () => {
 
         await expect(session.handlers.repair_complete()).rejects.toThrow(/not found/i);
         expect(device.setVehicleId).not.toHaveBeenCalled();
+    });
+
+    test('does not report connected while only the old link exists', async () => {
+        const driver = makeDriver([stillOld]);
+        const session = makeSession();
+        await driver.onRepair(session, makeDevice());
+        await session.handlers.get_link();
+
+        await expect(session.handlers.check_auth_status()).resolves.toMatchObject({ isAuthenticated: false });
+    });
+
+    test('repair_complete fails when the device still cannot fetch data', async () => {
+        const driver = makeDriver([relinked]);
+        const session = makeSession();
+        const device = makeDevice();
+        device.refreshData.mockResolvedValue(false);
+        await driver.onRepair(session, device);
+
+        await expect(session.handlers.repair_complete()).rejects.toThrow(/could not/i);
+        expect(device.setAvailable).not.toHaveBeenCalled();
     });
 
     test('repair_complete ignores another user\'s copy of the same car', async () => {

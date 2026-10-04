@@ -157,16 +157,23 @@ class XpengCarDevice extends Homey.Device {
     }
 
     this.log(`Vehicle ID ${this.vehicleId} not found; recovered by VIN -> ${byVin.id}`);
-    await this.setVehicleId(byVin.id);
+    await this.setVehicleId(byVin.id, byVin._clientId);
   }
 
   /**
-   * Adopt a new Enode vehicle id (after re-linking).
+   * Adopt a new Enode vehicle id (after re-linking), together with the Enode client that
+   * hosts it. A stale client would make every request for the new id fail.
    * @param {string} vehicleId
+   * @param {string} [clientId] - Enode client hosting the vehicle, if known
    */
-  async setVehicleId(vehicleId) {
+  async setVehicleId(vehicleId, clientId = null) {
     this.vehicleId = vehicleId;
     await this.setStoreValue('vehicleId', vehicleId);
+    if (clientId) {
+      await this.setStoreValue('accountId', clientId);
+    } else {
+      await this.unsetStoreValue('accountId');
+    }
   }
 
   /**
@@ -198,6 +205,16 @@ class XpengCarDevice extends Homey.Device {
    * Add capabilities that devices paired with older versions are missing.
    */
   async registerCapabilities() {
+    // A pre-release build reported charge power as measure_power, which Homey Energy would
+    // count on top of the wall charger
+    if (this.hasCapability('measure_power')) {
+      try {
+        await this.removeCapability('measure_power');
+      } catch (error) {
+        this.error('Failed to remove measure_power:', error.message);
+      }
+    }
+
     for (const capability of CAPABILITIES) {
       if (!this.hasCapability(capability)) {
         try {
@@ -287,8 +304,6 @@ class XpengCarDevice extends Homey.Device {
       // The refresh-hint wakes the car, so only use it when fresh data matters
       const useRefresh = shouldUseRefreshHint({
         chargingStatus: this.getCapabilityValue('chargingStatus'),
-        pluggedIn: this.getCapabilityValue('pluggedInStatus'),
-        wasPluggedIn: this.getStoreValue('wasPluggedIn'),
         lastDataUpdate: this.getStoreValue('lastDataUpdate'),
         now: Date.now()
       });
@@ -310,10 +325,6 @@ class XpengCarDevice extends Homey.Device {
         await this.setStoreValue('accountId', data._accountId);
       }
 
-      // Keep the previous plug state when Enode doesn't know it
-      if (typeof data.chargeState?.isPluggedIn === 'boolean') {
-        await this.setStoreValue('wasPluggedIn', data.chargeState.isPluggedIn);
-      }
       await this.markDataReceived();
 
       if (this.vehicleStore.needsStaticUpdate(data)) {
@@ -427,7 +438,10 @@ class XpengCarDevice extends Homey.Device {
       }
     }
 
-    if (changedCapabilities.has('range')) {
+    if (changedCapabilities.has('range') && this._skipNextRangeTrigger) {
+      // The range jumped because the distance unit changed, not because the car drove
+      this._skipNextRangeTrigger = false;
+    } else if (changedCapabilities.has('range')) {
       const { oldValue, newValue } = changedCapabilities.get('range');
       const range = toNumber(newValue);
       if (!isNaN(range)) {
@@ -637,7 +651,8 @@ class XpengCarDevice extends Homey.Device {
 
   /**
    * Homey calls this before saving new settings, so use newSettings, not getSettings().
-   * A failing refresh must not block saving.
+   * The refresh runs after the save so saving stays fast and the info labels it writes
+   * are not overwritten by the values being saved.
    */
   async onSettings({ newSettings, changedKeys }) {
     let refresh = false;
@@ -650,18 +665,21 @@ class XpengCarDevice extends Homey.Device {
 
     if (changedKeys.includes('distanceUnit')) {
       this.distanceUnit = newSettings.distanceUnit === 'mi' ? 'mi' : 'km';
+      this._skipNextRangeTrigger = true;
       await this.setStoreValue('rangeEfficiency', null); // learned in the old unit
       await this.applyDistanceUnit(this.distanceUnit);
       refresh = true;
     }
 
     if (refresh) {
-      try {
-        await this.pollVehicleData();
-      } catch (error) {
-        this.error('Refresh after settings change failed:', error.message);
-      }
-      this.scheduleNextPoll();
+      this.homey.setTimeout(async () => {
+        try {
+          await this.pollVehicleData();
+        } catch (error) {
+          this.error('Refresh after settings change failed:', error.message);
+        }
+        this.scheduleNextPoll();
+      }, 0);
     }
   }
 }

@@ -21,11 +21,6 @@ describe('shouldUseRefreshHint', () => {
         })).toBe(true);
     });
 
-    test('wakes the car right after it was unplugged', () => {
-        expect(shouldUseRefreshHint({
-            chargingStatus: 'Not Connected', pluggedIn: false, wasPluggedIn: true, lastDataUpdate: recent, now: NOW,
-        })).toBe(true);
-    });
 
     test('wakes the car when there is no previous data', () => {
         expect(shouldUseRefreshHint({
