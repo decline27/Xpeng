@@ -256,3 +256,52 @@ describe('review follow-ups', () => {
         expect(device.removeCapability).toHaveBeenCalledWith('measure_power');
     });
 });
+
+describe('live data follow-ups', () => {
+    const baseVehicle = {
+        id: 'vehicle-123',
+        information: { brand: 'XPENG', model: 'G6', vin: 'VIN123' },
+        chargeState: { isPluggedIn: false, isCharging: false, batteryLevel: 59, range: 274 },
+        odometer: { distance: null },
+        capabilities: { odometer: { isCapable: false } },
+    };
+
+    test('removes the odometer when Enode says the car cannot report it', async () => {
+        const { device, store } = makeDevice({
+            vehicle: baseVehicle,
+            store: { lastDataUpdate: Date.now() },
+            capabilities: { chargingStatus: 'Not Connected' },
+        });
+        await device.pollVehicleData();
+        expect(device.removeCapability).toHaveBeenCalledWith('odometer');
+        expect(store.odometerUnsupported).toBe(true);
+    });
+
+    test('does not add the odometer back on restart once it is known to be unsupported', async () => {
+        const { device } = prepareInit(makeDevice({
+            vehicle: baseVehicle,
+            store: { odometerUnsupported: true },
+            missingCapabilities: ['odometer'],
+        }));
+        await device.onInit();
+        expect(device.addCapability).not.toHaveBeenCalledWith('odometer');
+    });
+
+    test('predictChargingTime prefers Enode\'s own remaining-time estimate while charging', async () => {
+        const { device } = makeDevice({
+            capabilities: { chargingStatus: 'Charging', batteryLevel: 60, chargingLimit: 80, batteryCapacity: 67.8, chargingPower: 11000 },
+            store: { chargeTimeRemaining: 42 },
+        });
+        await expect(device.predictChargingTime()).resolves.toBe(42);
+    });
+
+    test('a poll stores Enode\'s remaining charge time', async () => {
+        const { device, store } = makeDevice({
+            vehicle: { ...baseVehicle, chargeState: { ...baseVehicle.chargeState, isPluggedIn: true, isCharging: true, chargeTimeRemaining: 37 } },
+            store: { lastDataUpdate: Date.now() },
+            capabilities: { chargingStatus: 'Connected' },
+        });
+        await device.pollVehicleData();
+        expect(store.chargeTimeRemaining).toBe(37);
+    });
+});

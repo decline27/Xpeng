@@ -216,6 +216,7 @@ class XpengCarDevice extends Homey.Device {
     }
 
     for (const capability of CAPABILITIES) {
+      if (capability === 'odometer' && this.getStoreValue('odometerUnsupported')) continue;
       if (!this.hasCapability(capability)) {
         try {
           this.log(`Adding missing capability: ${capability}`);
@@ -326,6 +327,11 @@ class XpengCarDevice extends Homey.Device {
       }
 
       await this.markDataReceived();
+      await this.applyVehicleCapabilities(data);
+
+      // Enode's own estimate is better than one computed from charge power
+      const remaining = data.chargeState?.chargeTimeRemaining;
+      await this.setStoreValue('chargeTimeRemaining', typeof remaining === 'number' ? remaining : null);
 
       if (this.vehicleStore.needsStaticUpdate(data)) {
         await this.vehicleStore.storeStaticData(data);
@@ -349,6 +355,24 @@ class XpengCarDevice extends Homey.Device {
     } catch (error) {
       this.error('Failed to poll vehicle data:', error.message);
       throw error;
+    }
+  }
+
+  /**
+   * Hide capabilities Enode says this car can't report (XPENG has no odometer via Enode).
+   * @param {Object} data - Enode vehicle
+   */
+  async applyVehicleCapabilities(data) {
+    if (data.capabilities?.odometer?.isCapable === false && !this.getStoreValue('odometerUnsupported')) {
+      await this.setStoreValue('odometerUnsupported', true);
+      if (this.hasCapability('odometer')) {
+        try {
+          await this.removeCapability('odometer');
+          this.log('Odometer removed: Enode reports this car cannot provide it');
+        } catch (error) {
+          this.error('Failed to remove odometer:', error.message);
+        }
+      }
     }
   }
 
@@ -576,6 +600,10 @@ class XpengCarDevice extends Homey.Device {
    * @returns {Promise<number>}
    */
   async predictChargingTime() {
+    const enodeEstimate = this.getStoreValue('chargeTimeRemaining');
+    if (this.getCapabilityValue('chargingStatus') === 'Charging' && typeof enodeEstimate === 'number') {
+      return Math.round(enodeEstimate);
+    }
     return predictChargingMinutes({
       batteryLevel: this.getCapabilityValue('batteryLevel'),
       chargeLimit: this.getCapabilityValue('chargingLimit'),
