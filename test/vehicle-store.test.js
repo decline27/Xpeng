@@ -122,7 +122,7 @@ describe('VehicleStore', () => {
         isCharging: true,
         batteryLevel: 75,
         chargeLimit: 90,
-        chargeRate: 7000 // 7kW
+        chargeRate: 7 // Enode reports kW
       },
       odometer: {
         distance: 5000
@@ -136,11 +136,12 @@ describe('VehicleStore', () => {
       range: undefined, // Not in test data
       chargingStatus: 'Charging',
       pluggedInStatus: true,
-      location: expect.stringContaining('37.775°N, -122.419°E'),
+      location: expect.stringContaining('37.775°N, 122.419°W'),
       lastSeen: expect.stringContaining('2023-01-01 12:00'),
-      odometer: '5000 km',
+      odometer: 5000,
       chargingLimit: 90,
-      powerDeliveryState: '7.0 kW'
+      powerDeliveryState: 'Charging',
+      measure_power: 7000
     });
   });
   
@@ -160,17 +161,10 @@ describe('VehicleStore', () => {
   });
   
   test('should format power delivery correctly', () => {
-    // No power
-    expect(vehicleStore.formatPowerDelivery(0, false)).toBe('No Power');
-    
-    // Unknown power
-    expect(vehicleStore.formatPowerDelivery(null, true)).toBe('Unknown');
-    
-    // Power in watts
-    expect(vehicleStore.formatPowerDelivery(800, true)).toBe('800.0 W');
-    
-    // Power in kilowatts
-    expect(vehicleStore.formatPowerDelivery(7500, true)).toBe('7.5 kW');
+    expect(vehicleStore.formatPowerDelivery({ isPluggedIn: false })).toBe('Unplugged');
+    expect(vehicleStore.formatPowerDelivery({ isPluggedIn: true, isCharging: true })).toBe('Charging');
+    expect(vehicleStore.formatPowerDelivery({ powerDeliveryState: 'PLUGGED_IN:NO_POWER' })).toBe('No Power');
+    expect(vehicleStore.formatPowerDelivery({})).toBeUndefined();
   });
   
   test('should handle cache operations correctly', () => {
@@ -218,11 +212,11 @@ describe('VehicleStore', () => {
     
     const processed = vehicleStore.processDynamicData(minimalData);
     
-    // Should handle missing data gracefully. With no chargeState, isPluggedIn/isCharging
-    // default to false, so the status is 'Not Connected' (consistent with getChargingStatus).
+    // Should handle missing data gracefully. With no chargeState the plug state is unknown,
+    // so status values stay undefined and the device keeps its previous values.
     expect(processed.batteryLevel).toBeUndefined();
-    expect(processed.chargingStatus).toBe('Not Connected');
-    expect(processed.pluggedInStatus).toBe(false);
+    expect(processed.chargingStatus).toBeUndefined();
+    expect(processed.pluggedInStatus).toBeUndefined();
     expect(processed.lastSeen).toContain('2023-01-01');
   });
   

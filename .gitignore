@@ -34,3 +34,5 @@ Thumbs.db
 
 # OMC tool state
 /.omc/
+# Local reports that contain customer data
+cleanup_report.txt

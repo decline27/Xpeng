@@ -3,6 +3,10 @@
     "en": "XPENG Status"
   },
   "height": 250,
+  "devices": {
+    "type": "app",
+    "singular": true
+  },
   "settings": [
     {
       "id": "refresh_interval",
@@ -34,10 +38,6 @@
     "stopCharging": {
       "method": "POST",
       "path": "/stop-charging"
-    },
-    "initWidget": {
-      "method": "GET",
-      "path": "/init-widget"
     }
   }
 }

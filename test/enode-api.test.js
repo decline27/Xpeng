@@ -273,7 +273,7 @@ describe('EnodeAPI', () => {
             enodeApi.getVehicleData = jest.fn().mockResolvedValue({ id: 'vehicle-123' });
             fetch.mockResolvedValue(okJson({}));
 
-            enodeApi.requestCache.set('refresh_count_vehicle-123', 9);
+            enodeApi.refreshState.set('vehicle-123', { last: 0, count: 9, windowStart: Date.now() });
 
             await enodeApi.refreshVehicleData('vehicle-123');
 

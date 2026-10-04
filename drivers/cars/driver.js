@@ -716,9 +716,9 @@ class XpengDriver extends Homey.Driver {
             this.log(`VIN ${vin} already in authorized list`);
           }
 
-          // Auto-reap: now that this car is connected (freshly seen), remove any older stale
-          // copies of the same VIN that linger under other Enode users/clients. Non-fatal.
-          await this._autoReapDuplicates(vin);
+          // Auto-reap: now that this car is connected, remove older stale copies of the same VIN
+          // that this Homey left behind under its own legacy Enode users. Non-fatal.
+          await this._autoReapDuplicates(vin, data.data?.id);
         } else {
           this.log('No VIN found in device data during add_device');
         }
@@ -870,9 +870,10 @@ class XpengDriver extends Homey.Driver {
    * reaper's safety rule). Controlled by the `auto_reap_enabled` setting (default ON); logs
    * what it would do even when disabled. Never throws into the pairing flow.
    * @param {string} vin
+   * @param {string} [keepVehicleId] - the Enode vehicle id that was just added; never removed
    * @private
    */
-  async _autoReapDuplicates(vin) {
+  async _autoReapDuplicates(vin, keepVehicleId = null) {
     try {
       if (!vin) {
         return;
@@ -882,9 +883,14 @@ class XpengDriver extends Homey.Driver {
       if (this.enodeApi && this.enodeApi.requestCache) {
         this.enodeApi.requestCache.clear();
       }
+      // Only this Homey's own Enode users may be removed; another household linked to the
+      // same car must never be disconnected.
+      const ownerUserIds = await getUserIdCandidates(this.homey);
       const result = await DuplicateReaper.reapForVin(this.enodeApi, vin, {
         execute,
         logger: this,
+        ownerUserIds,
+        keepVehicleId,
       });
       if (!result.targets || result.targets.length === 0) {
         this.log(`Auto-reap: no stale duplicates for VIN ${vin}`);

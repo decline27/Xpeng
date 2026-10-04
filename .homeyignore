@@ -2,24 +2,40 @@
 /env.json
 .env
 
-# Development files
+# Customer data and local reports - never ship these
+cleanup_report.txt
+/logs/
+*.log
+
+# Development and test files
 /.git/
 /.github/
 /.gitignore
+/.claude/
+/.omc/
+/.vercel/
+/.eslintrc.json
+/.eslintignore
 /test/
 /docs/
 /examples/
 /scripts/
-README.md
-CONTRIBUTING.md
-CHANGELOG.md
+/coverage/
+jest.config.js
+run.sh
+run-with-logging.js
+simple-log-test.js
+test-file-logging.js
+env.sample.json
 
-# Dependencies (will be installed by Homey)
-/node_modules/
+# Documentation (README.txt is kept: Homey uses it as the App Store description)
+*.md
+CLAUDE.md
+client-distribution-guide.md
+CODE_OF_CONDUCT.md
 
 # Build output
 /.homeybuild/
-*.log
 
 # System files
 .DS_Store

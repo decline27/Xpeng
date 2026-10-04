@@ -92,7 +92,7 @@ describe('duplicate-reaper', () => {
                 clientB: [vehicle('v2', 'uNew', 'VIN1', '2026-01-01T00:00:00Z')],
             }, disconnectUser);
 
-            const res = await DuplicateReaper.reapForVin(api, 'VIN1', { execute: false });
+            const res = await DuplicateReaper.reapForVin(api, 'VIN1', { execute: false, ownerUserIds: ['uOld', 'uNew'] });
 
             expect(res.targets).toHaveLength(1);
             expect(res.disconnected).toBe(0);
@@ -107,7 +107,7 @@ describe('duplicate-reaper', () => {
                 clientB: [vehicle('v2', 'uNew', 'VIN1', '2026-01-01T00:00:00Z')],
             }, disconnectUser);
 
-            const res = await DuplicateReaper.reapForVin(api, 'VIN1', { execute: true });
+            const res = await DuplicateReaper.reapForVin(api, 'VIN1', { execute: true, ownerUserIds: ['uOld', 'uNew'] });
 
             expect(res.disconnected).toBe(1);
             expect(res.executed).toBe(true);
@@ -125,6 +125,53 @@ describe('duplicate-reaper', () => {
 
             expect(res.targets).toHaveLength(0);
             expect(disconnectUser).not.toHaveBeenCalled();
+        });
+
+        test('never disconnects another household\'s link to the same car', async () => {
+            // Two Homeys linked to one car: this Homey owns uMine, someone else owns uOther.
+            const disconnectUser = jest.fn().mockResolvedValue(true);
+            const api = makeApi({
+                clientA: [vehicle('v1', 'uOther', 'VIN1', '2020-01-01T00:00:00Z')],
+                clientB: [vehicle('v2', 'uMine', 'VIN1', '2026-01-01T00:00:00Z')],
+            }, disconnectUser);
+
+            const res = await DuplicateReaper.reapForVin(api, 'VIN1', { execute: true, ownerUserIds: ['uMine'] });
+
+            expect(res.targets).toHaveLength(0);
+            expect(disconnectUser).not.toHaveBeenCalled();
+        });
+
+        test('does nothing when the owner user ids are not given', async () => {
+            const disconnectUser = jest.fn().mockResolvedValue(true);
+            const api = makeApi({
+                clientA: [vehicle('v1', 'uOld', 'VIN1', '2020-01-01T00:00:00Z')],
+                clientB: [vehicle('v2', 'uNew', 'VIN1', '2026-01-01T00:00:00Z')],
+            }, disconnectUser);
+
+            const res = await DuplicateReaper.reapForVin(api, 'VIN1', { execute: true });
+
+            expect(res.targets).toHaveLength(0);
+            expect(disconnectUser).not.toHaveBeenCalled();
+        });
+
+        test('keeps the freshly linked copy even when Enode has no lastSeen for it yet', async () => {
+            // The new link (v2, legacy-id user uLegacy -> stable uStable) has lastSeen null right
+            // after linking; the old copy was seen recently. The new link must survive.
+            const disconnectUser = jest.fn().mockResolvedValue(true);
+            const api = makeApi({
+                clientA: [vehicle('v1', 'uLegacy', 'VIN1', '2026-10-01T00:00:00Z')],
+                clientB: [vehicle('v2', 'uStable', 'VIN1', null)],
+            }, disconnectUser);
+
+            const res = await DuplicateReaper.reapForVin(api, 'VIN1', {
+                execute: true,
+                ownerUserIds: ['uLegacy', 'uStable'],
+                keepVehicleId: 'v2',
+            });
+
+            expect(disconnectUser).toHaveBeenCalledTimes(1);
+            expect(disconnectUser).toHaveBeenCalledWith('uLegacy', 'clientA');
+            expect(res.targets).toEqual([{ userId: 'uLegacy', clientId: 'clientA', vins: ['VIN1'] }]);
         });
     });
 });

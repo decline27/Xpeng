@@ -3,6 +3,7 @@ const EnodeAPI = require('../../lib/enode-api');
 const EnodeOAuth2 = require('../../lib/enode-oauth');
 const VehicleStore = require('../../lib/vehicle-store');
 const AccountManager = require('../../lib/account-manager');
+const { shouldUseRefreshHint, nextPollDelayMs } = require('../../lib/polling');
 
 class XpengCarDevice extends Homey.Device {
   async onInit() {
@@ -125,7 +126,7 @@ class XpengCarDevice extends Homey.Device {
       await this.vehicleStore.loadStaticData();
 
       // Set up adaptive polling based on vehicle state
-      this.setupAdaptivePolling();
+      this.scheduleNextPoll();
 
       // Set up health check to periodically verify device connectivity
       this.setupHealthCheck();
@@ -201,21 +202,8 @@ class XpengCarDevice extends Homey.Device {
    */
   async onDeleted() {
     try {
-      // Clean up all intervals and timeouts
-      if (this.pollingInterval) {
-        this.homey.clearInterval(this.pollingInterval);
-        this.pollingInterval = null;
-      }
-
-      if (this.shortPollTimeout) {
-        this.homey.clearTimeout(this.shortPollTimeout);
-        this.shortPollTimeout = null;
-      }
-
-      if (this.healthCheckInterval) {
-        this.homey.clearInterval(this.healthCheckInterval);
-        this.healthCheckInterval = null;
-      }
+      this._deleted = true;
+      this.clearTimers();
 
       // Clean up any cache
       if (this.vehicleStore) {
@@ -233,6 +221,29 @@ class XpengCarDevice extends Homey.Device {
     }
   }
 
+  /**
+   * Stop timers when the app stops or the device is removed.
+   */
+  async onUninit() {
+    this._deleted = true;
+    this.clearTimers();
+  }
+
+  /**
+   * Clear every timer this device owns.
+   */
+  clearTimers() {
+    this.clearPollTimer();
+    if (this.healthCheckInterval) {
+      this.homey.clearInterval(this.healthCheckInterval);
+      this.healthCheckInterval = null;
+    }
+    if (this.initRetryTimeout) {
+      this.homey.clearTimeout(this.initRetryTimeout);
+      this.initRetryTimeout = null;
+    }
+  }
+
   async pollVehicleData() {
     try {
       // Use the stored vehicle ID
@@ -243,22 +254,15 @@ class XpengCarDevice extends Homey.Device {
 
       this.log('Polling data for vehicle:', vehicleId);
 
-      // Only use refresh-hint if:
-      // 1. Car is charging (we want accurate charging status)
-      // 2. Car was recently unplugged (catch status changes)
-      // 3. We haven't gotten data in a while (>30 min)
-      let useRefresh = false;
-      const lastDataUpdate = this.getStoreValue('lastDataUpdate');
-      const isCharging = this.getCapabilityValue('chargingStatus');
-      const wasPluggedIn = this.getStoreValue('wasPluggedIn');
+      // The refresh-hint wakes the car, so only use it when fresh data matters
       const now = Date.now();
-
-      if (isCharging ||
-          (wasPluggedIn && !this.getCapabilityValue('pluggedInStatus')) ||
-          !lastDataUpdate ||
-          (now - lastDataUpdate > 30 * 60 * 1000)) {
-        useRefresh = true;
-      }
+      const useRefresh = shouldUseRefreshHint({
+        chargingStatus: this.getCapabilityValue('chargingStatus'),
+        pluggedIn: this.getCapabilityValue('pluggedInStatus'),
+        wasPluggedIn: this.getStoreValue('wasPluggedIn'),
+        lastDataUpdate: this.getStoreValue('lastDataUpdate'),
+        now
+      });
 
       // Get the account ID for this vehicle
       const accountId = this.getStoreValue('accountId');
@@ -294,8 +298,10 @@ class XpengCarDevice extends Homey.Device {
         throw new Error('No data received from API');
       }
 
-      // Store current plugged in status for next comparison
-      this.setStoreValue('wasPluggedIn', data.chargeState?.isPluggedIn || false);
+      // Store current plugged in status for next comparison (keep the old value when unknown)
+      if (typeof data.chargeState?.isPluggedIn === 'boolean') {
+        this.setStoreValue('wasPluggedIn', data.chargeState.isPluggedIn);
+      }
       this.setStoreValue('lastDataUpdate', now);
 
       // Check if static data needs updating
@@ -926,68 +932,38 @@ class XpengCarDevice extends Homey.Device {
     }
   }
 
-  // Set up adaptive polling intervals based on vehicle state
-  setupAdaptivePolling() {
-    // Clear any existing polling and short poll timeout
-    if (this.pollingInterval) {
-      this.homey.clearInterval(this.pollingInterval);
-      this.pollingInterval = null;
-    }
-    if (this.shortPollTimeout) {
-      this.homey.clearTimeout(this.shortPollTimeout);
-      this.shortPollTimeout = null;
-    }
+  /**
+   * Schedule the next poll. Each poll schedules the one after it, so the delay can follow
+   * the vehicle state: the configured interval when idle, faster while charging.
+   */
+  scheduleNextPoll() {
+    this.clearPollTimer();
+    if (this._deleted) return;
 
-    // Get current settings
-    const settings = this.getSettings();
-    this.updateInterval = parseInt(settings.updateInterval) || 10;
+    this.updateInterval = parseInt(this.getSettings().updateInterval, 10) || 10;
+    const delay = nextPollDelayMs({
+      intervalMinutes: this.updateInterval,
+      charging: this.getCapabilityValue('chargingStatus') === 'Charging'
+    });
 
-    // Set the base polling interval (minimum 10 minutes by default)
-    const baseInterval = Math.max(10, this.updateInterval) * 60 * 1000;
-
-    // Create adaptive polling function
-    this.pollingInterval = this.homey.setInterval(async () => {
+    this.pollTimeout = this.homey.setTimeout(async () => {
+      this.pollTimeout = null;
       try {
-        // Check vehicle state to determine if we need more frequent polling
-        const isCharging = this.getCapabilityValue('chargingStatus') === 'Charging';
-
-        // If vehicle is charging, we'll poll again sooner (half the regular interval)
-        if (isCharging) {
-          this.log('Vehicle is charging - scheduling next poll sooner');
-          // Cancel the regular interval temporarily
-          this.homey.clearInterval(this.pollingInterval);
-          this.pollingInterval = null;
-
-          // Poll once after a shorter delay
-          this.shortPollTimeout = this.homey.setTimeout(async () => {
-            try {
-              await this.pollVehicleData();
-            } catch (error) {
-              this.error('Error polling during charging:', error);
-            }
-            // Resume normal polling regardless of poll success/failure
-            this.setupAdaptivePolling();
-          }, Math.min(baseInterval / 2, 5 * 60 * 1000)); // Min of half time or 5 minutes
-
-          // Make sure the timeout doesn't keep the Node.js process alive (for testing)
-          if (this.shortPollTimeout.unref && typeof this.shortPollTimeout.unref === 'function') {
-            this.shortPollTimeout.unref();
-          }
-
-          return; // Exit early since we've scheduled the next poll
-        }
-
-        // Regular polling
         await this.pollVehicleData();
       } catch (error) {
-        this.error('Error in adaptive polling:', error);
-        // Still try to poll on the next scheduled interval
+        this.error('Scheduled poll failed:', error.message);
       }
-    }, baseInterval);
+      this.scheduleNextPoll();
+    }, delay);
+  }
 
-    // Make sure the interval doesn't keep the Node.js process alive (for testing)
-    if (this.pollingInterval.unref && typeof this.pollingInterval.unref === 'function') {
-      this.pollingInterval.unref();
+  /**
+   * Cancel a pending poll, if any.
+   */
+  clearPollTimer() {
+    if (this.pollTimeout) {
+      this.homey.clearTimeout(this.pollTimeout);
+      this.pollTimeout = null;
     }
   }
 
@@ -1053,7 +1029,7 @@ class XpengCarDevice extends Homey.Device {
     if (changedKeys.includes('updateInterval')) {
       // Update settings and reconfigure adaptive polling
       this.updateInterval = parseInt(newSettings.updateInterval) || 10;
-      this.setupAdaptivePolling();
+      this.scheduleNextPoll();
 
       // Update health check as polling interval has changed
       this.setupHealthCheck();

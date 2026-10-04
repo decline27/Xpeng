@@ -163,11 +163,8 @@ describe('Flow Capabilities', () => {
 
   afterEach(() => {
     // Clean up any intervals or timeouts
-    if (device.pollingInterval) {
-      clearInterval(device.pollingInterval);
-    }
-    if (device.shortPollTimeout) {
-      clearTimeout(device.shortPollTimeout);
+    if (device.pollTimeout) {
+      clearTimeout(device.pollTimeout);
     }
     if (device.healthCheckInterval) {
       clearInterval(device.healthCheckInterval);
