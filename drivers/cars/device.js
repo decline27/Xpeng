@@ -1,6 +1,5 @@
 const Homey = require('homey');
 const EnodeAPI = require('../../lib/enode-api');
-const EnodeOAuth2 = require('../../lib/enode-oauth');
 const VehicleStore = require('../../lib/vehicle-store');
 const AccountManager = require('../../lib/account-manager');
 const { shouldUseRefreshHint, nextPollDelayMs } = require('../../lib/polling');
@@ -13,195 +12,216 @@ const {
 } = require('../../lib/flow-logic');
 const ErrorHandler = require('../../lib/errorHandler');
 
+const MINUTE_MS = 60 * 1000;
+const INIT_RETRY_MINUTES = [1, 5, 15, 30, 60];
+const HEALTH_CHECK_INTERVAL_MS = 6 * 60 * MINUTE_MS;
+
+// Capabilities every device should have; added to devices paired with older versions
+const CAPABILITIES = [
+  'measure_battery',
+  'ev_charging_state',
+  'measure_power',
+  'batteryLevel',
+  'batteryCapacity',
+  'range',
+  'chargingStatus',
+  'chargingLimit',
+  'pluggedInStatus',
+  'powerDeliveryState',
+  'location',
+  'lastSeen',
+  'odometer',
+  'vehicleBrand',
+  'vehicleModel',
+  'vehicleYear',
+  'vehicleVin'
+];
+
 class XpengCarDevice extends Homey.Device {
   async onInit() {
-    // Import ErrorHandler at the top level
-    const ErrorHandler = require('../../lib/errorHandler');
-
     try {
-      this.log('XPeng device has been initialized');
-      this.enodeApi = new EnodeAPI(this.homey);
-      this.vehicleStore = new VehicleStore(this);
-      this.accountManager = new AccountManager(this.homey);
+      this.log('XPENG device initializing');
+      this.createServices();
 
-      // Get device data and log it for debugging
-      const deviceData = this.getData();
-      const storeData = this.getStore();
-      this.log('Device data:', deviceData);
-      this.log('Store data:', {
-        hasVehicleInfo: !!storeData.vehicleInfo,
-        hasOAuth2TokenData: !!storeData.oAuth2TokenData
-      });
-
-      // Store the vehicle ID - check settings first, then device data
-      // This allows us to recover if the vehicle ID has changed
       const settings = this.getSettings();
-      const storedVehicleId = this.getStoreValue('vehicleId');
-      this.vehicleId = settings.vehicleId || storedVehicleId || deviceData.vehicleId || deviceData.id;
-      this.log('Initialized with vehicle ID:', this.vehicleId);
+      this.updateInterval = parseInt(settings.updateInterval, 10) || 10;
+      this.distanceUnit = settings.distanceUnit === 'mi' ? 'mi' : 'km';
 
-      // Default to 10 minutes polling to match Enode's cache timing
-      this.updateInterval = parseInt(settings.updateInterval) || 10;
-
-      // Check if essential data is present
-      if (!this.vehicleId || isNaN(this.updateInterval)) {
-        const configError = new Error("Missing required device data or settings");
-        const handled = ErrorHandler.translateError(configError, 'deviceInit');
-
-        this.error(`Configuration error: ${handled.original}`);
-        await this.setUnavailable(handled.message);
-        return;
-      }
-
-      // Initialize OAuth2 client
-      const driver = this.driver;
-      const { clientId, clientSecret } = driver.getStoredCredentials();
-
-      if (!clientId || !clientSecret) {
-        throw new Error('Missing API credentials');
-      }
-
-      this.oAuth2Client = new EnodeOAuth2({
-        clientId: clientId,
-        clientSecret: clientSecret,
-        redirectUri: 'https://callback.athom.com/oauth2/callback',
-        homey: this.homey,
-        logger: this
-      });
-
-      // Load OAuth2 token data if available
-      if (storeData.oAuth2TokenData) {
-        this.oAuth2Client.loadToken(storeData.oAuth2TokenData);
-        this.log('Loaded OAuth2 token data from device store');
-      }
-
-      // Store the account ID if available
-      // Use the existing deviceData variable
-      let accountId = this.getStoreValue('accountId');
-
-      // If we have a VIN, check which account it belongs to
-      if (deviceData.vin && !accountId) {
-        accountId = this.accountManager.getVehicleAccount(deviceData.vin);
-        if (accountId) {
-          this.log(`Found account ${accountId} for vehicle with VIN ${deviceData.vin}`);
-          await this.setStoreValue('accountId', accountId);
-        }
-      }
-
-      // Verify the vehicle ID with Enode API
-      try {
-        // Get vehicles from the appropriate account or all accounts
-        const vehicles = await this.enodeApi.getVehicles();
-        const vehicle = vehicles.find(v => v.id === this.vehicleId);
-
-        if (!vehicle) {
-          // The stored Enode vehicle id wasn't found. This happens when the car was re-linked
-          // (repair / app reinstall / duplicate cleanup) and got a NEW id. Recover by VIN.
-          const vin = deviceData.vin;
-          const vehicleByVin = vin ? vehicles.find(v => v.information?.vin === vin) : null;
-
-          if (vehicleByVin) {
-            // Adopt the new id and CONTINUE initialising. Do NOT return here — returning would
-            // skip polling/health-check setup, leaving the device visible but never updating.
-            this.log(`Vehicle ID ${this.vehicleId} not found; recovered by VIN ${vin} -> ${vehicleByVin.id}`);
-            this.vehicleId = vehicleByVin.id;
-            await this.setSettings({ vehicleId: vehicleByVin.id });
-            await this.setStoreValue('vehicleId', vehicleByVin.id);
-            this.log(`Verified vehicle with VIN ${vin}: ${vehicleByVin.information?.brand} ${vehicleByVin.information?.model}`);
-          } else {
-            const notFoundError = new Error(`Vehicle ${this.vehicleId} not found in user's account`);
-            const handled = ErrorHandler.translateError(notFoundError, 'vehicleVerification');
-
-            this.error(`Vehicle not found: ${vehicles.map(v => ({ id: v.id, name: v.name }))}`);
-            await this.setUnavailable(handled.message);
-            return;
-          }
-        } else {
-          this.log(`Verified vehicle ${this.vehicleId} exists in user's account: ${vehicle.information?.brand} ${vehicle.information?.model}, reachable: ${vehicle.isReachable}`);
-        }
-      } catch (error) {
-        // Handle initialization error with user-friendly message
-        const handled = ErrorHandler.translateError(error, 'vehicleVerification');
-        this.error('Failed to verify vehicle:', error);
-        await this.setUnavailable(`${handled.message} ${handled.suggestion}`);
-        return;
-      }
-
-      // Register capabilities
+      await this.migrateStorage();
+      await this.ensureCarClass();
       await this.registerCapabilities();
-
-      // Load stored vehicle data
+      await this.applyDistanceUnit(this.distanceUnit);
       await this.vehicleStore.loadStaticData();
 
-      // Set up adaptive polling based on vehicle state
-      this.scheduleNextPoll();
-
-      // Set up health check to periodically verify device connectivity
-      this.setupHealthCheck();
-
-      // Initial poll
-      try {
-        await this.pollVehicleData();
-      } catch (pollError) {
-        // Non-fatal error - log but continue
-        const handled = ErrorHandler.translateError(pollError, 'initialPoll');
-        this.error(`Initial data poll failed: ${handled.original}`);
-
-        // We can still make the device available, but warn the user
-        if (this.homey && this.homey.notifications) {
-          this.homey.notifications.createNotification({
-            excerpt: `XPENG Car: ${handled.message} ${handled.suggestion}`
-          });
-        }
-      }
-
-      // Set firstConnected timestamp if not already set
-      const firstConnected = this.getStoreValue('firstConnected');
-      if (!firstConnected) {
-        this.setStoreValue('firstConnected', Date.now());
-      }
-
-      // Mark device as available
-      await this.setAvailable();
-
+      this.initAttempt = 0;
+      await this.finishSetup();
     } catch (error) {
-      // Handle any uncaught errors during initialization
       const handled = ErrorHandler.translateError(error, 'deviceInit');
       this.error('Failed to initialize device:', error);
       await this.setUnavailable(`${handled.message} ${handled.suggestion}`);
     }
   }
 
-  // Register all capabilities
-  async registerCapabilities() {
-    try {
-      const capabilities = [
-        'batteryLevel',
-        'batteryCapacity',
-        'range',
-        'chargingStatus',
-        'chargingLimit',
-        'pluggedInStatus',
-        'powerDeliveryState',
-        'location',
-        'lastSeen',
-        'odometer',
-        'vehicleBrand',
-        'vehicleModel',
-        'vehicleYear',
-        'vehicleVin'
-      ];
+  /**
+   * Create the helpers this device uses. The Enode client is shared app-wide.
+   */
+  createServices() {
+    this.enodeApi = EnodeAPI.forHomey(this.homey);
+    this.vehicleStore = new VehicleStore(this);
+    this.accountManager = new AccountManager(this.homey);
+  }
 
-      for (const capability of capabilities) {
-        if (!this.hasCapability(capability)) {
+  /**
+   * Move data older versions kept in settings into the device store, and resolve the
+   * Enode vehicle id (store first, so a stale hidden setting can no longer win).
+   */
+  async migrateStorage() {
+    const settings = this.getSettings();
+    const data = this.getData();
+
+    let vehicleId = this.getStoreValue('vehicleId');
+    if (!vehicleId && settings.vehicleId) {
+      vehicleId = settings.vehicleId;
+      await this.setStoreValue('vehicleId', vehicleId);
+    }
+    this.vehicleId = vehicleId || data.vehicleId || data.id;
+
+    if (!this.getStoreValue('storedVehicleData') && settings.storedVehicleData) {
+      await this.setStoreValue('storedVehicleData', settings.storedVehicleData);
+    }
+  }
+
+  /**
+   * Devices paired before the car class existed were sensors.
+   */
+  async ensureCarClass() {
+    try {
+      if (typeof this.getClass === 'function' && this.getClass() !== 'car') {
+        await this.setClass('car');
+        this.log('Device class migrated to car');
+      }
+    } catch (error) {
+      this.error('Failed to set device class:', error.message);
+    }
+  }
+
+  /**
+   * Verify the vehicle with Enode, then start polling. Retries with backoff when Enode or
+   * the network is unavailable, so a short outage at boot doesn't leave the device dead.
+   */
+  async finishSetup() {
+    if (this._deleted) return;
+
+    try {
+      await this.verifyVehicle();
+    } catch (error) {
+      const handled = ErrorHandler.translateError(error, 'vehicleVerification');
+      this.error(`Setup failed (attempt ${this.initAttempt + 1}): ${handled.original}`);
+      await this.setUnavailable(`${handled.message} ${handled.suggestion}`);
+      this.scheduleInitRetry();
+      return;
+    }
+
+    this.initAttempt = 0;
+    this.setupHealthCheck();
+
+    try {
+      await this.pollVehicleData();
+    } catch (error) {
+      this.error('Initial data poll failed:', error.message);
+    }
+    this.scheduleNextPoll();
+
+    if (!this.getStoreValue('firstConnected')) {
+      await this.setStoreValue('firstConnected', Date.now());
+    }
+    await this.setAvailable();
+  }
+
+  /**
+   * Check the vehicle still exists in Enode. If its id changed (re-linked), recover by VIN.
+   * @throws when Enode can't be reached or the vehicle is gone
+   */
+  async verifyVehicle() {
+    if (!this.vehicleId) {
+      throw new Error('Missing vehicle ID. Please repair the device.');
+    }
+
+    const vehicles = await this.enodeApi.getVehicles();
+    if (vehicles.find(v => v.id === this.vehicleId)) return;
+
+    const vin = this.getData().vin;
+    const byVin = vin ? vehicles.find(v => v.information?.vin === vin) : null;
+    if (!byVin) {
+      throw new Error(`Vehicle ${this.vehicleId} not found in your Enode account. Use Repair to reconnect it.`);
+    }
+
+    this.log(`Vehicle ID ${this.vehicleId} not found; recovered by VIN -> ${byVin.id}`);
+    await this.setVehicleId(byVin.id);
+  }
+
+  /**
+   * Adopt a new Enode vehicle id (after re-linking).
+   * @param {string} vehicleId
+   */
+  async setVehicleId(vehicleId) {
+    this.vehicleId = vehicleId;
+    await this.setStoreValue('vehicleId', vehicleId);
+  }
+
+  /**
+   * Backoff for setup retries: 1, 5, 15, 30, then every 60 minutes.
+   * @param {number} attempt - zero-based retry number
+   * @returns {number} ms
+   */
+  initRetryDelayMs(attempt) {
+    return INIT_RETRY_MINUTES[Math.min(attempt, INIT_RETRY_MINUTES.length - 1)] * MINUTE_MS;
+  }
+
+  /**
+   * Schedule another setup attempt.
+   */
+  scheduleInitRetry() {
+    if (this._deleted) return;
+    if (this.initRetryTimeout) {
+      this.homey.clearTimeout(this.initRetryTimeout);
+    }
+    const delay = this.initRetryDelayMs(this.initAttempt);
+    this.initAttempt += 1;
+    this.initRetryTimeout = this.homey.setTimeout(async () => {
+      this.initRetryTimeout = null;
+      await this.finishSetup();
+    }, delay);
+  }
+
+  /**
+   * Add capabilities that devices paired with older versions are missing.
+   */
+  async registerCapabilities() {
+    for (const capability of CAPABILITIES) {
+      if (!this.hasCapability(capability)) {
+        try {
           this.log(`Adding missing capability: ${capability}`);
           await this.addCapability(capability);
+        } catch (error) {
+          this.error(`Failed to add capability ${capability}:`, error.message);
         }
       }
+    }
+  }
 
-      this.log('All capabilities registered successfully');
-    } catch (error) {
-      this.error('Error registering capabilities:', error);
+  /**
+   * Show range and odometer in the chosen unit.
+   * @param {'km'|'mi'} unit
+   */
+  async applyDistanceUnit(unit) {
+    for (const capability of ['range', 'odometer']) {
+      if (!this.hasCapability(capability)) continue;
+      try {
+        await this.setCapabilityOptions(capability, { units: { en: unit } });
+      } catch (error) {
+        this.error(`Failed to set units for ${capability}:`, error.message);
+      }
     }
   }
 
@@ -252,231 +272,132 @@ class XpengCarDevice extends Homey.Device {
     }
   }
 
+  /**
+   * Fetch vehicle data from Enode and update the device.
+   * @returns {Promise<boolean>}
+   * @throws when no data could be fetched
+   */
   async pollVehicleData() {
     try {
-      // Use the stored vehicle ID
       const vehicleId = this.vehicleId;
       if (!vehicleId) {
         throw new Error('Missing vehicle ID');
       }
 
-      this.log('Polling data for vehicle:', vehicleId);
-
       // The refresh-hint wakes the car, so only use it when fresh data matters
-      const now = Date.now();
       const useRefresh = shouldUseRefreshHint({
         chargingStatus: this.getCapabilityValue('chargingStatus'),
         pluggedIn: this.getCapabilityValue('pluggedInStatus'),
         wasPluggedIn: this.getStoreValue('wasPluggedIn'),
         lastDataUpdate: this.getStoreValue('lastDataUpdate'),
-        now
+        now: Date.now()
       });
 
-      // Get the account ID for this vehicle
       const accountId = this.getStoreValue('accountId');
-      if (accountId) {
-        this.log(`Using account ${accountId} for vehicle ${vehicleId}`);
-      }
-
-      // Get data with or without refresh
-      let data;
-      if (useRefresh) {
-        data = await this.enodeApi.refreshVehicleData(vehicleId, 2000, accountId);
-        // Only fallback to getVehicleData if refreshVehicleData returned null
-        if (!data) {
-          this.log('Refresh failed, using regular vehicle data fetch');
-          data = await this.enodeApi.getVehicleData(vehicleId, accountId);
-        }
-      } else {
+      let data = useRefresh
+        ? await this.enodeApi.refreshVehicleData(vehicleId, 2000, accountId)
+        : null;
+      if (!data) {
         data = await this.enodeApi.getVehicleData(vehicleId, accountId);
       }
-
-      // If we got data and have a VIN but no account ID, store the account mapping
-      if (data && data.information?.vin && !accountId) {
-        const vin = data.information.vin;
-        // If the vehicle has an _accountId property, use it
-        if (data._accountId) {
-          this.log(`Storing account ${data._accountId} for vehicle with VIN ${vin}`);
-          this.accountManager.setVehicleAccount(vin, data._accountId);
-          await this.setStoreValue('accountId', data._accountId);
-        }
-      }
-
       if (!data) {
         throw new Error('No data received from API');
       }
 
-      // Store current plugged in status for next comparison (keep the old value when unknown)
-      if (typeof data.chargeState?.isPluggedIn === 'boolean') {
-        this.setStoreValue('wasPluggedIn', data.chargeState.isPluggedIn);
+      // Remember which Enode client hosts this vehicle
+      if (!accountId && data._accountId && data.information?.vin) {
+        this.accountManager.setVehicleAccount(data.information.vin, data._accountId);
+        await this.setStoreValue('accountId', data._accountId);
       }
-      this.setStoreValue('lastDataUpdate', now);
 
-      // Check if static data needs updating
+      // Keep the previous plug state when Enode doesn't know it
+      if (typeof data.chargeState?.isPluggedIn === 'boolean') {
+        await this.setStoreValue('wasPluggedIn', data.chargeState.isPluggedIn);
+      }
+      await this.markDataReceived();
+
       if (this.vehicleStore.needsStaticUpdate(data)) {
         await this.vehicleStore.storeStaticData(data);
       }
 
-      // Get static and dynamic data
-      const staticData = this.vehicleStore.getStaticData();
-      const dynamicData = this.vehicleStore.processDynamicData(data);
-
-      if (!staticData || !dynamicData) {
-        throw new Error('Failed to process vehicle data');
-      }
-
-      // Combine static and dynamic data
       const finalData = {
-        ...staticData,
-        ...dynamicData
+        ...(this.vehicleStore.getStaticData() || {}),
+        ...this.vehicleStore.processDynamicData(data, { distanceUnit: this.distanceUnit || 'km' })
       };
 
-      // Store the complete data in cache
-      this.vehicleStore.setCachedData({
-        batteryLevel: finalData.batteryLevel,
-        range: finalData.range,
-        chargingStatus: finalData.chargingStatus,
-        pluggedInStatus: finalData.pluggedInStatus,
-        location: finalData.location,
-        lastSeen: finalData.lastSeen,
-        powerDeliveryState: finalData.powerDeliveryState,
-        vehicleModel: finalData.vehicleModel,
-        timestamp: now
-      });
-
-      // Update capabilities
       await this.updateCapabilities(finalData);
+      await this.updateInfoSettings(data);
 
-      // Learn the km per battery % for range predictions
+      // Learn the distance per battery % for range predictions
       const efficiency = updateEfficiency(this.getStoreValue('rangeEfficiency'), finalData);
       if (efficiency !== null && efficiency !== undefined) {
         await this.setStoreValue('rangeEfficiency', efficiency);
       }
 
-      // Store updated OAuth2 token data if available
-      if (this.oAuth2Client) {
-        const tokenData = this.oAuth2Client.getTokenData();
-        if (tokenData) {
-          await this.setStoreValue('oAuth2TokenData', tokenData);
-          this.log('Updated OAuth2 token data in device store');
-        }
-      }
-
       return true;
     } catch (error) {
-      this.error('Failed to poll vehicle data:', error);
+      this.error('Failed to poll vehicle data:', error.message);
       throw error;
     }
   }
 
-  async getCachedVehicleData() {
-    try {
-      const cachedData = this.vehicleStore.getCachedData();
-      if (!cachedData) {
-        // If no cached data, force a poll
-        await this.pollVehicleData();
-        return this.vehicleStore.getCachedData();
-      }
-      return cachedData;
-    } catch (error) {
-      this.error('Failed to get cached vehicle data:', error);
-      throw error;
+  /**
+   * Record a successful update; also ends any health-check outage.
+   */
+  async markDataReceived() {
+    await this.setStoreValue('lastDataUpdate', Date.now());
+    if (this.getStoreValue('healthNotified')) {
+      await this.setStoreValue('healthNotified', false);
     }
   }
 
-  async updateCapabilities(data) {
+  /**
+   * Fill the read-only "Vehicle information" labels in the device settings.
+   * @param {Object} data - Enode vehicle
+   */
+  async updateInfoSettings(data) {
     try {
-      // Set capabilities
-      let updatedCapabilities = 0;
-      const failedCapabilities = [];
-      const changedCapabilities = new Map();
-      const oldValues = {};
-
-      // Log the processed capability data for debugging
-      this.log('Processing charge state:', {
-        isPluggedIn: data.pluggedInStatus,
-        isCharging: data.chargingStatus,
-        batteryLevel: data.batteryLevel,
-        chargeLimit: data.chargingLimit
+      await this.setSettings({
+        info_vehicle_id: String(this.vehicleId || '-'),
+        info_vin: String(data.information?.vin || this.getData().vin || '-'),
+        info_last_sync: this.vehicleStore.formatLastSeen(new Date().toISOString())
       });
-
-      // First, store old values for comparison
-      for (const capability of Object.keys(data)) {
-        if (data[capability] !== undefined && data[capability] !== null) {
-          oldValues[capability] = this.getCapabilityValue(capability);
-        }
-      }
-
-      // Then update capabilities
-      for (const [capability, value] of Object.entries(data)) {
-        if (value !== undefined && value !== null) {
-          try {
-            const oldValue = oldValues[capability];
-
-            // Special handling for pluggedInStatus
-            if (capability === 'pluggedInStatus') {
-              // Ensure we have boolean values
-              const oldBool = oldValue === true;
-              const newBool = value === true;
-
-              // Apply the value as boolean
-              await this.setCapabilityValue(capability, newBool);
-              updatedCapabilities++;
-
-              this.log(`Processing pluggedInStatus: ${oldBool} => ${newBool}`);
-
-              // Only store changes if the boolean interpretation changes
-              if (oldBool !== newBool) {
-                this.log(`Plugged in status changed from ${oldBool} to ${newBool} (will trigger flow)`);
-                changedCapabilities.set(capability, { oldValue: oldBool, newValue: newBool });
-              }
-            }
-            // Handle other capabilities normally with Insights support
-            else {
-              // Use specialized methods for key metrics to ensure Insights logging
-              if (capability === 'batteryLevel') {
-                await this.updateBatteryLevel(value);
-              } else if (capability === 'range') {
-                await this.updateRange(value);
-              } else if (capability === 'odometer') {
-                await this.updateOdometer(value);
-              } else if (capability === 'batteryCapacity') {
-                await this.updateBatteryCapacity(value);
-              } else if (capability === 'chargingLimit') {
-                await this.updateChargingLimit(value);
-              } else if (capability === 'lastSeen') {
-                await this.updateLastSeen(value);
-              } else {
-                await this.setCapabilityValue(capability, value);
-              }
-              updatedCapabilities++;
-
-              // Store capability changes for flow triggers
-              if (oldValue !== value) {
-                changedCapabilities.set(capability, { oldValue, newValue: value });
-              }
-            }
-          } catch (error) {
-            failedCapabilities.push(capability);
-            this.error(`Failed to set capability ${capability}:`, error.message);
-          }
-        }
-      }
-
-      // Handle flow triggers based on capability changes
-      await this.handleFlowTriggers(changedCapabilities);
-
-      this.log(`Updated ${updatedCapabilities} capabilities successfully`);
-      if (failedCapabilities.length > 0) {
-        this.error(`Failed to update capabilities: ${failedCapabilities.join(', ')}`);
-      }
-
-      // If we successfully got data, device is available
-      await this.setAvailable();
-
     } catch (error) {
-      this.error('Failed to update capabilities:', error);
+      this.error('Failed to update vehicle information settings:', error.message);
     }
+  }
+
+  /**
+   * Write capability values and fire flow triggers for the ones that changed.
+   * Undefined/null values and capabilities the device doesn't have are skipped.
+   * @param {Object} data - capability id -> value
+   */
+  async updateCapabilities(data) {
+    const changedCapabilities = new Map();
+    const failed = [];
+
+    for (const [capability, value] of Object.entries(data)) {
+      if (value === undefined || value === null || !this.hasCapability(capability)) continue;
+
+      const oldValue = this.getCapabilityValue(capability);
+      const newValue = capability === 'pluggedInStatus' ? value === true : value;
+      try {
+        await this.setCapabilityValue(capability, newValue);
+        if (oldValue !== newValue) {
+          changedCapabilities.set(capability, { oldValue, newValue });
+        }
+      } catch (error) {
+        failed.push(capability);
+        this.error(`Failed to set capability ${capability}:`, error.message);
+      }
+    }
+
+    if (failed.length > 0) {
+      this.error(`Failed to update capabilities: ${failed.join(', ')}`);
+    }
+
+    await this.handleFlowTriggers(changedCapabilities);
+    await this.setAvailable();
   }
 
   /**
@@ -622,84 +543,6 @@ class XpengCarDevice extends Homey.Device {
     }
   }
 
-  // Step 1: Specialized methods for Insights logging
-  async updateBatteryLevel(batteryValue) {
-    try {
-      await this.setCapabilityValue('batteryLevel', batteryValue);
-      // Insights will automatically log this if enabled (preventInsights: false)
-      this.log(`Battery level updated to ${batteryValue} - logged to Insights`);
-    } catch (error) {
-      this.error('Failed to update battery level:', error);
-      throw error;
-    }
-  }
-
-  async updateRange(rangeValue) {
-    try {
-      await this.setCapabilityValue('range', rangeValue);
-      // Insights will automatically log this if enabled
-      this.log(`Range updated to ${rangeValue} - logged to Insights`);
-    } catch (error) {
-      this.error('Failed to update range:', error);
-      throw error;
-    }
-  }
-
-  async updateOdometer(odometerValue) {
-    try {
-      await this.setCapabilityValue('odometer', odometerValue);
-      // Insights will automatically log this if enabled
-      this.log(`Odometer updated to ${odometerValue} - logged to Insights`);
-    } catch (error) {
-      this.error('Failed to update odometer:', error);
-      throw error;
-    }
-  }
-
-  async updateBatteryCapacity(capacityValue) {
-    try {
-      await this.setCapabilityValue('batteryCapacity', capacityValue);
-      // Insights will automatically log this if enabled
-      this.log(`Battery capacity updated to ${capacityValue} - logged to Insights`);
-    } catch (error) {
-      this.error('Failed to update battery capacity:', error);
-      throw error;
-    }
-  }
-
-  async updateChargingLimit(limitValue) {
-    try {
-      await this.setCapabilityValue('chargingLimit', limitValue);
-      // Insights will automatically log this if enabled
-      this.log(`Charging limit updated to ${limitValue} - logged to Insights`);
-    } catch (error) {
-      this.error('Failed to update charging limit:', error);
-      throw error;
-    }
-  }
-
-  async updatePluggedInStatus(pluggedValue) {
-    try {
-      await this.setCapabilityValue('pluggedInStatus', pluggedValue);
-      // Insights will automatically log this if enabled
-      this.log(`Plugged in status updated to ${pluggedValue} - logged to Insights`);
-    } catch (error) {
-      this.error('Failed to update plugged in status:', error);
-      throw error;
-    }
-  }
-
-  async updateLastSeen(lastSeenValue) {
-    try {
-      await this.setCapabilityValue('lastSeen', lastSeenValue);
-      // Insights will automatically log this if enabled
-      this.log(`Last seen updated to ${lastSeenValue} - logged to Insights`);
-    } catch (error) {
-      this.error('Failed to update last seen:', error);
-      throw error;
-    }
-  }
-
   /**
    * Predicted range after charging to the charge limit, using the km per battery % this car
    * has achieved over recent polls.
@@ -735,9 +578,8 @@ class XpengCarDevice extends Homey.Device {
     this.clearPollTimer();
     if (this._deleted) return;
 
-    this.updateInterval = parseInt(this.getSettings().updateInterval, 10) || 10;
     const delay = nextPollDelayMs({
-      intervalMinutes: this.updateInterval,
+      intervalMinutes: this.updateInterval || parseInt(this.getSettings().updateInterval, 10) || 10,
       charging: this.getCapabilityValue('chargingStatus') === 'Charging'
     });
 
@@ -763,74 +605,63 @@ class XpengCarDevice extends Homey.Device {
   }
 
   /**
-   * Set up a periodic health check to verify device connectivity
-   * This helps detect issues with the vehicle connection before users notice
+   * Periodically check that data is still arriving.
    */
   setupHealthCheck() {
-    // Clear any existing health check
     if (this.healthCheckInterval) {
       this.homey.clearInterval(this.healthCheckInterval);
     }
-
-    // Set up daily health check (every 24 hours)
-    const HEALTH_CHECK_INTERVAL = 24 * 60 * 60 * 1000; // 24 hours
-
-    this.healthCheckInterval = this.homey.setInterval(async () => {
-      try {
-        this.log('Running periodic health check');
-
-        // Check if we've received data recently (within double the polling interval)
-        const lastDataUpdate = this.getStoreValue('lastDataUpdate') || 0;
-        const now = Date.now();
-        const maxSilence = Math.max(20, this.updateInterval * 2) * 60 * 1000; // At least 20 minutes
-
-        if (now - lastDataUpdate > maxSilence) {
-          this.log(`Health check: No data received since ${new Date(lastDataUpdate).toISOString()}`);
-
-          // Try to refresh data
-          const success = await this.refreshData();
-
-          if (!success) {
-            // If refresh fails, notify user about potential connection issue
-            const ErrorHandler = require('../../lib/errorHandler');
-            const error = new Error('Vehicle connection may be interrupted');
-            const handled = ErrorHandler.translateError(error, 'healthCheck');
-
-            if (this.homey && this.homey.notifications) {
-              this.homey.notifications.createNotification({
-                excerpt: `XPENG Car Health Check: ${handled.message} ${handled.suggestion}`
-              });
-            }
-          }
-        } else {
-          this.log('Health check: Connection is good');
-        }
-
-        // Record health check
-        this.setStoreValue('lastHealthCheck', now);
-      } catch (error) {
-        this.error('Error in health check:', error);
-      }
-    }, HEALTH_CHECK_INTERVAL);
-
-    // Make sure interval doesn't keep process alive
-    if (this.healthCheckInterval.unref && typeof this.healthCheckInterval.unref === 'function') {
-      this.healthCheckInterval.unref();
-    }
+    this.healthCheckInterval = this.homey.setInterval(() => {
+      this.runHealthCheck().catch((error) => this.error('Health check failed:', error.message));
+    }, HEALTH_CHECK_INTERVAL_MS);
   }
 
-  // Device#onSettings to handle changes in settings
-  async onSettings({ oldSettings, newSettings, changedKeys }) {
+  /**
+   * If no data arrived for a while, try a refresh. Notify once per outage when that fails.
+   */
+  async runHealthCheck() {
+    const lastDataUpdate = this.getStoreValue('lastDataUpdate') || 0;
+    const maxSilence = Math.max(20, (this.updateInterval || 10) * 2) * MINUTE_MS;
+    if (Date.now() - lastDataUpdate <= maxSilence) return;
+
+    this.log(`Health check: no data since ${new Date(lastDataUpdate).toISOString()}`);
+    const success = await this.refreshData();
+    if (success || this.getStoreValue('healthNotified')) return;
+
+    await this.setStoreValue('healthNotified', true);
+    const handled = ErrorHandler.translateError(new Error('Vehicle connection may be interrupted'), 'healthCheck');
+    await this.homey.notifications.createNotification({
+      excerpt: `${this.getName()}: no data received recently. ${handled.suggestion}`
+    }).catch((error) => this.error('Failed to create notification:', error.message));
+  }
+
+  /**
+   * Homey calls this before saving new settings, so use newSettings, not getSettings().
+   * A failing refresh must not block saving.
+   */
+  async onSettings({ newSettings, changedKeys }) {
+    let refresh = false;
+
     if (changedKeys.includes('updateInterval')) {
-      // Update settings and reconfigure adaptive polling
-      this.updateInterval = parseInt(newSettings.updateInterval) || 10;
-      this.scheduleNextPoll();
-
-      // Update health check as polling interval has changed
+      this.updateInterval = parseInt(newSettings.updateInterval, 10) || 10;
       this.setupHealthCheck();
+      refresh = true;
+    }
 
-      // Do an immediate poll with the new settings
-      await this.pollVehicleData();
+    if (changedKeys.includes('distanceUnit')) {
+      this.distanceUnit = newSettings.distanceUnit === 'mi' ? 'mi' : 'km';
+      await this.setStoreValue('rangeEfficiency', null); // learned in the old unit
+      await this.applyDistanceUnit(this.distanceUnit);
+      refresh = true;
+    }
+
+    if (refresh) {
+      try {
+        await this.pollVehicleData();
+      } catch (error) {
+        this.error('Refresh after settings change failed:', error.message);
+      }
+      this.scheduleNextPoll();
     }
   }
 }

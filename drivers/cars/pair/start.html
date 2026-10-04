@@ -335,9 +335,14 @@ document.getElementById('start-link').addEventListener('click', async () => {
         updateStepStatus(1, 'completed');
         updateStepStatus(2, 'active');
 
-        // Open the link in a new window when generated
-        enodeLink.addEventListener('click', () => {
-            // Start polling for authentication status after user clicks the link
+        // Open through Homey so the link also works inside the mobile app
+        enodeLink.addEventListener('click', (event) => {
+            event.preventDefault();
+            if (typeof Homey.openURL === 'function') {
+                Homey.openURL(result.linkUrl);
+            } else {
+                window.open(result.linkUrl, '_blank');
+            }
             startAuthStatusPolling();
         });
     } catch (error) {

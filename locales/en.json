@@ -1,1 +1,14 @@
-{}
+{
+  "repair": {
+    "title": "Reconnect your XPENG",
+    "intro": "Use this when your car stopped updating, for example after you reconnected it in Enode. Your flows and history are kept.",
+    "open_link": "Open Enode to reconnect",
+    "waiting_title": "Waiting for Enode...",
+    "waiting_text": "Finish connecting your car in the browser. This page updates by itself.",
+    "success_title": "Car connected",
+    "success_text": "Click Finish to update the device.",
+    "finish": "Finish",
+    "link_failed": "Could not create the Enode link.",
+    "finish_failed": "Could not update the device."
+  }
+}

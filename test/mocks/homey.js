@@ -96,13 +96,6 @@ module.exports = {
     log() {}
     error() {}
     
-    getStoredCredentials() {
-      return {
-        clientId: 'test-client-id',
-        clientSecret: 'test-client-secret'
-      };
-    }
-    
     // For testing flow triggers
     registerFlowCardTrigger(triggerId) {
       this.triggers[triggerId] = {

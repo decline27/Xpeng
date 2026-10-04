@@ -4,10 +4,10 @@
     "en": "Range is low"
   },
   "titleFormatted": {
-    "en": "Range drops below [[threshold]] km"
+    "en": "Range drops below [[threshold]]"
   },
   "hint": {
-    "en": "Triggered once when the remaining range drops below the threshold"
+    "en": "Triggered once when the remaining range drops below the threshold (in the distance unit set on the device)"
   },
   "args": [
     {

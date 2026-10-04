@@ -11,7 +11,9 @@ describe('VehicleStore', () => {
       error: jest.fn(),
       getData: jest.fn().mockReturnValue({ id: 'vehicle-123' }),
       getSettings: jest.fn().mockReturnValue({}),
-      setSettings: jest.fn().mockResolvedValue(true)
+      setSettings: jest.fn().mockResolvedValue(true),
+      getStoreValue: jest.fn(),
+      setStoreValue: jest.fn().mockResolvedValue(true)
     };
     
     vehicleStore = new VehicleStore(mockDevice);
@@ -35,10 +37,8 @@ describe('VehicleStore', () => {
     
     await vehicleStore.storeStaticData(staticData);
     
-    // Should call setSettings on the device
-    expect(mockDevice.setSettings).toHaveBeenCalledWith({
-      storedVehicleData: expect.any(String)
-    });
+    // Should persist in the device store
+    expect(mockDevice.setStoreValue).toHaveBeenCalledWith('storedVehicleData', expect.any(String));
     
     // Check stored data
     const storedData = vehicleStore.getStaticData();
@@ -141,7 +141,9 @@ describe('VehicleStore', () => {
       odometer: 5000,
       chargingLimit: 90,
       powerDeliveryState: 'Charging',
-      measure_power: 7000
+      measure_power: 7000,
+      measure_battery: 75,
+      ev_charging_state: 'plugged_in_charging'
     });
   });
   
@@ -221,8 +223,8 @@ describe('VehicleStore', () => {
   });
   
   test('should handle error when storing static data', async () => {
-    // Mock setSettings to fail
-    mockDevice.setSettings.mockRejectedValueOnce(new Error('Failed to save settings'));
+    // Mock the store write to fail
+    mockDevice.setStoreValue.mockRejectedValueOnce(new Error('Failed to save'));
     
     const staticData = {
       information: {

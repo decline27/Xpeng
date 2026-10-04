@@ -3,8 +3,11 @@
   "name": {
     "en": "XPENG Car"
   },
-  "class": "sensor",
+  "class": "car",
   "capabilities": [
+    "measure_battery",
+    "ev_charging_state",
+    "measure_power",
     "batteryLevel",
     "batteryCapacity",
     "range",
@@ -70,9 +73,7 @@
     }
   },
   "energy": {
-    "batteries": [
-      "INTERNAL"
-    ]
+    "electricCar": true
   },
   "settings": [
     {
@@ -98,6 +99,11 @@
           }
         }
       ]
+    }
+  ],
+  "repair": [
+    {
+      "id": "start"
     }
   ]
 }

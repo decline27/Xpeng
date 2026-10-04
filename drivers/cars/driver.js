@@ -1,9 +1,8 @@
 const Homey = require('homey');
 const EnodeAPI = require('../../lib/enode-api');
-const EnodeOAuth2 = require('../../lib/enode-oauth');
-const AccountManager = require('../../lib/account-manager');
 const { resolveUserId, getUserIdCandidates } = require('../../lib/user-identity');
 const DuplicateReaper = require('../../lib/duplicate-reaper');
+const ErrorHandler = require('../../lib/errorHandler');
 const {
   compareNumber,
   crossedBelow,
@@ -15,45 +14,8 @@ const {
 
 class XpengDriver extends Homey.Driver {
   async onInit() {
-    this.log('XPeng Driver has been initialized');
-
-    // Initialize API clients
-    this.enodeApi = new EnodeAPI(this.homey);
-
-    // Initialize account manager
-    this.accountManager = new AccountManager(this.homey);
-
-    // Check account status
-    const accountStatus = this.accountManager.checkAccountsStatus();
-    this.log('Enode accounts status:', {
-      primaryConfigured: accountStatus.primaryConfigured,
-      secondaryConfigured: accountStatus.secondaryConfigured,
-      defaultAccount: this.accountManager.getDefaultAccount()
-    });
-
-    // Get credentials for the default account
-    const credentials = this.accountManager.getCredentials();
-    this.clientId = credentials.clientId;
-    this.clientSecret = credentials.clientSecret;
-
-    // Initialize OAuth2 client with default account credentials
-    this.oAuth2Client = new EnodeOAuth2({
-      clientId: this.clientId,
-      clientSecret: this.clientSecret,
-      redirectUri: 'https://callback.athom.com/oauth2/callback',
-      homey: this.homey,
-      logger: this
-    });
-
-    // Initialize OAuth2 client
-    try {
-      this.oAuth2Client.init();
-      this.log('OAuth2 client initialized');
-    } catch (error) {
-      this.error('Failed to initialize OAuth2 client:', error);
-    }
-
-    // Register all flow cards
+    this.log('XPENG driver initialized');
+    this.enodeApi = EnodeAPI.forHomey(this.homey);
     this.registerFlowCards();
   }
 
@@ -231,113 +193,30 @@ class XpengDriver extends Homey.Driver {
   }
 
   /**
-   * Handles the device pairing process
+   * Pairing: link the car through Enode, then list the user's own cars.
    * @param {Object} session - The pairing session object
    */
   async onPair(session) {
-    let savedCredentials = false;
-    let pairingStartTime = Date.now();
-
-    // Log pairing start
+    const pairingStartTime = Date.now();
     this.log('Starting XPENG pairing process');
 
-    // Handler to get stored credentials status (not the actual credentials)
+    const isOwnVehicle = (candidates) => (vehicle) =>
+      candidates.includes(vehicle.userId) || (vehicle.user && candidates.includes(vehicle.user.id));
+
+    // Credentials come from env.json; the page only needs to know they exist
     session.setHandler('get_stored_credentials', async () => {
-      const storedClientId = this.homey.settings.get('enode_client_id') || Homey.env.ENODE_CLIENT_ID;
-      const storedClientSecret = this.homey.settings.get('enode_client_secret') || Homey.env.ENODE_CLIENT_SECRET;
-
-      this.log('Checking credentials status:', {
-        hasClientId: !!storedClientId,
-        hasClientSecret: !!storedClientSecret
-      });
-
-      // Only return whether credentials are available, not the actual values
-      return {
-        hasCredentials: !!(storedClientId && storedClientSecret)
-      };
+      const clients = this.enodeApi.clientManager ? this.enodeApi.clientManager.getAllClients() : [];
+      return { hasCredentials: clients.some(c => c.enodeClientId) || !!Homey.env.ENODE_CLIENT_ID };
     });
 
-    // This handler is now just a validation step, not actually saving user-provided credentials
-    session.setHandler('save_credentials', async () => {
-      try {
-        this.log('Validating API credentials');
-
-        // Get credentials from env.json or settings
-        this.clientId = Homey.env.ENODE_CLIENT_ID || this.homey.settings.get('enode_client_id');
-        this.clientSecret = Homey.env.ENODE_CLIENT_SECRET || this.homey.settings.get('enode_client_secret');
-
-        // Input validation
-        if (!this.clientId || this.clientId.trim() === '') {
-          throw new Error('Client ID is not configured. Please create an env.json file with your ENODE_CLIENT_ID value.');
-        }
-
-        if (!this.clientSecret || this.clientSecret.trim() === '') {
-          throw new Error('Client Secret is not configured. Please create an env.json file with your ENODE_CLIENT_SECRET value.');
-        }
-
-        // Validate credentials by getting a machine token
-        await this.enodeApi.getAccessToken();
-
-        // Update OAuth2 client with credentials
-        this.oAuth2Client = new EnodeOAuth2({
-          clientId: this.clientId,
-          clientSecret: this.clientSecret,
-          redirectUri: 'https://callback.athom.com/oauth2/callback',
-          homey: this.homey,
-          logger: this
-        });
-
-        try {
-          this.oAuth2Client.init();
-          this.log('OAuth2 client initialized with credentials');
-        } catch (error) {
-          this.error('Failed to initialize OAuth2 client:', error);
-          // Non-blocking error, continue with pairing
-        }
-
-        savedCredentials = true;
-        return true;
-      } catch (error) {
-        // Use ErrorHandler for better error messages
-        const ErrorHandler = require('../../lib/errorHandler');
-        const handled = ErrorHandler.translateError(error, 'validateCredentials');
-
-        this.error('Failed to validate credentials:', error);
-
-        // For credential errors, provide more specific guidance
-        if (handled.type === ErrorHandler.ErrorTypes.AUTHENTICATION) {
-          throw new Error('Invalid API credentials. Please contact the app developer.');
-        } else if (handled.type === ErrorHandler.ErrorTypes.NETWORK) {
-          throw new Error('Network issue while validating credentials. Please check your internet connection and try again.');
-        } else {
-          throw new Error(`${handled.message} ${handled.suggestion}`);
-        }
-      }
-    });
-
-    // Add a handler to check if the user has authenticated vehicles
     session.setHandler('check_auth_status', async () => {
       try {
-        // Stable user ID (survives reinstall), plus legacy id for migration dual-matching.
-        const userId = await resolveUserId(this.homey);
-        const userIdCandidates = await getUserIdCandidates(this.homey);
-
-        // Fetch vehicles from Enode API
-        const allVehicles = await this.enodeApi.getVehicles();
-
-        // Filter vehicles by user ID (stable or legacy)
-        const userVehicles = allVehicles.filter(vehicle =>
-          userIdCandidates.includes(vehicle.userId) ||
-          (vehicle.user && userIdCandidates.includes(vehicle.user.id))
-        );
-
-        this.log(`Auth status check: Found ${userVehicles.length} vehicles for user ID ${userId}`);
-
-        // Return authentication status
-        return {
-          isAuthenticated: userVehicles.length > 0,
-          vehicleCount: userVehicles.length
-        };
+        if (this.enodeApi.requestCache) {
+          this.enodeApi.requestCache.clear();
+        }
+        const candidates = await getUserIdCandidates(this.homey);
+        const vehicles = (await this.enodeApi.getVehicles()).filter(isOwnVehicle(candidates));
+        return { isAuthenticated: vehicles.length > 0, vehicleCount: vehicles.length };
       } catch (error) {
         this.error('Error checking authentication status:', error);
         return { isAuthenticated: false, vehicleCount: 0 };
@@ -346,384 +225,129 @@ class XpengDriver extends Homey.Driver {
 
     session.setHandler('get_link', async () => {
       try {
-        if (!savedCredentials && !this.clientId && !this.clientSecret) {
-          // Try to get credentials from settings if not saved in current session
-          this.clientId = this.homey.settings.get('enode_client_id') || Homey.env.ENODE_CLIENT_ID;
-          this.clientSecret = this.homey.settings.get('enode_client_secret') || Homey.env.ENODE_CLIENT_SECRET;
-
-          this.log('Retrieved credentials for link generation:', {
-            hasClientId: !!this.clientId,
-            hasClientSecret: !!this.clientSecret
-          });
-        }
-
-        if (!this.clientId || !this.clientSecret) {
-          throw new Error('Credentials not set');
-        }
-
-        // Stable user ID (Homey Cloud ID based) so re-linking reuses the same Enode user
-        // instead of creating a duplicate. generateVehicleLink pins to the user's existing
-        // client if they already exist on one.
+        // Stable user id, so re-linking reuses the same Enode user instead of a duplicate
         const userId = await resolveUserId(this.homey);
-        this.log(`Using stable user ID for vehicle link: ${userId}`);
-
         const linkUrl = await this.enodeApi.generateVehicleLink(userId);
         return { linkUrl };
       } catch (error) {
-        // Use ErrorHandler for better error messages
-        const ErrorHandler = require('../../lib/errorHandler');
         const handled = ErrorHandler.translateError(error, 'generateLink');
-
         this.error('Failed to generate vehicle link:', error);
-
-        // Provide more specific guidance based on error type
-        if (handled.type === ErrorHandler.ErrorTypes.AUTHENTICATION) {
-          throw new Error(
-            'Authentication failed while generating the link. Please make sure your Enode credentials are correct.'
-          );
-        } else if (handled.type === ErrorHandler.ErrorTypes.NETWORK) {
-          throw new Error(
-            'Cannot connect to Enode services. Please check your internet connection and try again in a few minutes.'
-          );
-        } else if (handled.type === ErrorHandler.ErrorTypes.CONFIGURATION) {
-          throw new Error(
-            'Configuration error. Please re-enter your Enode credentials in the previous step.'
-          );
-        } else {
-          throw new Error(`Problem generating link: ${handled.message} ${handled.suggestion}`);
-        }
+        throw new Error(`Problem generating link: ${handled.message} ${handled.suggestion}`);
       }
     });
 
     session.setHandler('list_devices', async () => {
       try {
-        if (!savedCredentials && !this.clientId && !this.clientSecret) {
-          // Try to get credentials from settings if not saved in current session
-          this.clientId = this.homey.settings.get('enode_client_id') || Homey.env.ENODE_CLIENT_ID;
-          this.clientSecret = this.homey.settings.get('enode_client_secret') || Homey.env.ENODE_CLIENT_SECRET;
+        const allVehicles = await this.enodeApi.getVehicles();
+        const candidates = await getUserIdCandidates(this.homey);
+        let vehicles = allVehicles.filter(isOwnVehicle(candidates));
 
-          this.log('Retrieved credentials for device listing:', {
-            hasClientId: !!this.clientId,
-            hasClientSecret: !!this.clientSecret
-          });
+        // Fall back to cars this Homey authorised before (e.g. linked under an older user id)
+        if (vehicles.length === 0) {
+          const authorizedVins = this.homey.settings.get('authorized_vins') || [];
+          vehicles = allVehicles.filter(v => authorizedVins.includes(v.information?.vin));
         }
 
-        if (!this.clientId || !this.clientSecret) {
-          throw new Error('Credentials not set');
-        }
-
-        // Fetch vehicles from Enode API
-        let allVehicles = await this.enodeApi.getVehicles();
-
-        if (!allVehicles || allVehicles.length === 0) {
-          throw new Error('No vehicles found. Please make sure you have completed the connection process in your browser.');
-        }
-
-        // Log found vehicles for debugging
-        this.log('Found vehicles:', allVehicles.map(v => ({ id: v.id, name: v.name, userId: v.userId })));
-
-        // Stable user ID plus legacy id, so users see their car across the migration.
-        const userId = await resolveUserId(this.homey);
-        const userIdCandidates = await getUserIdCandidates(this.homey);
-        this.log('Using user IDs for vehicle filtering:', userIdCandidates.join(', '));
-
-        // SECURITY IMPROVEMENT: Filter vehicles by user ID
-        // This ensures users only see their own vehicles
-        const userVehicles = allVehicles.filter(vehicle =>
-          userIdCandidates.includes(vehicle.userId) ||
-          (vehicle.user && userIdCandidates.includes(vehicle.user.id))
-        );
-
-        // Get authorized VINs from settings
-        const authorizedVins = this.homey.settings.get('authorized_vins') || [];
-        this.log(`Found ${authorizedVins.length} authorized VINs in settings`);
-
-        // First try to filter by authorized VINs
-        let vinFilteredVehicles = [];
-        if (authorizedVins.length > 0) {
-          vinFilteredVehicles = allVehicles.filter(vehicle =>
-            authorizedVins.includes(vehicle.information?.vin)
-          );
-          this.log(`Found ${vinFilteredVehicles.length} vehicles matching authorized VINs`);
-        }
-
-        // If we found vehicles for this user by ID, use those
-        // Otherwise, if we found vehicles by VIN, use those
-        // As a last resort during pairing, show all vehicles
-        let vehicles = allVehicles;
-
-        if (userVehicles.length > 0) {
-          this.log(`Found ${userVehicles.length} vehicles for user ID ${userId}. Using these vehicles.`);
-          vehicles = userVehicles;
-
-          // Store the VINs of these vehicles in the authorized list if they're not already there
-          userVehicles.forEach(vehicle => {
-            const vin = vehicle.information?.vin;
-            if (vin && !authorizedVins.includes(vin)) {
-              authorizedVins.push(vin);
-              this.log(`Adding VIN ${vin} to authorized list from user ID match`);
-            }
-          });
-
-          // Update the authorized VINs in settings
-          if (authorizedVins.length > 0) {
-            this.homey.settings.set('authorized_vins', authorizedVins);
-            // Clear any cached data in the API client to ensure fresh data
-            if (this.enodeApi && this.enodeApi.requestCache) {
-              this.enodeApi.requestCache.clear('vehicles');
-            }
-          }
-        } else if (vinFilteredVehicles.length > 0) {
-          this.log(`Using ${vinFilteredVehicles.length} vehicles matching authorized VINs`);
-          vehicles = vinFilteredVehicles;
-        } else {
-          this.log(`No vehicles found specifically for user ID ${userId} or matching authorized VINs. Returning empty list for security.`);
-          // SECURITY IMPROVEMENT: Never show all vehicles, even during initial pairing
-          // Instead, we'll throw a helpful error message below when vehicles.length is 0
-          vehicles = [];
-        }
-
-        // Check if we have any vehicles to show
         if (vehicles.length === 0) {
           throw new Error(
-            'No vehicles linked to your account yet.\n\n' +
-            'NEXT STEPS:\n' +
-            '1. Click "Generate Connection Link" to get your personal linking URL\n' +
-            '2. Open the link in your browser and sign in with your XPENG account\n' +
-            '3. Authorize the connection to link your vehicle\n' +
-            '4. Wait 1-2 minutes, then return here and continue\n\n' +
-            'If you already completed these steps, please wait a few minutes and try again.'
+            'No XPENG vehicles found. Please make sure you have:\n\n'
+            + '1. Completed the connection process by clicking the link and authorizing in your browser\n'
+            + '2. Waited a few minutes for the connection to be established\n'
+            + '3. If problems persist, try clicking "Generate Connection Link" again'
           );
         }
 
-        // Group vehicles by VIN to detect duplicates
-        const vehiclesByVin = {};
-        vehicles.forEach(vehicle => {
+        this.rememberAuthorizedVins(vehicles);
+
+        // One entry per VIN: the most recently seen copy
+        const byVin = new Map();
+        for (const vehicle of vehicles) {
+          const key = vehicle.information?.vin || vehicle.id;
+          const existing = byVin.get(key);
+          if (!existing || new Date(vehicle.lastSeen || 0) > new Date(existing.lastSeen || 0)) {
+            byVin.set(key, vehicle);
+          }
+        }
+
+        return [...byVin.values()].map(vehicle => {
           const vin = vehicle.information?.vin;
-          if (vin) {
-            if (!vehiclesByVin[vin]) {
-              vehiclesByVin[vin] = [];
-            }
-            vehiclesByVin[vin].push(vehicle);
-          }
-        });
-
-        // For each VIN, select the most recently seen vehicle
-        const uniqueVehicles = [];
-        Object.values(vehiclesByVin).forEach(duplicates => {
-          // Sort by lastSeen date (most recent first)
-          duplicates.sort((a, b) => {
-            const dateA = new Date(a.lastSeen || 0);
-            const dateB = new Date(b.lastSeen || 0);
-            return dateB - dateA;
-          });
-
-          // Add the most recent vehicle
-          uniqueVehicles.push(duplicates[0]);
-
-          // Log if duplicates were found
-          if (duplicates.length > 1) {
-            this.log(`Found ${duplicates.length} vehicles with VIN ${duplicates[0].information?.vin}. Using the most recently seen one.`);
-          }
-        });
-
-        // Map unique vehicles to Homey device format
-        return uniqueVehicles.map(vehicle => {
-          const vin = vehicle.information?.vin || 'unknown';
           const model = vehicle.information?.model || 'Vehicle';
-
           return {
-            name: vehicle.name || `XPENG ${model} (${vin.substring(vin.length - 6)})`,
-            data: {
-              id: vehicle.id,
-              vehicleId: vehicle.id,  // Store the ID in both places for backward compatibility
-              vin: vin  // Store the VIN for future reference
-            },
-            store: {
-              vehicleInfo: vehicle,
-              oAuth2TokenData: this.oAuth2Client.getTokenData() // Store OAuth2 token data for the device
-            },
-            capabilities: [
-              'batteryLevel',
-              'batteryCapacity',
-              'chargingStatus',
-              'pluggedInStatus',
-              'range',
-              'location',
-              'lastSeen',
-              'odometer',
-              'vehicleBrand',
-              'vehicleModel',
-              'vehicleYear',
-              'vehicleVin',
-              'chargingLimit',
-              'powerDeliveryState'
-            ]
+            name: vehicle.name || `XPENG ${model}${vin ? ` (${vin.slice(-6)})` : ''}`,
+            // The VIN identifies the car; the Enode id can change when the car is re-linked
+            data: { id: vin || vehicle.id, vehicleId: vehicle.id, vin: vin || null },
+            store: { vehicleId: vehicle.id }
           };
         });
       } catch (error) {
-        // Use ErrorHandler for better error messages
-        const ErrorHandler = require('../../lib/errorHandler');
-        const handled = ErrorHandler.translateError(error, 'listDevices');
-
         this.error('Failed to list devices:', error);
-
-        // Special handling for common vehicle discovery issues
-        if (error.message.includes('vehicles found') || error.message.includes('No vehicles')) {
-          throw new Error(
-            'No XPENG vehicles found. Please make sure you have:\n\n' +
-            '1. Completed the connection process by clicking the link and authorizing in your browser\n' +
-            '2. Waited a few minutes for the connection to be established\n' +
-            '3. If problems persist, try clicking "Generate Connection Link" again'
-          );
-        } else if (handled.type === ErrorHandler.ErrorTypes.AUTHENTICATION) {
-          throw new Error(
-            'Authentication error when connecting to Enode. Please check your credentials and try again.'
-          );
-        } else if (handled.type === ErrorHandler.ErrorTypes.NETWORK) {
-          throw new Error(
-            'Cannot connect to Enode services. Please check your internet connection and try again later.'
-          );
-        } else {
-          throw new Error(`${handled.message} ${handled.suggestion}`);
-        }
+        if (error.message.includes('No XPENG vehicles')) throw error;
+        const handled = ErrorHandler.translateError(error, 'listDevices');
+        throw new Error(`${handled.message} ${handled.suggestion}`);
       }
     });
 
-    // Handle device added event
-    session.setHandler('add_device', async (data) => {
+    session.setHandler('add_device', async (device) => {
       try {
-        // Extract the VIN from the device data
-        const vin = data.data?.vin;
+        const vin = device.data?.vin;
         if (vin) {
-          // Get the current list of authorized VINs
-          const authorizedVins = this.homey.settings.get('authorized_vins') || [];
-
-          // Add this VIN if it's not already in the list
-          if (!authorizedVins.includes(vin)) {
-            authorizedVins.push(vin);
-            this.homey.settings.set('authorized_vins', authorizedVins);
-            this.log(`Added VIN ${vin} to authorized list. Total authorized VINs: ${authorizedVins.length}`);
-
-            // Clear any cached data in the API client to ensure fresh data
-            if (this.enodeApi && this.enodeApi.requestCache) {
-              this.enodeApi.requestCache.clear('vehicles');
-            }
-          } else {
-            this.log(`VIN ${vin} already in authorized list`);
-          }
-
-          // Auto-reap: now that this car is connected, remove older stale copies of the same VIN
-          // that this Homey left behind under its own legacy Enode users. Non-fatal.
-          await this._autoReapDuplicates(vin, data.data?.id);
-        } else {
-          this.log('No VIN found in device data during add_device');
+          this.rememberAuthorizedVins([{ information: { vin } }]);
+          // Remove stale copies of this car that this Homey left behind. Non-fatal.
+          await this._autoReapDuplicates(vin, device.data?.vehicleId);
         }
-        return true;
       } catch (error) {
         this.error('Error in add_device handler:', error);
-        return true; // Continue with device addition even if storing VIN fails
       }
+      return true;
     });
 
-    // Handle session completion
     session.setHandler('complete', async () => {
       const pairingDuration = (Date.now() - pairingStartTime) / 1000;
       this.log(`XPENG pairing process completed in ${pairingDuration.toFixed(1)} seconds`);
-
-      // Track usage statistics (non-PII)
-      try {
-        this.homey.settings.set('last_pairing_duration', pairingDuration);
-        this.homey.settings.set('last_pairing_time', new Date().toISOString());
-
-        const pairingCount = this.homey.settings.get('pairing_count') || 0;
-        this.homey.settings.set('pairing_count', pairingCount + 1);
-      } catch (error) {
-        // Non-critical, just log
-        this.error('Failed to save pairing statistics:', error);
-      }
-
       return true;
     });
   }
 
   /**
-   * Handles the device repair process
+   * Remember VINs this Homey is allowed to see, used when the user id doesn't match.
+   * @param {Array} vehicles
+   */
+  rememberAuthorizedVins(vehicles) {
+    const authorizedVins = this.homey.settings.get('authorized_vins') || [];
+    let changed = false;
+    for (const vehicle of vehicles) {
+      const vin = vehicle.information?.vin;
+      if (vin && !authorizedVins.includes(vin)) {
+        authorizedVins.push(vin);
+        changed = true;
+      }
+    }
+    if (changed) {
+      this.homey.settings.set('authorized_vins', authorizedVins);
+    }
+  }
+
+  /**
+   * Repair: re-link the car with Enode and move the device to the new Enode vehicle id.
    * @param {Object} session - The repair session object
    * @param {Object} device - The device being repaired
    */
   async onRepair(session, device) {
     this.log(`Repairing device: ${device.getName()}`);
-    let savedCredentials = false;
 
-    // Use the same handlers as pairing, focusing on the link generation
+    const ownVehicles = async () => {
+      const candidates = await getUserIdCandidates(this.homey);
+      const vehicles = await this.enodeApi.getVehicles();
+      return vehicles.filter(vehicle =>
+        candidates.includes(vehicle.userId) || (vehicle.user && candidates.includes(vehicle.user.id))
+      );
+    };
 
-    // Handler to get stored credentials status
-    session.setHandler('get_stored_credentials', async () => {
-      const storedClientId = this.homey.settings.get('enode_client_id') || Homey.env.ENODE_CLIENT_ID;
-      const storedClientSecret = this.homey.settings.get('enode_client_secret') || Homey.env.ENODE_CLIENT_SECRET;
+    session.setHandler('get_stored_credentials', async () => ({ hasCredentials: true }));
 
-      return {
-        hasCredentials: !!(storedClientId && storedClientSecret)
-      };
-    });
-
-    // Validating API credentials
-    session.setHandler('save_credentials', async () => {
-      try {
-        this.clientId = Homey.env.ENODE_CLIENT_ID || this.homey.settings.get('enode_client_id');
-        this.clientSecret = Homey.env.ENODE_CLIENT_SECRET || this.homey.settings.get('enode_client_secret');
-
-        if (!this.clientId || !this.clientSecret) {
-          throw new Error('API Credentials not configured in env.json');
-        }
-
-        // Validate credentials
-        await this.enodeApi.getAccessToken();
-
-        savedCredentials = true;
-        return true;
-      } catch (error) {
-        throw new Error(`Credential validation failed: ${error.message}`);
-      }
-    });
-
-    // Add authentication status check (required by UI polling)
-    session.setHandler('check_auth_status', async () => {
-      try {
-        const vehicleInfo = device.getStoreValue('vehicleInfo');
-        const userId = vehicleInfo?.userId || await resolveUserId(this.homey);
-
-        // Fetch vehicles from Enode API
-        const allVehicles = await this.enodeApi.getVehicles();
-
-        // Check if ANY vehicle exists for this user (same logic as onPair)
-        const userVehicles = allVehicles.filter(vehicle =>
-          vehicle.userId === userId ||
-          (vehicle.user && vehicle.user.id === userId)
-        );
-
-        this.log(`Repair auth check: Found ${userVehicles.length} vehicles for user ID ${userId}`);
-
-        return {
-          isAuthenticated: userVehicles.length > 0,
-          vehicleCount: userVehicles.length
-        };
-      } catch (error) {
-        this.error('Error checking repair auth status:', error);
-        return { isAuthenticated: false, vehicleCount: 0 };
-      }
-    });
-
-    // Generate link for the existing user ID of the device
     session.setHandler('get_link', async () => {
       try {
-        const vehicleInfo = device.getStoreValue('vehicleInfo');
-        const userId = vehicleInfo?.userId || await resolveUserId(this.homey);
-
-        this.log(`Generating repair link for user ID: ${userId}`);
-
-        // Generate the vehicle link
+        const userId = await resolveUserId(this.homey);
         const linkUrl = await this.enodeApi.generateVehicleLink(userId);
         return { linkUrl };
       } catch (error) {
@@ -732,32 +356,34 @@ class XpengDriver extends Homey.Driver {
       }
     });
 
-    // Handle device list (required by UI to proceed to final step)
-    session.setHandler('list_devices', async () => {
-      // In repair mode, we just want to confirm the device still exists or can be matched
-      // We'll return the current device as the only option
-      const vin = device.getData()?.vin;
-      const vehicleInfo = device.getStoreValue('vehicleInfo');
-
-      return [{
-        name: device.getName(),
-        data: device.getData(),
-        store: {
-          vehicleInfo: vehicleInfo
+    session.setHandler('check_auth_status', async () => {
+      try {
+        if (this.enodeApi.requestCache) {
+          this.enodeApi.requestCache.clear();
         }
-      }];
+        const vehicles = await ownVehicles();
+        return { isAuthenticated: vehicles.length > 0, vehicleCount: vehicles.length };
+      } catch (error) {
+        this.error('Error checking repair auth status:', error);
+        return { isAuthenticated: false, vehicleCount: 0 };
+      }
     });
 
-    // Handle repair completion
-    session.setHandler('complete', async () => {
-      this.log(`Repair process completed for ${device.getName()}`);
-      // Refresh data to confirm link is working
-      try {
-        await device.refreshData();
-      } catch (error) {
-        this.error('Failed to refresh data after repair:', error);
+    session.setHandler('repair_complete', async () => {
+      const vin = device.getData().vin;
+      if (this.enodeApi.requestCache) {
+        this.enodeApi.requestCache.clear();
       }
-      return true;
+      const vehicle = (await ownVehicles()).find(v => v.information?.vin === vin);
+      if (!vehicle) {
+        throw new Error('Your car was not found in Enode yet. Finish connecting it in the browser, wait a minute and try again.');
+      }
+
+      await device.setVehicleId(vehicle.id);
+      await device.refreshData();
+      await device.setAvailable();
+      this.log(`Repair completed for ${device.getName()}: now using vehicle ${vehicle.id}`);
+      return { success: true, vehicleId: vehicle.id };
     });
   }
 
@@ -798,79 +424,6 @@ class XpengDriver extends Homey.Driver {
       }
     } catch (error) {
       this.error(`Auto-reap failed for VIN ${vin}:`, error);
-    }
-  }
-
-  /**
-   * Get stored credentials from env.json or Homey settings
-   * @param {string} accountId - Optional account ID to get credentials for
-   * @returns {Object} The credentials object
-   */
-  getStoredCredentials(accountId = null) {
-    // Use the account manager to get credentials
-    const credentials = this.accountManager.getCredentials(accountId);
-
-    this.log(`Getting stored credentials for account ${accountId || 'default'}:`, {
-      hasClientId: !!credentials.clientId,
-      hasClientSecret: !!credentials.clientSecret,
-      accountId: credentials.accountId
-    });
-
-    return credentials;
-  }
-
-  /**
-   * Check for duplicate vehicles and log information about them
-   * This can help diagnose issues with multiple copies of the same vehicle
-   */
-  async checkForDuplicates() {
-    try {
-      const DuplicateCleanup = require('../../lib/cleanup-duplicates');
-      const cleanup = new DuplicateCleanup(this.enodeApi);
-      cleanup.logger = this;
-
-      await cleanup.logDuplicateInfo();
-      return true;
-    } catch (error) {
-      this.error('Error checking for duplicates:', error);
-      return false;
-    }
-  }
-
-  /**
-   * Get a vehicle by VIN
-   * If multiple vehicles with the same VIN exist, returns the most recently seen one
-   * @param {string} vin - The VIN to look for
-   * @returns {Promise<Object|null>} The vehicle or null if not found
-   */
-  async getVehicleByVin(vin) {
-    try {
-      if (!vin) {
-        return null;
-      }
-
-      // Get all vehicles
-      const vehicles = await this.enodeApi.getVehicles();
-
-      // Find vehicles with matching VIN
-      const matches = vehicles.filter(v => v.information?.vin === vin);
-
-      if (matches.length === 0) {
-        return null;
-      }
-
-      // If only one match, return it
-      if (matches.length === 1) {
-        return matches[0];
-      }
-
-      // If multiple matches, get the most recently seen one
-      const DuplicateCleanup = require('../../lib/cleanup-duplicates');
-      const cleanup = new DuplicateCleanup(this.enodeApi);
-      return cleanup.getBestVehicle(matches);
-    } catch (error) {
-      this.error(`Error getting vehicle by VIN ${vin}:`, error);
-      return null;
     }
   }
 

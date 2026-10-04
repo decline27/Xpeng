@@ -327,10 +327,10 @@
           "en": "Range is low"
         },
         "titleFormatted": {
-          "en": "Range drops below [[threshold]] km"
+          "en": "Range drops below [[threshold]]"
         },
         "hint": {
-          "en": "Triggered once when the remaining range drops below the threshold"
+          "en": "Triggered once when the remaining range drops below the threshold (in the distance unit set on the device)"
         },
         "args": [
           {
@@ -591,10 +591,10 @@
           "en": "Range !{{is|isn't}}"
         },
         "titleFormatted": {
-          "en": "Range !{{is|isn't}} [[comparison]] [[value]] km"
+          "en": "Range !{{is|isn't}} [[comparison]] [[value]]"
         },
         "hint": {
-          "en": "Compare the vehicle's remaining range"
+          "en": "Compare the vehicle's remaining range (in the distance unit set on the device)"
         },
         "args": [
           {
@@ -774,8 +774,11 @@
       "name": {
         "en": "XPENG Car"
       },
-      "class": "sensor",
+      "class": "car",
       "capabilities": [
+        "measure_battery",
+        "ev_charging_state",
+        "measure_power",
         "batteryLevel",
         "batteryCapacity",
         "range",
@@ -841,22 +844,20 @@
         }
       },
       "energy": {
-        "batteries": [
-          "INTERNAL"
-        ]
+        "electricCar": true
       },
       "settings": [
         {
           "type": "group",
           "label": {
-            "en": "Update Settings"
+            "en": "Updates"
           },
           "children": [
             {
               "id": "updateInterval",
               "type": "number",
               "label": {
-                "en": "Update Interval"
+                "en": "Update interval"
               },
               "value": 10,
               "min": 10,
@@ -865,10 +866,80 @@
                 "en": "minutes"
               },
               "hint": {
-                "en": "How often to update vehicle data (10-60 minutes)"
+                "en": "How often to fetch vehicle data from Enode (10-60 minutes). While charging the app checks every 5 minutes."
               }
             }
           ]
+        },
+        {
+          "type": "group",
+          "label": {
+            "en": "Display"
+          },
+          "children": [
+            {
+              "id": "distanceUnit",
+              "type": "dropdown",
+              "label": {
+                "en": "Distance unit"
+              },
+              "value": "km",
+              "hint": {
+                "en": "Unit for range and odometer. Range thresholds in flows use this unit too."
+              },
+              "values": [
+                {
+                  "id": "km",
+                  "label": {
+                    "en": "Kilometres"
+                  }
+                },
+                {
+                  "id": "mi",
+                  "label": {
+                    "en": "Miles"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "group",
+          "label": {
+            "en": "Vehicle information"
+          },
+          "children": [
+            {
+              "id": "info_vehicle_id",
+              "type": "label",
+              "label": {
+                "en": "Enode vehicle ID"
+              },
+              "value": "-"
+            },
+            {
+              "id": "info_vin",
+              "type": "label",
+              "label": {
+                "en": "VIN"
+              },
+              "value": "-"
+            },
+            {
+              "id": "info_last_sync",
+              "type": "label",
+              "label": {
+                "en": "Last successful update"
+              },
+              "value": "-"
+            }
+          ]
+        }
+      ],
+      "repair": [
+        {
+          "id": "start"
         }
       ]
     }
@@ -956,7 +1027,7 @@
       },
       "units": "%",
       "getable": true,
-      "setable": true,
+      "setable": false,
       "min": 0,
       "max": 100,
       "icon": "assets/capabilities/charging.svg",
@@ -1034,19 +1105,14 @@
     },
     "powerDeliveryState": {
       "id": "powerDeliveryState",
-      "title": "Power Delivery State",
+      "title": {
+        "en": "Power Delivery State"
+      },
       "type": "string",
       "getable": true,
       "setable": false,
       "uiComponent": "sensor",
-      "insights": false,
-      "options": {
-        "choices": [
-          "UNPLUGGED",
-          "CHARGING",
-          "CHARGED"
-        ]
-      }
+      "insights": false
     },
     "range": {
       "type": "number",

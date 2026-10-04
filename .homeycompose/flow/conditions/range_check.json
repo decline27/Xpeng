@@ -4,10 +4,10 @@
     "en": "Range !{{is|isn't}}"
   },
   "titleFormatted": {
-    "en": "Range !{{is|isn't}} [[comparison]] [[value]] km"
+    "en": "Range !{{is|isn't}} [[comparison]] [[value]]"
   },
   "hint": {
-    "en": "Compare the vehicle's remaining range"
+    "en": "Compare the vehicle's remaining range (in the distance unit set on the device)"
   },
   "args": [
     {

@@ -153,3 +153,15 @@ describe('EnodeAPI request handling', () => {
         });
     });
 });
+
+describe('EnodeAPI.forHomey', () => {
+    test('returns one shared client per Homey, so devices share rate limits and caches', () => {
+        HomeyMock.env = {};
+        const homey = makeHomey();
+        const a = EnodeAPI.forHomey(homey);
+        const b = EnodeAPI.forHomey(homey);
+        expect(a).toBe(b);
+        expect(EnodeAPI.forHomey(makeHomey())).not.toBe(a);
+        a.destroy();
+    });
+});

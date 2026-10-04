@@ -4,7 +4,7 @@ const EnodeAPI = require('../lib/enode-api');
 
 // Mock the EnodeAPI module
 jest.mock('../lib/enode-api', () => {
-  return jest.fn().mockImplementation(() => {
+  const MockEnodeAPI = jest.fn().mockImplementation(() => {
     return {
       getVehicles: jest.fn().mockResolvedValue([
         { 
@@ -50,6 +50,8 @@ jest.mock('../lib/enode-api', () => {
       })
     };
   });
+  MockEnodeAPI.forHomey = () => new MockEnodeAPI();
+  return MockEnodeAPI;
 });
 
 describe('Flow Capabilities', () => {

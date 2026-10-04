@@ -2,14 +2,14 @@
   {
     "type": "group",
     "label": {
-      "en": "Update Settings"
+      "en": "Updates"
     },
     "children": [
       {
         "id": "updateInterval",
         "type": "number",
         "label": {
-          "en": "Update Interval"
+          "en": "Update interval"
         },
         "value": 10,
         "min": 10,
@@ -18,8 +18,73 @@
           "en": "minutes"
         },
         "hint": {
-          "en": "How often to update vehicle data (10-60 minutes)"
+          "en": "How often to fetch vehicle data from Enode (10-60 minutes). While charging the app checks every 5 minutes."
         }
+      }
+    ]
+  },
+  {
+    "type": "group",
+    "label": {
+      "en": "Display"
+    },
+    "children": [
+      {
+        "id": "distanceUnit",
+        "type": "dropdown",
+        "label": {
+          "en": "Distance unit"
+        },
+        "value": "km",
+        "hint": {
+          "en": "Unit for range and odometer. Range thresholds in flows use this unit too."
+        },
+        "values": [
+          {
+            "id": "km",
+            "label": {
+              "en": "Kilometres"
+            }
+          },
+          {
+            "id": "mi",
+            "label": {
+              "en": "Miles"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": "group",
+    "label": {
+      "en": "Vehicle information"
+    },
+    "children": [
+      {
+        "id": "info_vehicle_id",
+        "type": "label",
+        "label": {
+          "en": "Enode vehicle ID"
+        },
+        "value": "-"
+      },
+      {
+        "id": "info_vin",
+        "type": "label",
+        "label": {
+          "en": "VIN"
+        },
+        "value": "-"
+      },
+      {
+        "id": "info_last_sync",
+        "type": "label",
+        "label": {
+          "en": "Last successful update"
+        },
+        "value": "-"
       }
     ]
   }

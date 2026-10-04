@@ -1,0 +1,148 @@
+<!-- Repair: re-link the car with Enode and point the device at the new Enode vehicle -->
+<style>
+    .info-message {
+        background-color: #e3f2fd;
+        padding: 15px;
+        border-radius: 4px;
+        margin-bottom: 20px;
+    }
+    .error-message {
+        color: #d32f2f;
+        background-color: #ffebee;
+        padding: 10px;
+        border-radius: 4px;
+        margin-bottom: 15px;
+        display: none;
+    }
+    .status {
+        padding: 15px;
+        border-radius: 4px;
+        margin: 15px 0;
+        display: none;
+    }
+    .status-waiting {
+        background-color: #fff3e0;
+        border-left: 4px solid #ff9800;
+    }
+    .status-success {
+        background-color: #e8f5e9;
+        border-left: 4px solid #4caf50;
+    }
+    .homey-button-primary:disabled {
+        background-color: #e0e0e0 !important;
+        color: #9e9e9e !important;
+        cursor: not-allowed !important;
+    }
+    .actions button {
+        margin-top: 10px;
+        width: 100%;
+    }
+</style>
+
+<div class="homey-form-group">
+    <h1 class="homey-title" id="title">Reconnect your XPENG</h1>
+
+    <div class="info-message">
+        <p id="intro">Use this when your car stopped updating, for example after you reconnected it in Enode. Your flows and history are kept.</p>
+    </div>
+
+    <div class="error-message" id="error"></div>
+
+    <div class="actions">
+        <button id="open-link" class="homey-button-primary">Open Enode to reconnect</button>
+    </div>
+
+    <div id="waiting" class="status status-waiting">
+        <strong id="waiting-title">Waiting for Enode...</strong>
+        <p id="waiting-text">Finish connecting your car in the browser. This page updates by itself.</p>
+    </div>
+
+    <div id="success" class="status status-success">
+        <strong id="success-title">Car connected</strong>
+        <p id="success-text">Click Finish to update the device.</p>
+    </div>
+
+    <div class="actions">
+        <button id="finish" class="homey-button-primary" disabled>Finish</button>
+    </div>
+</div>
+
+<script type="text/javascript">
+(function () {
+    // Translate with an English fallback so a missing key never blanks the page
+    function t(key, fallback) {
+        try {
+            const value = Homey.__(key);
+            return value && value !== key ? value : fallback;
+        } catch (error) {
+            return fallback;
+        }
+    }
+
+    const el = (id) => document.getElementById(id);
+    [
+        ['title', 'repair.title'], ['intro', 'repair.intro'], ['open-link', 'repair.open_link'],
+        ['waiting-title', 'repair.waiting_title'], ['waiting-text', 'repair.waiting_text'],
+        ['success-title', 'repair.success_title'], ['success-text', 'repair.success_text'],
+        ['finish', 'repair.finish']
+    ].forEach(([id, key]) => { el(id).textContent = t(key, el(id).textContent); });
+    Homey.setTitle(t('repair.title', 'Reconnect your XPENG'));
+
+    let pollTimer = null;
+
+    function showError(message) {
+        el('error').textContent = message;
+        el('error').style.display = 'block';
+    }
+
+    function openUrl(url) {
+        if (typeof Homey.openURL === 'function') {
+            Homey.openURL(url);
+        } else {
+            window.open(url, '_blank');
+        }
+    }
+
+    async function checkLinked() {
+        try {
+            const status = await Homey.emit('check_auth_status');
+            if (status && status.isAuthenticated) {
+                clearInterval(pollTimer);
+                el('waiting').style.display = 'none';
+                el('success').style.display = 'block';
+                el('finish').disabled = false;
+            }
+        } catch (error) {
+            // Keep polling; a temporary error should not stop the repair
+        }
+    }
+
+    el('open-link').addEventListener('click', async () => {
+        el('error').style.display = 'none';
+        el('open-link').disabled = true;
+        try {
+            const { linkUrl } = await Homey.emit('get_link');
+            openUrl(linkUrl);
+            el('waiting').style.display = 'block';
+            clearInterval(pollTimer);
+            pollTimer = setInterval(checkLinked, 5000);
+            checkLinked();
+        } catch (error) {
+            showError(error.message || t('repair.link_failed', 'Could not create the Enode link.'));
+        } finally {
+            el('open-link').disabled = false;
+        }
+    });
+
+    el('finish').addEventListener('click', async () => {
+        el('finish').disabled = true;
+        try {
+            await Homey.emit('repair_complete');
+            Homey.done();
+        } catch (error) {
+            showError(error.message || t('repair.finish_failed', 'Could not update the device.'));
+            el('finish').disabled = false;
+        }
+    });
+})();
+</script>

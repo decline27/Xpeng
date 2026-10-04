@@ -1,16 +1,11 @@
 {
   "id": "powerDeliveryState",
-  "title": "Power Delivery State",
+  "title": {
+    "en": "Power Delivery State"
+  },
   "type": "string",
   "getable": true,
   "setable": false,
   "uiComponent": "sensor",
-  "insights": false,
-  "options": {
-    "choices": [
-      "UNPLUGGED",
-      "CHARGING",
-      "CHARGED"
-    ]
-  }
+  "insights": false
 }

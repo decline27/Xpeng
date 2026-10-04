@@ -1,0 +1,14 @@
+{
+  "repair": {
+    "title": "Anslut din XPENG igen",
+    "intro": "Använd detta när bilen har slutat uppdateras, till exempel efter att du anslutit den till Enode på nytt. Flöden och historik behålls.",
+    "open_link": "Öppna Enode för att ansluta",
+    "waiting_title": "Väntar på Enode...",
+    "waiting_text": "Slutför anslutningen av bilen i webbläsaren. Sidan uppdateras automatiskt.",
+    "success_title": "Bilen är ansluten",
+    "success_text": "Tryck på Slutför för att uppdatera enheten.",
+    "finish": "Slutför",
+    "link_failed": "Kunde inte skapa Enode-länken.",
+    "finish_failed": "Kunde inte uppdatera enheten."
+  }
+}
