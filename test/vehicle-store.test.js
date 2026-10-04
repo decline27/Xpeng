@@ -141,7 +141,7 @@ describe('VehicleStore', () => {
       odometer: 5000,
       chargingLimit: 90,
       powerDeliveryState: 'Charging',
-      measure_power: 7000,
+      chargingPower: 7000,
       measure_battery: 75,
       ev_charging_state: 'plugged_in_charging'
     });

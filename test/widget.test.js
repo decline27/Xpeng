@@ -25,7 +25,7 @@ const chargingCar = {
     pluggedInStatus: true,
     lastSeen: '2026-10-04 21:27',
     powerDeliveryState: 'Charging',
-    measure_power: 11000,
+    chargingPower: 11000,
     location: '55.570°N, 13.054°E (55.570267,13.053961)',
     vehicleModel: 'G6',
 };
@@ -38,7 +38,7 @@ describe('buildWidgetData', () => {
     });
 
     test('allows starting when plugged in and not charging', () => {
-        const data = buildWidgetData(fakeDevice('a', { ...chargingCar, chargingStatus: 'Connected', measure_power: 0 }));
+        const data = buildWidgetData(fakeDevice('a', { ...chargingCar, chargingStatus: 'Connected', chargingPower: 0 }));
         expect(data.isCharging).toBe(false);
         expect(data.canStartCharging).toBe(true);
     });
@@ -48,7 +48,7 @@ describe('buildWidgetData', () => {
         expect(data.canStartCharging).toBe(false);
     });
 
-    test('reports charging power in kW from measure_power', () => {
+    test('reports charging power in kW from chargingPower', () => {
         expect(buildWidgetData(fakeDevice('a', chargingCar)).chargingPowerKw).toBe(11);
     });
 

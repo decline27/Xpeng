@@ -25,10 +25,10 @@ describe('device class and Homey Energy', () => {
     });
 
     test('standard battery, power and EV charging capabilities are added to existing devices', async () => {
-        const { device } = prepareInit(makeDevice({ missingCapabilities: ['measure_battery', 'measure_power', 'ev_charging_state'] }));
+        const { device } = prepareInit(makeDevice({ missingCapabilities: ['measure_battery', 'chargingPower', 'ev_charging_state'] }));
         await device.onInit();
         expect(device.addCapability).toHaveBeenCalledWith('measure_battery');
-        expect(device.addCapability).toHaveBeenCalledWith('measure_power');
+        expect(device.addCapability).toHaveBeenCalledWith('chargingPower');
         expect(device.addCapability).toHaveBeenCalledWith('ev_charging_state');
     });
 

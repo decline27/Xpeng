@@ -940,7 +940,7 @@
       "capabilities": [
         "measure_battery",
         "ev_charging_state",
-        "measure_power",
+        "chargingPower",
         "batteryLevel",
         "batteryCapacity",
         "range",
@@ -1228,6 +1228,24 @@
       "uiComponent": "sensor",
       "insights": true
     },
+    "chargingPower": {
+      "type": "number",
+      "title": {
+        "en": "Charging Power",
+        "no": "Ladeeffekt",
+        "sv": "Laddeffekt"
+      },
+      "units": {
+        "en": "W"
+      },
+      "decimals": 0,
+      "min": 0,
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "icon": "assets/capabilities/charging.svg",
+      "insights": true
+    },
     "chargingStatus": {
       "type": "string",
       "title": {
@@ -1322,7 +1340,8 @@
       "getable": true,
       "setable": false,
       "uiComponent": "sensor",
-      "insights": false
+      "insights": false,
+      "icon": "assets/capabilities/power-delivery.svg"
     },
     "range": {
       "type": "number",

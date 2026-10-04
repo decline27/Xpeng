@@ -9,7 +9,7 @@
   "capabilities": [
     "measure_battery",
     "ev_charging_state",
-    "measure_power",
+    "chargingPower",
     "batteryLevel",
     "batteryCapacity",
     "range",

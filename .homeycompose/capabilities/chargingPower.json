@@ -1,0 +1,18 @@
+{
+  "type": "number",
+  "title": {
+    "en": "Charging Power",
+    "no": "Ladeeffekt",
+    "sv": "Laddeffekt"
+  },
+  "units": {
+    "en": "W"
+  },
+  "decimals": 0,
+  "min": 0,
+  "getable": true,
+  "setable": false,
+  "uiComponent": "sensor",
+  "icon": "assets/capabilities/charging.svg",
+  "insights": true
+}

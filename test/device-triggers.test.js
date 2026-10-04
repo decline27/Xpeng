@@ -119,11 +119,11 @@ describe('device refresh', () => {
 });
 
 describe('device predictions', () => {
-    test('predictChargingTime uses measure_power instead of the text state', async () => {
+    test('predictChargingTime uses chargingPower instead of the text state', async () => {
         const { device } = makeDevice({
             capabilities: {
                 batteryLevel: 60, chargingLimit: 80, batteryCapacity: 67.8,
-                measure_power: 11000, powerDeliveryState: 'Charging',
+                chargingPower: 11000, powerDeliveryState: 'Charging',
             },
         });
 

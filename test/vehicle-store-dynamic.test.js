@@ -71,18 +71,18 @@ describe('VehicleStore.processDynamicData', () => {
     });
 
     describe('charge power', () => {
-        test('treats Enode chargeRate as kW and exposes measure_power in W', () => {
+        test('treats Enode chargeRate as kW and exposes chargingPower in W', () => {
             const out = store.processDynamicData({
                 chargeState: { isPluggedIn: true, isCharging: true, chargeRate: 11 },
             });
-            expect(out.measure_power).toBe(11000);
+            expect(out.chargingPower).toBe(11000);
         });
 
         test('reports 0 W when not charging', () => {
             const out = store.processDynamicData({
                 chargeState: { isPluggedIn: true, isCharging: false, chargeRate: 11 },
             });
-            expect(out.measure_power).toBe(0);
+            expect(out.chargingPower).toBe(0);
         });
     });
 

@@ -18,8 +18,16 @@ describe('driver manifest', () => {
         expect(driver.energy).toEqual({ electricCar: true });
     });
 
-    test.each(['measure_battery', 'measure_power', 'ev_charging_state'])('includes the standard %s capability', (id) => {
+    test.each(['measure_battery', 'ev_charging_state'])('includes the standard %s capability', (id) => {
         expect(driver.capabilities).toContain(id);
+    });
+
+    test('reports charge power in a custom capability, not measure_power', () => {
+        // The wall charger already reports this power to Homey Energy; measure_power on the
+        // car would count the same energy twice
+        expect(driver.capabilities).not.toContain('measure_power');
+        expect(driver.capabilities).toContain('chargingPower');
+        expect(capability('chargingPower')).toMatchObject({ type: 'number', units: { en: 'W' }, setable: false });
     });
 
     test('keeps settings only in driver.settings.compose.json (no stale copy here)', () => {

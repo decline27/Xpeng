@@ -20,7 +20,7 @@ const HEALTH_CHECK_INTERVAL_MS = 6 * 60 * MINUTE_MS;
 const CAPABILITIES = [
   'measure_battery',
   'ev_charging_state',
-  'measure_power',
+  'chargingPower',
   'batteryLevel',
   'batteryCapacity',
   'range',
@@ -566,7 +566,7 @@ class XpengCarDevice extends Homey.Device {
       batteryLevel: this.getCapabilityValue('batteryLevel'),
       chargeLimit: this.getCapabilityValue('chargingLimit'),
       capacityKwh: this.getCapabilityValue('batteryCapacity'),
-      powerW: this.getCapabilityValue('measure_power')
+      powerW: this.getCapabilityValue('chargingPower')
     });
   }
 
