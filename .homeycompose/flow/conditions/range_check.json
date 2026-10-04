@@ -1,13 +1,19 @@
 {
   "id": "range_check",
   "title": {
-    "en": "Range !{{is|isn't}}"
+    "en": "Range !{{is|isn't}}",
+    "no": "Rekkevidden !{{er|er ikke}}",
+    "sv": "Räckvidden !{{är|är inte}}"
   },
   "titleFormatted": {
-    "en": "Range !{{is|isn't}} [[comparison]] [[value]]"
+    "en": "Range !{{is|isn't}} [[comparison]] [[value]]",
+    "no": "Rekkevidden !{{er|er ikke}} [[comparison]] [[value]]",
+    "sv": "Räckvidden !{{är|är inte}} [[comparison]] [[value]]"
   },
   "hint": {
-    "en": "Compare the vehicle's remaining range (in the distance unit set on the device)"
+    "en": "Compare the vehicle's remaining range (in the distance unit set on the device)",
+    "no": "Sammenlign bilens gjenværende rekkevidde (i avstandsenheten valgt på enheten)",
+    "sv": "Jämför bilens återstående räckvidd (i avståndsenheten som valts på enheten)"
   },
   "args": [
     {
@@ -19,25 +25,33 @@
       "name": "comparison",
       "type": "dropdown",
       "title": {
-        "en": "Comparison"
+        "en": "Comparison",
+        "no": "Sammenligning",
+        "sv": "Jämförelse"
       },
       "values": [
         {
           "id": "greater",
           "title": {
-            "en": "greater than"
+            "en": "greater than",
+            "no": "større enn",
+            "sv": "större än"
           }
         },
         {
           "id": "lower",
           "title": {
-            "en": "lower than"
+            "en": "lower than",
+            "no": "mindre enn",
+            "sv": "mindre än"
           }
         },
         {
           "id": "equals",
           "title": {
-            "en": "equal to"
+            "en": "equal to",
+            "no": "lik",
+            "sv": "lika med"
           }
         }
       ]
@@ -49,7 +63,9 @@
       "max": 1000,
       "step": 1,
       "title": {
-        "en": "Value"
+        "en": "Value",
+        "no": "Verdi",
+        "sv": "Värde"
       }
     }
   ]

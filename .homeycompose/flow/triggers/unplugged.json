@@ -1,10 +1,14 @@
 {
   "id": "unplugged",
   "title": {
-    "en": "Vehicle was unplugged"
+    "en": "Vehicle was unplugged",
+    "no": "Bilen ble koblet fra",
+    "sv": "Bilen kopplades ur"
   },
   "hint": {
-    "en": "Triggered when the charging cable is disconnected"
+    "en": "Triggered when the charging cable is disconnected",
+    "no": "Utløses når ladekabelen kobles fra",
+    "sv": "Utlöses när laddkabeln kopplas ur"
   },
   "args": [
     {

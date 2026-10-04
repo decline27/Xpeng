@@ -106,7 +106,7 @@ describe('EnodeAPI request handling', () => {
         const vehicle = { id: 'v1', chargeState: {} };
 
         beforeEach(() => {
-            fetch.mockImplementation(async (url, opts) => {
+            fetch.mockImplementation(async (url) => {
                 if (url.includes('/oauth2/token')) return okJson({ access_token: 't', expires_in: 3600 });
                 if (url.endsWith('/refresh-hint')) return okJson({});
                 return okJson(vehicle);

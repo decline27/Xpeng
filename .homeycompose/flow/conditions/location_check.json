@@ -2,15 +2,18 @@
   "id": "location_check",
   "title": {
     "en": "Car !{{is|isn't}} at coordinates",
-    "no": "Bilen !{{er|er ikke}} ved koordinater"
+    "no": "Bilen !{{er|er ikke}} ved koordinater",
+    "sv": "Bilen !{{är|är inte}} vid koordinaterna"
   },
   "titleFormatted": {
     "en": "Car !{{is|isn't}} within [[radius]]m of coordinates ([[latitude]], [[longitude]])",
-    "no": "Bilen !{{er|er ikke}} innenfor [[radius]]m av koordinater ([[latitude]], [[longitude]])"
+    "no": "Bilen !{{er|er ikke}} innenfor [[radius]]m av koordinater ([[latitude]], [[longitude]])",
+    "sv": "Bilen !{{är|är inte}} inom [[radius]] m från koordinaterna ([[latitude]], [[longitude]])"
   },
   "hint": {
     "en": "Check if the car is within the specified radius of given coordinates",
-    "no": "Sjekk om bilen er innenfor angitt radius fra gitte koordinater"
+    "no": "Sjekk om bilen er innenfor angitt radius fra gitte koordinater",
+    "sv": "Kontrollera om bilen är inom angiven radie från koordinaterna"
   },
   "args": [
     {
@@ -23,7 +26,8 @@
       "type": "number",
       "title": {
         "en": "Latitude",
-        "no": "Breddegrad"
+        "no": "Breddegrad",
+        "sv": "Latitud"
       },
       "min": -90,
       "max": 90,
@@ -38,7 +42,8 @@
       "type": "number",
       "title": {
         "en": "Longitude",
-        "no": "Lengdegrad"
+        "no": "Lengdegrad",
+        "sv": "Longitud"
       },
       "min": -180,
       "max": 180,
@@ -53,7 +58,8 @@
       "type": "number",
       "title": {
         "en": "Radius (meters)",
-        "no": "Radius (meter)"
+        "no": "Radius (meter)",
+        "sv": "Radie (meter)"
       },
       "min": 10,
       "max": 1000,

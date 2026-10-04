@@ -1,7 +1,9 @@
 {
   "id": "cars",
   "name": {
-    "en": "XPENG Car"
+    "en": "XPENG Car",
+    "no": "XPENG-bil",
+    "sv": "XPENG-bil"
   },
   "class": "car",
   "capabilities": [
@@ -75,32 +77,6 @@
   "energy": {
     "electricCar": true
   },
-  "settings": [
-    {
-      "type": "group",
-      "label": {
-        "en": "Update Settings"
-      },
-      "children": [
-        {
-          "id": "updateInterval",
-          "type": "number",
-          "label": {
-            "en": "Update Interval"
-          },
-          "value": 10,
-          "min": 10,
-          "max": 60,
-          "units": {
-            "en": "minutes"
-          },
-          "hint": {
-            "en": "How often to update vehicle data (10-60 minutes)"
-          }
-        }
-      ]
-    }
-  ],
   "repair": [
     {
       "id": "start"

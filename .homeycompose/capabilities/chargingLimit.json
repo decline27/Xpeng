@@ -1,7 +1,9 @@
 {
   "type": "number",
   "title": {
-    "en": "Charging Limit"
+    "en": "Charging Limit",
+    "no": "Ladegrense",
+    "sv": "Laddningsgräns"
   },
   "units": "%",
   "getable": true,

@@ -1,11 +1,23 @@
 {
-    "type": "boolean",
-    "title": { "en": "Plugged In Status" },
-    "getable": true,
-    "setable": false,
-    "title_true": { "en": "Plugged In" },
-    "title_false": { "en": "Unplugged" },
-    "icon": "assets/capabilities/charging.svg",
-    "uiComponent": "sensor",
-    "insights": true
+  "type": "boolean",
+  "title": {
+    "en": "Plugged In Status",
+    "no": "Tilkoblet lader",
+    "sv": "Ansluten till laddare"
+  },
+  "getable": true,
+  "setable": false,
+  "title_true": {
+    "en": "Plugged In",
+    "no": "Tilkoblet",
+    "sv": "Ansluten"
+  },
+  "title_false": {
+    "en": "Unplugged",
+    "no": "Frakoblet",
+    "sv": "Urkopplad"
+  },
+  "icon": "assets/capabilities/charging.svg",
+  "uiComponent": "sensor",
+  "insights": true
 }

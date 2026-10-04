@@ -1,10 +1,14 @@
 {
   "id": "is_charging",
   "title": {
-    "en": "Vehicle !{{is|isn't}} charging"
+    "en": "Vehicle !{{is|isn't}} charging",
+    "no": "Bilen !{{lader|lader ikke}}",
+    "sv": "Bilen !{{laddar|laddar inte}}"
   },
   "hint": {
-    "en": "Check if the vehicle is currently charging"
+    "en": "Check if the vehicle is currently charging",
+    "no": "Sjekk om bilen lader nå",
+    "sv": "Kontrollera om bilen laddar just nu"
   },
   "args": [
     {

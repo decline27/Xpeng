@@ -1,10 +1,14 @@
 {
   "id": "plugged_in_status",
   "title": {
-    "en": "Vehicle !{{is|isn't}} plugged in"
+    "en": "Vehicle !{{is|isn't}} plugged in",
+    "no": "Bilen !{{er|er ikke}} tilkoblet lader",
+    "sv": "Bilen !{{är|är inte}} ansluten till laddare"
   },
   "hint": {
-    "en": "Check if the charging cable is connected to the vehicle"
+    "en": "Check if the charging cable is connected to the vehicle",
+    "no": "Sjekk om ladekabelen er koblet til bilen",
+    "sv": "Kontrollera om laddkabeln är ansluten till bilen"
   },
   "args": [
     {

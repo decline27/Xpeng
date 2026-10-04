@@ -1,8 +1,12 @@
 {
-    "type": "string",
-    "title": { "en": "Vehicle VIN" },
-    "getable": true,
-    "setable": false,
-    "icon": "assets/capabilities/vin.svg",
-    "uiComponent": "sensor"
+  "type": "string",
+  "title": {
+    "en": "Vehicle VIN",
+    "no": "Chassisnummer (VIN)",
+    "sv": "Chassinummer (VIN)"
+  },
+  "getable": true,
+  "setable": false,
+  "icon": "assets/capabilities/vin.svg",
+  "uiComponent": "sensor"
 }

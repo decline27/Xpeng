@@ -1,9 +1,13 @@
 {
   "title": {
-    "en": "Refresh Vehicle Data"
+    "en": "Refresh Vehicle Data",
+    "no": "Oppdater bildata",
+    "sv": "Uppdatera bildata"
   },
   "hint": {
-    "en": "Force an immediate refresh of vehicle data"
+    "en": "Force an immediate refresh of vehicle data",
+    "no": "Hent bildata på nytt nå",
+    "sv": "Hämta bildata på nytt nu"
   },
   "args": [
     {
@@ -12,5 +16,7 @@
       "filter": "driver_id=cars"
     }
   ],
-  "platforms": ["local"]
+  "platforms": [
+    "local"
+  ]
 }

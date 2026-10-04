@@ -1,10 +1,14 @@
 {
-    "type": "number",
-    "title": { "en": "Battery Capacity" },
-    "units": "kWh",
-    "getable": true,
-    "setable": false,
-    "icon": "assets/capabilities/battery.svg",
-    "uiComponent": "sensor",
-    "insights": true
+  "type": "number",
+  "title": {
+    "en": "Battery Capacity",
+    "no": "Batterikapasitet",
+    "sv": "Batterikapacitet"
+  },
+  "units": "kWh",
+  "getable": true,
+  "setable": false,
+  "icon": "assets/capabilities/battery.svg",
+  "uiComponent": "sensor",
+  "insights": true
 }

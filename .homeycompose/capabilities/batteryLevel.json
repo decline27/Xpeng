@@ -1,7 +1,9 @@
 {
   "type": "number",
   "title": {
-    "en": "Battery Level"
+    "en": "Battery Level",
+    "no": "Batterinivå",
+    "sv": "Batterinivå"
   },
   "units": "%",
   "min": 0,

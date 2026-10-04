@@ -1,8 +1,12 @@
 {
-    "type": "string",
-    "title": { "en": "Vehicle Brand" },
-    "getable": true,
-    "setable": false,
-    "icon": "assets/capabilities/car.svg",
-    "uiComponent": "sensor"
+  "type": "string",
+  "title": {
+    "en": "Vehicle Brand",
+    "no": "Bilmerke",
+    "sv": "Bilmärke"
+  },
+  "getable": true,
+  "setable": false,
+  "icon": "assets/capabilities/car.svg",
+  "uiComponent": "sensor"
 }

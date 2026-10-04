@@ -39,10 +39,14 @@
       {
         "id": "battery_level_changed",
         "title": {
-          "en": "Battery level changed"
+          "en": "Battery level changed",
+          "no": "Batterinivået endret seg",
+          "sv": "Batterinivån ändrades"
         },
         "hint": {
-          "en": "Triggered when the vehicle's battery level changes"
+          "en": "Triggered when the vehicle's battery level changes",
+          "no": "Utløses når bilens batterinivå endrer seg",
+          "sv": "Utlöses när bilens batterinivå ändras"
         },
         "args": [
           {
@@ -56,7 +60,9 @@
             "name": "battery_level",
             "type": "number",
             "title": {
-              "en": "Battery Level"
+              "en": "Battery Level",
+              "no": "Batterinivå",
+              "sv": "Batterinivå"
             },
             "example": 75
           }
@@ -65,13 +71,19 @@
       {
         "id": "battery_low",
         "title": {
-          "en": "Battery level is low"
+          "en": "Battery level is low",
+          "no": "Batterinivået er lavt",
+          "sv": "Batterinivån är låg"
         },
         "titleFormatted": {
-          "en": "Battery level drops below [[threshold]]%"
+          "en": "Battery level drops below [[threshold]]%",
+          "no": "Batterinivået faller under [[threshold]] %",
+          "sv": "Batterinivån sjunker under [[threshold]] %"
         },
         "hint": {
-          "en": "Triggered once when the battery level drops below the threshold"
+          "en": "Triggered once when the battery level drops below the threshold",
+          "no": "Utløses én gang når batterinivået faller under grensen",
+          "sv": "Utlöses en gång när batterinivån sjunker under gränsen"
         },
         "args": [
           {
@@ -86,7 +98,9 @@
             "max": 100,
             "step": 1,
             "title": {
-              "en": "Threshold"
+              "en": "Threshold",
+              "no": "Grense",
+              "sv": "Gräns"
             },
             "placeholder": {
               "en": "20"
@@ -98,7 +112,9 @@
             "name": "battery_level",
             "type": "number",
             "title": {
-              "en": "Battery Level"
+              "en": "Battery Level",
+              "no": "Batterinivå",
+              "sv": "Batterinivå"
             },
             "example": 15
           }
@@ -107,10 +123,14 @@
       {
         "id": "charging_started",
         "title": {
-          "en": "Charging started"
+          "en": "Charging started",
+          "no": "Lading startet",
+          "sv": "Laddning startade"
         },
         "hint": {
-          "en": "Triggered when the vehicle starts charging"
+          "en": "Triggered when the vehicle starts charging",
+          "no": "Utløses når bilen begynner å lade",
+          "sv": "Utlöses när bilen börjar ladda"
         },
         "args": [
           {
@@ -123,13 +143,19 @@
       {
         "id": "charging_status_changed",
         "title": {
-          "en": "Charging status changed"
+          "en": "Charging status changed",
+          "no": "Ladestatus endret seg",
+          "sv": "Laddningsstatus ändrades"
         },
         "titleFormatted": {
-          "en": "Charging status changed to [[status]]"
+          "en": "Charging status changed to [[status]]",
+          "no": "Ladestatus endret til [[status]]",
+          "sv": "Laddningsstatus ändrades till [[status]]"
         },
         "hint": {
-          "en": "Triggered when the charging status changes to the selected status"
+          "en": "Triggered when the charging status changes to the selected status",
+          "no": "Utløses når ladestatus endres til valgt status",
+          "sv": "Utlöses när laddningsstatus ändras till vald status"
         },
         "args": [
           {
@@ -141,31 +167,41 @@
             "name": "status",
             "type": "dropdown",
             "title": {
-              "en": "Status"
+              "en": "Status",
+              "no": "Status",
+              "sv": "Status"
             },
             "values": [
               {
                 "id": "charging",
                 "title": {
-                  "en": "Charging"
+                  "en": "Charging",
+                  "no": "Lader",
+                  "sv": "Laddar"
                 }
               },
               {
                 "id": "not_charging",
                 "title": {
-                  "en": "Not Charging"
+                  "en": "Not Charging",
+                  "no": "Lader ikke",
+                  "sv": "Laddar inte"
                 }
               },
               {
                 "id": "charging_complete",
                 "title": {
-                  "en": "Charging Complete"
+                  "en": "Charging Complete",
+                  "no": "Lading fullført",
+                  "sv": "Laddning klar"
                 }
               },
               {
                 "id": "charging_error",
                 "title": {
-                  "en": "Error"
+                  "en": "Error",
+                  "no": "Feil",
+                  "sv": "Fel"
                 }
               }
             ]
@@ -176,7 +212,9 @@
             "name": "previous_status",
             "type": "string",
             "title": {
-              "en": "Previous Status"
+              "en": "Previous Status",
+              "no": "Forrige status",
+              "sv": "Föregående status"
             },
             "example": "Connected"
           },
@@ -184,7 +222,9 @@
             "name": "current_status",
             "type": "string",
             "title": {
-              "en": "Current Status"
+              "en": "Current Status",
+              "no": "Nåværende status",
+              "sv": "Nuvarande status"
             },
             "example": "Charging"
           }
@@ -193,10 +233,14 @@
       {
         "id": "charging_stopped",
         "title": {
-          "en": "Charging stopped"
+          "en": "Charging stopped",
+          "no": "Lading stoppet",
+          "sv": "Laddning stoppades"
         },
         "hint": {
-          "en": "Triggered when the vehicle stops charging"
+          "en": "Triggered when the vehicle stops charging",
+          "no": "Utløses når bilen slutter å lade",
+          "sv": "Utlöses när bilen slutar ladda"
         },
         "args": [
           {
@@ -210,15 +254,18 @@
         "id": "location_changed",
         "title": {
           "en": "Car enters or leaves an area",
-          "no": "Bilen kjører inn i eller ut av et område"
+          "no": "Bilen kjører inn i eller ut av et område",
+          "sv": "Bilen kör in i eller ut ur ett område"
         },
         "titleFormatted": {
           "en": "Car [[comparison]] within [[radius]]m of coordinates ([[latitude]], [[longitude]])",
-          "no": "Bilen [[comparison]] innenfor [[radius]]m av koordinater ([[latitude]], [[longitude]])"
+          "no": "Bilen [[comparison]] innenfor [[radius]]m av koordinater ([[latitude]], [[longitude]])",
+          "sv": "Bilen [[comparison]] inom [[radius]] m från koordinaterna ([[latitude]], [[longitude]])"
         },
         "hint": {
           "en": "Triggered when the car moves into or out of the circle around the given coordinates",
-          "no": "Utløses når bilen kjører inn i eller ut av sirkelen rundt de gitte koordinatene"
+          "no": "Utløses når bilen kjører inn i eller ut av sirkelen rundt de gitte koordinatene",
+          "sv": "Utlöses när bilen kör in i eller ut ur cirkeln runt de angivna koordinaterna"
         },
         "args": [
           {
@@ -231,21 +278,24 @@
             "type": "dropdown",
             "title": {
               "en": "Movement",
-              "no": "Bevegelse"
+              "no": "Bevegelse",
+              "sv": "Rörelse"
             },
             "values": [
               {
                 "id": "enters",
                 "title": {
                   "en": "enters",
-                  "no": "kjører inn"
+                  "no": "kjører inn",
+                  "sv": "kör in"
                 }
               },
               {
                 "id": "exits",
                 "title": {
                   "en": "exits",
-                  "no": "kjører ut"
+                  "no": "kjører ut",
+                  "sv": "kör ut"
                 }
               }
             ]
@@ -255,7 +305,8 @@
             "type": "number",
             "title": {
               "en": "Latitude",
-              "no": "Breddegrad"
+              "no": "Breddegrad",
+              "sv": "Latitud"
             },
             "min": -90,
             "max": 90,
@@ -270,7 +321,8 @@
             "type": "number",
             "title": {
               "en": "Longitude",
-              "no": "Lengdegrad"
+              "no": "Lengdegrad",
+              "sv": "Longitud"
             },
             "min": -180,
             "max": 180,
@@ -285,7 +337,8 @@
             "type": "number",
             "title": {
               "en": "Radius (meters)",
-              "no": "Radius (meter)"
+              "no": "Radius (meter)",
+              "sv": "Radie (meter)"
             },
             "min": 10,
             "max": 1000,
@@ -299,7 +352,8 @@
             "type": "number",
             "title": {
               "en": "Distance moved (m)",
-              "no": "Avstand kjørt (m)"
+              "no": "Avstand kjørt (m)",
+              "sv": "Körd sträcka (m)"
             },
             "example": 850
           }
@@ -308,10 +362,14 @@
       {
         "id": "plugged_in",
         "title": {
-          "en": "Vehicle was plugged in"
+          "en": "Vehicle was plugged in",
+          "no": "Bilen ble koblet til",
+          "sv": "Bilen anslöts"
         },
         "hint": {
-          "en": "Triggered when the charging cable is connected"
+          "en": "Triggered when the charging cable is connected",
+          "no": "Utløses når ladekabelen kobles til",
+          "sv": "Utlöses när laddkabeln ansluts"
         },
         "args": [
           {
@@ -324,13 +382,19 @@
       {
         "id": "range_low",
         "title": {
-          "en": "Range is low"
+          "en": "Range is low",
+          "no": "Rekkevidden er lav",
+          "sv": "Räckvidden är låg"
         },
         "titleFormatted": {
-          "en": "Range drops below [[threshold]]"
+          "en": "Range drops below [[threshold]]",
+          "no": "Rekkevidden faller under [[threshold]]",
+          "sv": "Räckvidden sjunker under [[threshold]]"
         },
         "hint": {
-          "en": "Triggered once when the remaining range drops below the threshold (in the distance unit set on the device)"
+          "en": "Triggered once when the remaining range drops below the threshold (in the distance unit set on the device)",
+          "no": "Utløses én gang når gjenværende rekkevidde faller under grensen (i avstandsenheten valgt på enheten)",
+          "sv": "Utlöses en gång när återstående räckvidd sjunker under gränsen (i avståndsenheten som valts på enheten)"
         },
         "args": [
           {
@@ -345,7 +409,9 @@
             "max": 1000,
             "step": 1,
             "title": {
-              "en": "Threshold"
+              "en": "Threshold",
+              "no": "Grense",
+              "sv": "Gräns"
             },
             "placeholder": {
               "en": "50"
@@ -357,7 +423,9 @@
             "name": "range",
             "type": "number",
             "title": {
-              "en": "Range"
+              "en": "Range",
+              "no": "Rekkevidde",
+              "sv": "Räckvidd"
             },
             "example": 45
           }
@@ -366,10 +434,14 @@
       {
         "id": "unplugged",
         "title": {
-          "en": "Vehicle was unplugged"
+          "en": "Vehicle was unplugged",
+          "no": "Bilen ble koblet fra",
+          "sv": "Bilen kopplades ur"
         },
         "hint": {
-          "en": "Triggered when the charging cable is disconnected"
+          "en": "Triggered when the charging cable is disconnected",
+          "no": "Utløses når ladekabelen kobles fra",
+          "sv": "Utlöses när laddkabeln kopplas ur"
         },
         "args": [
           {
@@ -384,13 +456,19 @@
       {
         "id": "battery_level",
         "title": {
-          "en": "Battery level !{{is|isn't}}"
+          "en": "Battery level !{{is|isn't}}",
+          "no": "Batterinivået !{{er|er ikke}}",
+          "sv": "Batterinivån !{{är|är inte}}"
         },
         "titleFormatted": {
-          "en": "Battery level !{{is|isn't}} [[comparison]] [[value]]%"
+          "en": "Battery level !{{is|isn't}} [[comparison]] [[value]]%",
+          "no": "Batterinivået !{{er|er ikke}} [[comparison]] [[value]] %",
+          "sv": "Batterinivån !{{är|är inte}} [[comparison]] [[value]] %"
         },
         "hint": {
-          "en": "Compare the vehicle's battery level"
+          "en": "Compare the vehicle's battery level",
+          "no": "Sammenlign bilens batterinivå",
+          "sv": "Jämför bilens batterinivå"
         },
         "args": [
           {
@@ -402,25 +480,33 @@
             "name": "comparison",
             "type": "dropdown",
             "title": {
-              "en": "Comparison"
+              "en": "Comparison",
+              "no": "Sammenligning",
+              "sv": "Jämförelse"
             },
             "values": [
               {
                 "id": "greater",
                 "title": {
-                  "en": "greater than"
+                  "en": "greater than",
+                  "no": "større enn",
+                  "sv": "större än"
                 }
               },
               {
                 "id": "lower",
                 "title": {
-                  "en": "lower than"
+                  "en": "lower than",
+                  "no": "mindre enn",
+                  "sv": "mindre än"
                 }
               },
               {
                 "id": "equals",
                 "title": {
-                  "en": "equal to"
+                  "en": "equal to",
+                  "no": "lik",
+                  "sv": "lika med"
                 }
               }
             ]
@@ -432,7 +518,9 @@
             "max": 100,
             "step": 1,
             "title": {
-              "en": "Value"
+              "en": "Value",
+              "no": "Verdi",
+              "sv": "Värde"
             }
           }
         ]
@@ -440,13 +528,19 @@
       {
         "id": "charging_status",
         "title": {
-          "en": "Charging status !{{is|isn't}}"
+          "en": "Charging status !{{is|isn't}}",
+          "no": "Ladestatus !{{er|er ikke}}",
+          "sv": "Laddningsstatus !{{är|är inte}}"
         },
         "titleFormatted": {
-          "en": "Charging status !{{is|isn't}} [[status]]"
+          "en": "Charging status !{{is|isn't}} [[status]]",
+          "no": "Ladestatus !{{er|er ikke}} [[status]]",
+          "sv": "Laddningsstatus !{{är|är inte}} [[status]]"
         },
         "hint": {
-          "en": "Check the vehicle's charging status"
+          "en": "Check the vehicle's charging status",
+          "no": "Sjekk bilens ladestatus",
+          "sv": "Kontrollera bilens laddningsstatus"
         },
         "args": [
           {
@@ -458,31 +552,41 @@
             "name": "status",
             "type": "dropdown",
             "title": {
-              "en": "Status"
+              "en": "Status",
+              "no": "Status",
+              "sv": "Status"
             },
             "values": [
               {
                 "id": "charging",
                 "title": {
-                  "en": "Charging"
+                  "en": "Charging",
+                  "no": "Lader",
+                  "sv": "Laddar"
                 }
               },
               {
                 "id": "not_charging",
                 "title": {
-                  "en": "Not Charging"
+                  "en": "Not Charging",
+                  "no": "Lader ikke",
+                  "sv": "Laddar inte"
                 }
               },
               {
                 "id": "charging_complete",
                 "title": {
-                  "en": "Charging Complete"
+                  "en": "Charging Complete",
+                  "no": "Lading fullført",
+                  "sv": "Laddning klar"
                 }
               },
               {
                 "id": "charging_error",
                 "title": {
-                  "en": "Error"
+                  "en": "Error",
+                  "no": "Feil",
+                  "sv": "Fel"
                 }
               }
             ]
@@ -492,10 +596,14 @@
       {
         "id": "is_charging",
         "title": {
-          "en": "Vehicle !{{is|isn't}} charging"
+          "en": "Vehicle !{{is|isn't}} charging",
+          "no": "Bilen !{{lader|lader ikke}}",
+          "sv": "Bilen !{{laddar|laddar inte}}"
         },
         "hint": {
-          "en": "Check if the vehicle is currently charging"
+          "en": "Check if the vehicle is currently charging",
+          "no": "Sjekk om bilen lader nå",
+          "sv": "Kontrollera om bilen laddar just nu"
         },
         "args": [
           {
@@ -509,15 +617,18 @@
         "id": "location_check",
         "title": {
           "en": "Car !{{is|isn't}} at coordinates",
-          "no": "Bilen !{{er|er ikke}} ved koordinater"
+          "no": "Bilen !{{er|er ikke}} ved koordinater",
+          "sv": "Bilen !{{är|är inte}} vid koordinaterna"
         },
         "titleFormatted": {
           "en": "Car !{{is|isn't}} within [[radius]]m of coordinates ([[latitude]], [[longitude]])",
-          "no": "Bilen !{{er|er ikke}} innenfor [[radius]]m av koordinater ([[latitude]], [[longitude]])"
+          "no": "Bilen !{{er|er ikke}} innenfor [[radius]]m av koordinater ([[latitude]], [[longitude]])",
+          "sv": "Bilen !{{är|är inte}} inom [[radius]] m från koordinaterna ([[latitude]], [[longitude]])"
         },
         "hint": {
           "en": "Check if the car is within the specified radius of given coordinates",
-          "no": "Sjekk om bilen er innenfor angitt radius fra gitte koordinater"
+          "no": "Sjekk om bilen er innenfor angitt radius fra gitte koordinater",
+          "sv": "Kontrollera om bilen är inom angiven radie från koordinaterna"
         },
         "args": [
           {
@@ -530,7 +641,8 @@
             "type": "number",
             "title": {
               "en": "Latitude",
-              "no": "Breddegrad"
+              "no": "Breddegrad",
+              "sv": "Latitud"
             },
             "min": -90,
             "max": 90,
@@ -545,7 +657,8 @@
             "type": "number",
             "title": {
               "en": "Longitude",
-              "no": "Lengdegrad"
+              "no": "Lengdegrad",
+              "sv": "Longitud"
             },
             "min": -180,
             "max": 180,
@@ -560,7 +673,8 @@
             "type": "number",
             "title": {
               "en": "Radius (meters)",
-              "no": "Radius (meter)"
+              "no": "Radius (meter)",
+              "sv": "Radie (meter)"
             },
             "min": 10,
             "max": 1000,
@@ -572,10 +686,14 @@
       {
         "id": "plugged_in_status",
         "title": {
-          "en": "Vehicle !{{is|isn't}} plugged in"
+          "en": "Vehicle !{{is|isn't}} plugged in",
+          "no": "Bilen !{{er|er ikke}} tilkoblet lader",
+          "sv": "Bilen !{{är|är inte}} ansluten till laddare"
         },
         "hint": {
-          "en": "Check if the charging cable is connected to the vehicle"
+          "en": "Check if the charging cable is connected to the vehicle",
+          "no": "Sjekk om ladekabelen er koblet til bilen",
+          "sv": "Kontrollera om laddkabeln är ansluten till bilen"
         },
         "args": [
           {
@@ -588,13 +706,19 @@
       {
         "id": "range_check",
         "title": {
-          "en": "Range !{{is|isn't}}"
+          "en": "Range !{{is|isn't}}",
+          "no": "Rekkevidden !{{er|er ikke}}",
+          "sv": "Räckvidden !{{är|är inte}}"
         },
         "titleFormatted": {
-          "en": "Range !{{is|isn't}} [[comparison]] [[value]]"
+          "en": "Range !{{is|isn't}} [[comparison]] [[value]]",
+          "no": "Rekkevidden !{{er|er ikke}} [[comparison]] [[value]]",
+          "sv": "Räckvidden !{{är|är inte}} [[comparison]] [[value]]"
         },
         "hint": {
-          "en": "Compare the vehicle's remaining range (in the distance unit set on the device)"
+          "en": "Compare the vehicle's remaining range (in the distance unit set on the device)",
+          "no": "Sammenlign bilens gjenværende rekkevidde (i avstandsenheten valgt på enheten)",
+          "sv": "Jämför bilens återstående räckvidd (i avståndsenheten som valts på enheten)"
         },
         "args": [
           {
@@ -606,25 +730,33 @@
             "name": "comparison",
             "type": "dropdown",
             "title": {
-              "en": "Comparison"
+              "en": "Comparison",
+              "no": "Sammenligning",
+              "sv": "Jämförelse"
             },
             "values": [
               {
                 "id": "greater",
                 "title": {
-                  "en": "greater than"
+                  "en": "greater than",
+                  "no": "større enn",
+                  "sv": "större än"
                 }
               },
               {
                 "id": "lower",
                 "title": {
-                  "en": "lower than"
+                  "en": "lower than",
+                  "no": "mindre enn",
+                  "sv": "mindre än"
                 }
               },
               {
                 "id": "equals",
                 "title": {
-                  "en": "equal to"
+                  "en": "equal to",
+                  "no": "lik",
+                  "sv": "lika med"
                 }
               }
             ]
@@ -636,7 +768,9 @@
             "max": 1000,
             "step": 1,
             "title": {
-              "en": "Value"
+              "en": "Value",
+              "no": "Verdi",
+              "sv": "Värde"
             }
           }
         ]
@@ -645,10 +779,14 @@
     "actions": [
       {
         "title": {
-          "en": "Predict Charging Time"
+          "en": "Predict Charging Time",
+          "no": "Beregn ladetid",
+          "sv": "Beräkna laddtid"
         },
         "hint": {
-          "en": "Predict time to complete charging based on current power delivery and battery level"
+          "en": "Predict time to complete charging based on current power delivery and battery level",
+          "no": "Beregn tiden til ladingen er ferdig ut fra nåværende ladeeffekt og batterinivå",
+          "sv": "Beräkna tiden tills laddningen är klar utifrån nuvarande laddeffekt och batterinivå"
         },
         "args": [
           {
@@ -662,7 +800,9 @@
             "name": "charging_time_minutes",
             "type": "number",
             "title": {
-              "en": "Charging Time (minutes)"
+              "en": "Charging Time (minutes)",
+              "no": "Ladetid (minutter)",
+              "sv": "Laddtid (minuter)"
             },
             "example": 120
           },
@@ -670,7 +810,9 @@
             "name": "charging_time_hours",
             "type": "number",
             "title": {
-              "en": "Charging Time (hours)"
+              "en": "Charging Time (hours)",
+              "no": "Ladetid (timer)",
+              "sv": "Laddtid (timmar)"
             },
             "example": 2
           }
@@ -682,10 +824,14 @@
       },
       {
         "title": {
-          "en": "Predict Range"
+          "en": "Predict Range",
+          "no": "Beregn rekkevidde",
+          "sv": "Beräkna räckvidd"
         },
         "hint": {
-          "en": "Predict the range after charging to the charge limit, based on the km per battery % this car has achieved recently"
+          "en": "Predict the range after charging to the charge limit, based on the distance per battery % this car has achieved recently",
+          "no": "Beregn rekkevidden etter lading til ladegrensen, basert på hvor langt bilen har kjørt per batteriprosent i det siste",
+          "sv": "Beräkna räckvidden efter laddning till laddningsgränsen, baserat på hur långt bilen har kört per batteriprocent på sistone"
         },
         "args": [
           {
@@ -699,7 +845,9 @@
             "name": "predicted_range",
             "type": "number",
             "title": {
-              "en": "Predicted range at charge limit (km)"
+              "en": "Predicted range at charge limit",
+              "no": "Beregnet rekkevidde ved ladegrensen",
+              "sv": "Beräknad räckvidd vid laddningsgränsen"
             },
             "example": 250
           }
@@ -711,10 +859,14 @@
       },
       {
         "title": {
-          "en": "Refresh Vehicle Data"
+          "en": "Refresh Vehicle Data",
+          "no": "Oppdater bildata",
+          "sv": "Uppdatera bildata"
         },
         "hint": {
-          "en": "Force an immediate refresh of vehicle data"
+          "en": "Force an immediate refresh of vehicle data",
+          "no": "Hent bildata på nytt nå",
+          "sv": "Hämta bildata på nytt nu"
         },
         "args": [
           {
@@ -730,10 +882,14 @@
       },
       {
         "title": {
-          "en": "Start Charging"
+          "en": "Start Charging",
+          "no": "Start lading",
+          "sv": "Starta laddning"
         },
         "hint": {
-          "en": "Start charging the vehicle if it is plugged in"
+          "en": "Start charging the vehicle if it is plugged in",
+          "no": "Start lading hvis bilen er koblet til",
+          "sv": "Starta laddning om bilen är ansluten"
         },
         "args": [
           {
@@ -749,10 +905,14 @@
       },
       {
         "title": {
-          "en": "Stop Charging"
+          "en": "Stop Charging",
+          "no": "Stopp lading",
+          "sv": "Stoppa laddning"
         },
         "hint": {
-          "en": "Stop charging the vehicle"
+          "en": "Stop charging the vehicle",
+          "no": "Stopp ladingen av bilen",
+          "sv": "Stoppa laddningen av bilen"
         },
         "args": [
           {
@@ -772,7 +932,9 @@
     {
       "id": "cars",
       "name": {
-        "en": "XPENG Car"
+        "en": "XPENG Car",
+        "no": "XPENG-bil",
+        "sv": "XPENG-bil"
       },
       "class": "car",
       "capabilities": [
@@ -846,18 +1008,27 @@
       "energy": {
         "electricCar": true
       },
+      "repair": [
+        {
+          "id": "start"
+        }
+      ],
       "settings": [
         {
           "type": "group",
           "label": {
-            "en": "Updates"
+            "en": "Updates",
+            "no": "Oppdateringer",
+            "sv": "Uppdateringar"
           },
           "children": [
             {
               "id": "updateInterval",
               "type": "number",
               "label": {
-                "en": "Update interval"
+                "en": "Update interval",
+                "no": "Oppdateringsintervall",
+                "sv": "Uppdateringsintervall"
               },
               "value": 10,
               "min": 10,
@@ -866,7 +1037,9 @@
                 "en": "minutes"
               },
               "hint": {
-                "en": "How often to fetch vehicle data from Enode (10-60 minutes). While charging the app checks every 5 minutes."
+                "en": "How often to fetch vehicle data from Enode (10-60 minutes). While charging the app checks every 5 minutes.",
+                "no": "Hvor ofte bildata hentes fra Enode (10–60 minutter). Under lading sjekker appen hvert 5. minutt.",
+                "sv": "Hur ofta bildata hämtas från Enode (10–60 minuter). Under laddning kontrollerar appen var 5:e minut."
               }
             }
           ]
@@ -874,30 +1047,40 @@
         {
           "type": "group",
           "label": {
-            "en": "Display"
+            "en": "Display",
+            "no": "Visning",
+            "sv": "Visning"
           },
           "children": [
             {
               "id": "distanceUnit",
               "type": "dropdown",
               "label": {
-                "en": "Distance unit"
+                "en": "Distance unit",
+                "no": "Avstandsenhet",
+                "sv": "Avståndsenhet"
               },
               "value": "km",
               "hint": {
-                "en": "Unit for range and odometer. Range thresholds in flows use this unit too."
+                "en": "Unit for range and odometer. Range thresholds in flows use this unit too.",
+                "no": "Enhet for rekkevidde og kilometerteller. Rekkeviddegrenser i flows bruker også denne enheten.",
+                "sv": "Enhet för räckvidd och mätarställning. Räckviddsgränser i flöden använder också denna enhet."
               },
               "values": [
                 {
                   "id": "km",
                   "label": {
-                    "en": "Kilometres"
+                    "en": "Kilometres",
+                    "no": "Kilometer",
+                    "sv": "Kilometer"
                   }
                 },
                 {
                   "id": "mi",
                   "label": {
-                    "en": "Miles"
+                    "en": "Miles",
+                    "no": "Miles",
+                    "sv": "Engelska mil (miles)"
                   }
                 }
               ]
@@ -907,14 +1090,18 @@
         {
           "type": "group",
           "label": {
-            "en": "Vehicle information"
+            "en": "Vehicle information",
+            "no": "Bilinformasjon",
+            "sv": "Bilinformation"
           },
           "children": [
             {
               "id": "info_vehicle_id",
               "type": "label",
               "label": {
-                "en": "Enode vehicle ID"
+                "en": "Enode vehicle ID",
+                "no": "Enode-bil-ID",
+                "sv": "Enode-bil-ID"
               },
               "value": "-"
             },
@@ -930,16 +1117,13 @@
               "id": "info_last_sync",
               "type": "label",
               "label": {
-                "en": "Last successful update"
+                "en": "Last successful update",
+                "no": "Siste vellykkede oppdatering",
+                "sv": "Senaste lyckade uppdatering"
               },
               "value": "-"
             }
           ]
-        }
-      ],
-      "repair": [
-        {
-          "id": "start"
         }
       ]
     }
@@ -947,7 +1131,9 @@
   "widgets": {
     "xpeng": {
       "name": {
-        "en": "XPENG Status"
+        "en": "XPENG Status",
+        "no": "XPENG-status",
+        "sv": "XPENG-status"
       },
       "height": 250,
       "devices": {
@@ -959,7 +1145,9 @@
           "id": "refresh_interval",
           "type": "number",
           "label": {
-            "en": "Refresh interval"
+            "en": "Refresh interval",
+            "no": "Oppdateringsintervall",
+            "sv": "Uppdateringsintervall"
           },
           "value": 5,
           "min": 1,
@@ -994,7 +1182,9 @@
     "batteryCapacity": {
       "type": "number",
       "title": {
-        "en": "Battery Capacity"
+        "en": "Battery Capacity",
+        "no": "Batterikapasitet",
+        "sv": "Batterikapacitet"
       },
       "units": "kWh",
       "getable": true,
@@ -1006,7 +1196,9 @@
     "batteryLevel": {
       "type": "number",
       "title": {
-        "en": "Battery Level"
+        "en": "Battery Level",
+        "no": "Batterinivå",
+        "sv": "Batterinivå"
       },
       "units": "%",
       "min": 0,
@@ -1023,7 +1215,9 @@
     "chargingLimit": {
       "type": "number",
       "title": {
-        "en": "Charging Limit"
+        "en": "Charging Limit",
+        "no": "Ladegrense",
+        "sv": "Laddningsgräns"
       },
       "units": "%",
       "getable": true,
@@ -1037,7 +1231,9 @@
     "chargingStatus": {
       "type": "string",
       "title": {
-        "en": "Charging Status"
+        "en": "Charging Status",
+        "no": "Ladestatus",
+        "sv": "Laddningsstatus"
       },
       "getable": true,
       "setable": false,
@@ -1050,7 +1246,9 @@
     "lastSeen": {
       "type": "string",
       "title": {
-        "en": "Last Seen"
+        "en": "Last Seen",
+        "no": "Sist sett",
+        "sv": "Senast sedd"
       },
       "getable": true,
       "setable": false,
@@ -1061,7 +1259,9 @@
     "location": {
       "type": "string",
       "title": {
-        "en": "Location"
+        "en": "Location",
+        "no": "Posisjon",
+        "sv": "Position"
       },
       "getable": true,
       "setable": false,
@@ -1074,7 +1274,9 @@
     "odometer": {
       "type": "number",
       "title": {
-        "en": "Odometer"
+        "en": "Odometer",
+        "no": "Kilometerteller",
+        "sv": "Mätarställning"
       },
       "getable": true,
       "setable": false,
@@ -1089,15 +1291,21 @@
     "pluggedInStatus": {
       "type": "boolean",
       "title": {
-        "en": "Plugged In Status"
+        "en": "Plugged In Status",
+        "no": "Tilkoblet lader",
+        "sv": "Ansluten till laddare"
       },
       "getable": true,
       "setable": false,
       "title_true": {
-        "en": "Plugged In"
+        "en": "Plugged In",
+        "no": "Tilkoblet",
+        "sv": "Ansluten"
       },
       "title_false": {
-        "en": "Unplugged"
+        "en": "Unplugged",
+        "no": "Frakoblet",
+        "sv": "Urkopplad"
       },
       "icon": "assets/capabilities/charging.svg",
       "uiComponent": "sensor",
@@ -1106,7 +1314,9 @@
     "powerDeliveryState": {
       "id": "powerDeliveryState",
       "title": {
-        "en": "Power Delivery State"
+        "en": "Power Delivery State",
+        "no": "Strømtilførsel",
+        "sv": "Strömtillförsel"
       },
       "type": "string",
       "getable": true,
@@ -1117,7 +1327,9 @@
     "range": {
       "type": "number",
       "title": {
-        "en": "Range"
+        "en": "Range",
+        "no": "Rekkevidde",
+        "sv": "Räckvidd"
       },
       "units": "km",
       "getable": true,
@@ -1130,7 +1342,9 @@
     "vehicleBrand": {
       "type": "string",
       "title": {
-        "en": "Vehicle Brand"
+        "en": "Vehicle Brand",
+        "no": "Bilmerke",
+        "sv": "Bilmärke"
       },
       "getable": true,
       "setable": false,
@@ -1140,7 +1354,9 @@
     "vehicleModel": {
       "type": "string",
       "title": {
-        "en": "Vehicle Model"
+        "en": "Vehicle Model",
+        "no": "Bilmodell",
+        "sv": "Bilmodell"
       },
       "getable": true,
       "setable": false,
@@ -1150,7 +1366,9 @@
     "vehicleVin": {
       "type": "string",
       "title": {
-        "en": "Vehicle VIN"
+        "en": "Vehicle VIN",
+        "no": "Chassisnummer (VIN)",
+        "sv": "Chassinummer (VIN)"
       },
       "getable": true,
       "setable": false,
@@ -1160,7 +1378,9 @@
     "vehicleYear": {
       "type": "number",
       "title": {
-        "en": "Vehicle Year"
+        "en": "Vehicle Year",
+        "no": "Årsmodell",
+        "sv": "Årsmodell"
       },
       "readable": true,
       "writable": false,

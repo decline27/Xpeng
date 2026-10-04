@@ -1,13 +1,19 @@
 {
   "id": "battery_level",
   "title": {
-    "en": "Battery level !{{is|isn't}}"
+    "en": "Battery level !{{is|isn't}}",
+    "no": "Batterinivået !{{er|er ikke}}",
+    "sv": "Batterinivån !{{är|är inte}}"
   },
   "titleFormatted": {
-    "en": "Battery level !{{is|isn't}} [[comparison]] [[value]]%"
+    "en": "Battery level !{{is|isn't}} [[comparison]] [[value]]%",
+    "no": "Batterinivået !{{er|er ikke}} [[comparison]] [[value]] %",
+    "sv": "Batterinivån !{{är|är inte}} [[comparison]] [[value]] %"
   },
   "hint": {
-    "en": "Compare the vehicle's battery level"
+    "en": "Compare the vehicle's battery level",
+    "no": "Sammenlign bilens batterinivå",
+    "sv": "Jämför bilens batterinivå"
   },
   "args": [
     {
@@ -19,25 +25,33 @@
       "name": "comparison",
       "type": "dropdown",
       "title": {
-        "en": "Comparison"
+        "en": "Comparison",
+        "no": "Sammenligning",
+        "sv": "Jämförelse"
       },
       "values": [
         {
           "id": "greater",
           "title": {
-            "en": "greater than"
+            "en": "greater than",
+            "no": "større enn",
+            "sv": "större än"
           }
         },
         {
           "id": "lower",
           "title": {
-            "en": "lower than"
+            "en": "lower than",
+            "no": "mindre enn",
+            "sv": "mindre än"
           }
         },
         {
           "id": "equals",
           "title": {
-            "en": "equal to"
+            "en": "equal to",
+            "no": "lik",
+            "sv": "lika med"
           }
         }
       ]
@@ -49,7 +63,9 @@
       "max": 100,
       "step": 1,
       "title": {
-        "en": "Value"
+        "en": "Value",
+        "no": "Verdi",
+        "sv": "Värde"
       }
     }
   ]

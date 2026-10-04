@@ -1,9 +1,13 @@
 {
   "title": {
-    "en": "Stop Charging"
+    "en": "Stop Charging",
+    "no": "Stopp lading",
+    "sv": "Stoppa laddning"
   },
   "hint": {
-    "en": "Stop charging the vehicle"
+    "en": "Stop charging the vehicle",
+    "no": "Stopp ladingen av bilen",
+    "sv": "Stoppa laddningen av bilen"
   },
   "args": [
     {
@@ -12,5 +16,7 @@
       "filter": "driver_id=cars"
     }
   ],
-  "platforms": ["local"]
+  "platforms": [
+    "local"
+  ]
 }

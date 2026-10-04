@@ -1,13 +1,19 @@
 {
   "id": "battery_low",
   "title": {
-    "en": "Battery level is low"
+    "en": "Battery level is low",
+    "no": "Batterinivået er lavt",
+    "sv": "Batterinivån är låg"
   },
   "titleFormatted": {
-    "en": "Battery level drops below [[threshold]]%"
+    "en": "Battery level drops below [[threshold]]%",
+    "no": "Batterinivået faller under [[threshold]] %",
+    "sv": "Batterinivån sjunker under [[threshold]] %"
   },
   "hint": {
-    "en": "Triggered once when the battery level drops below the threshold"
+    "en": "Triggered once when the battery level drops below the threshold",
+    "no": "Utløses én gang når batterinivået faller under grensen",
+    "sv": "Utlöses en gång när batterinivån sjunker under gränsen"
   },
   "args": [
     {
@@ -22,7 +28,9 @@
       "max": 100,
       "step": 1,
       "title": {
-        "en": "Threshold"
+        "en": "Threshold",
+        "no": "Grense",
+        "sv": "Gräns"
       },
       "placeholder": {
         "en": "20"
@@ -34,7 +42,9 @@
       "name": "battery_level",
       "type": "number",
       "title": {
-        "en": "Battery Level"
+        "en": "Battery Level",
+        "no": "Batterinivå",
+        "sv": "Batterinivå"
       },
       "example": 15
     }

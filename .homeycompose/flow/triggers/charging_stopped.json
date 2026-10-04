@@ -1,10 +1,14 @@
 {
   "id": "charging_stopped",
   "title": {
-    "en": "Charging stopped"
+    "en": "Charging stopped",
+    "no": "Lading stoppet",
+    "sv": "Laddning stoppades"
   },
   "hint": {
-    "en": "Triggered when the vehicle stops charging"
+    "en": "Triggered when the vehicle stops charging",
+    "no": "Utløses når bilen slutter å lade",
+    "sv": "Utlöses när bilen slutar ladda"
   },
   "args": [
     {

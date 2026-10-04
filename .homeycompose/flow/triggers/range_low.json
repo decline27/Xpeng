@@ -1,13 +1,19 @@
 {
   "id": "range_low",
   "title": {
-    "en": "Range is low"
+    "en": "Range is low",
+    "no": "Rekkevidden er lav",
+    "sv": "Räckvidden är låg"
   },
   "titleFormatted": {
-    "en": "Range drops below [[threshold]]"
+    "en": "Range drops below [[threshold]]",
+    "no": "Rekkevidden faller under [[threshold]]",
+    "sv": "Räckvidden sjunker under [[threshold]]"
   },
   "hint": {
-    "en": "Triggered once when the remaining range drops below the threshold (in the distance unit set on the device)"
+    "en": "Triggered once when the remaining range drops below the threshold (in the distance unit set on the device)",
+    "no": "Utløses én gang når gjenværende rekkevidde faller under grensen (i avstandsenheten valgt på enheten)",
+    "sv": "Utlöses en gång när återstående räckvidd sjunker under gränsen (i avståndsenheten som valts på enheten)"
   },
   "args": [
     {
@@ -22,7 +28,9 @@
       "max": 1000,
       "step": 1,
       "title": {
-        "en": "Threshold"
+        "en": "Threshold",
+        "no": "Grense",
+        "sv": "Gräns"
       },
       "placeholder": {
         "en": "50"
@@ -34,7 +42,9 @@
       "name": "range",
       "type": "number",
       "title": {
-        "en": "Range"
+        "en": "Range",
+        "no": "Rekkevidde",
+        "sv": "Räckvidd"
       },
       "example": 45
     }

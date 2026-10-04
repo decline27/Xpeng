@@ -1,13 +1,19 @@
 {
   "id": "charging_status",
   "title": {
-    "en": "Charging status !{{is|isn't}}"
+    "en": "Charging status !{{is|isn't}}",
+    "no": "Ladestatus !{{er|er ikke}}",
+    "sv": "Laddningsstatus !{{är|är inte}}"
   },
   "titleFormatted": {
-    "en": "Charging status !{{is|isn't}} [[status]]"
+    "en": "Charging status !{{is|isn't}} [[status]]",
+    "no": "Ladestatus !{{er|er ikke}} [[status]]",
+    "sv": "Laddningsstatus !{{är|är inte}} [[status]]"
   },
   "hint": {
-    "en": "Check the vehicle's charging status"
+    "en": "Check the vehicle's charging status",
+    "no": "Sjekk bilens ladestatus",
+    "sv": "Kontrollera bilens laddningsstatus"
   },
   "args": [
     {
@@ -19,31 +25,41 @@
       "name": "status",
       "type": "dropdown",
       "title": {
-        "en": "Status"
+        "en": "Status",
+        "no": "Status",
+        "sv": "Status"
       },
       "values": [
         {
           "id": "charging",
           "title": {
-            "en": "Charging"
+            "en": "Charging",
+            "no": "Lader",
+            "sv": "Laddar"
           }
         },
         {
           "id": "not_charging",
           "title": {
-            "en": "Not Charging"
+            "en": "Not Charging",
+            "no": "Lader ikke",
+            "sv": "Laddar inte"
           }
         },
         {
           "id": "charging_complete",
           "title": {
-            "en": "Charging Complete"
+            "en": "Charging Complete",
+            "no": "Lading fullført",
+            "sv": "Laddning klar"
           }
         },
         {
           "id": "charging_error",
           "title": {
-            "en": "Error"
+            "en": "Error",
+            "no": "Feil",
+            "sv": "Fel"
           }
         }
       ]

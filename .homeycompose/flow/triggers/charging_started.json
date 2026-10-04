@@ -1,10 +1,14 @@
 {
   "id": "charging_started",
   "title": {
-    "en": "Charging started"
+    "en": "Charging started",
+    "no": "Lading startet",
+    "sv": "Laddning startade"
   },
   "hint": {
-    "en": "Triggered when the vehicle starts charging"
+    "en": "Triggered when the vehicle starts charging",
+    "no": "Utløses når bilen begynner å lade",
+    "sv": "Utlöses när bilen börjar ladda"
   },
   "args": [
     {

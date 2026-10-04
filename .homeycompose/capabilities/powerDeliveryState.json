@@ -1,7 +1,9 @@
 {
   "id": "powerDeliveryState",
   "title": {
-    "en": "Power Delivery State"
+    "en": "Power Delivery State",
+    "no": "Strømtilførsel",
+    "sv": "Strömtillförsel"
   },
   "type": "string",
   "getable": true,

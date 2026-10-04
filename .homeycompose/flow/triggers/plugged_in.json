@@ -1,10 +1,14 @@
 {
   "id": "plugged_in",
   "title": {
-    "en": "Vehicle was plugged in"
+    "en": "Vehicle was plugged in",
+    "no": "Bilen ble koblet til",
+    "sv": "Bilen anslöts"
   },
   "hint": {
-    "en": "Triggered when the charging cable is connected"
+    "en": "Triggered when the charging cable is connected",
+    "no": "Utløses når ladekabelen kobles til",
+    "sv": "Utlöses när laddkabeln ansluts"
   },
   "args": [
     {

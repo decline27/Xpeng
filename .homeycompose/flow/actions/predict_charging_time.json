@@ -1,9 +1,13 @@
 {
   "title": {
-    "en": "Predict Charging Time"
+    "en": "Predict Charging Time",
+    "no": "Beregn ladetid",
+    "sv": "Beräkna laddtid"
   },
   "hint": {
-    "en": "Predict time to complete charging based on current power delivery and battery level"
+    "en": "Predict time to complete charging based on current power delivery and battery level",
+    "no": "Beregn tiden til ladingen er ferdig ut fra nåværende ladeeffekt og batterinivå",
+    "sv": "Beräkna tiden tills laddningen är klar utifrån nuvarande laddeffekt och batterinivå"
   },
   "args": [
     {
@@ -17,7 +21,9 @@
       "name": "charging_time_minutes",
       "type": "number",
       "title": {
-        "en": "Charging Time (minutes)"
+        "en": "Charging Time (minutes)",
+        "no": "Ladetid (minutter)",
+        "sv": "Laddtid (minuter)"
       },
       "example": 120
     },
@@ -25,10 +31,14 @@
       "name": "charging_time_hours",
       "type": "number",
       "title": {
-        "en": "Charging Time (hours)"
+        "en": "Charging Time (hours)",
+        "no": "Ladetid (timer)",
+        "sv": "Laddtid (timmar)"
       },
       "example": 2
     }
   ],
-  "platforms": ["local"]
+  "platforms": [
+    "local"
+  ]
 }

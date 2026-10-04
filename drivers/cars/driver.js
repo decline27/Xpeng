@@ -119,7 +119,7 @@ class XpengDriver extends Homey.Driver {
   registerActionCards() {
     // Start charging action
     this.startChargingAction = this.homey.flow.getActionCard('start_charging');
-    this.startChargingAction.registerRunListener(async (args, state) => {
+    this.startChargingAction.registerRunListener(async (args) => {
       try {
         const device = args.device;
         this.log(`Start charging triggered for ${device.getName()}`);
@@ -133,7 +133,7 @@ class XpengDriver extends Homey.Driver {
 
     // Stop charging action
     this.stopChargingAction = this.homey.flow.getActionCard('stop_charging');
-    this.stopChargingAction.registerRunListener(async (args, state) => {
+    this.stopChargingAction.registerRunListener(async (args) => {
       try {
         this.log('Stop charging flow triggered with args:', {
           deviceId: args.device?.id,
@@ -167,7 +167,7 @@ class XpengDriver extends Homey.Driver {
 
     // Refresh data action
     this.refreshDataAction = this.homey.flow.getActionCard('refresh_data');
-    this.refreshDataAction.registerRunListener(async (args, state) => {
+    this.refreshDataAction.registerRunListener(async (args) => {
       try {
         this.log('Refresh data flow triggered with args:', {
           deviceId: args.device?.id,

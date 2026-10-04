@@ -66,7 +66,7 @@ describe('ErrorHandler', () => {
     const result = ErrorHandler.translateError(authError, 'testContext');
     
     expect(result.type).toBe(ErrorHandler.ErrorTypes.AUTHENTICATION);
-    expect(result.message).toContain('credentials');
+    expect(result.message).toContain('Enode');
     expect(result.suggestion).toContain('reconnect');
   });
   

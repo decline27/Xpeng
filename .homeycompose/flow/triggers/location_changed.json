@@ -2,15 +2,18 @@
   "id": "location_changed",
   "title": {
     "en": "Car enters or leaves an area",
-    "no": "Bilen kjører inn i eller ut av et område"
+    "no": "Bilen kjører inn i eller ut av et område",
+    "sv": "Bilen kör in i eller ut ur ett område"
   },
   "titleFormatted": {
     "en": "Car [[comparison]] within [[radius]]m of coordinates ([[latitude]], [[longitude]])",
-    "no": "Bilen [[comparison]] innenfor [[radius]]m av koordinater ([[latitude]], [[longitude]])"
+    "no": "Bilen [[comparison]] innenfor [[radius]]m av koordinater ([[latitude]], [[longitude]])",
+    "sv": "Bilen [[comparison]] inom [[radius]] m från koordinaterna ([[latitude]], [[longitude]])"
   },
   "hint": {
     "en": "Triggered when the car moves into or out of the circle around the given coordinates",
-    "no": "Utløses når bilen kjører inn i eller ut av sirkelen rundt de gitte koordinatene"
+    "no": "Utløses når bilen kjører inn i eller ut av sirkelen rundt de gitte koordinatene",
+    "sv": "Utlöses när bilen kör in i eller ut ur cirkeln runt de angivna koordinaterna"
   },
   "args": [
     {
@@ -23,21 +26,24 @@
       "type": "dropdown",
       "title": {
         "en": "Movement",
-        "no": "Bevegelse"
+        "no": "Bevegelse",
+        "sv": "Rörelse"
       },
       "values": [
         {
           "id": "enters",
           "title": {
             "en": "enters",
-            "no": "kjører inn"
+            "no": "kjører inn",
+            "sv": "kör in"
           }
         },
         {
           "id": "exits",
           "title": {
             "en": "exits",
-            "no": "kjører ut"
+            "no": "kjører ut",
+            "sv": "kör ut"
           }
         }
       ]
@@ -47,7 +53,8 @@
       "type": "number",
       "title": {
         "en": "Latitude",
-        "no": "Breddegrad"
+        "no": "Breddegrad",
+        "sv": "Latitud"
       },
       "min": -90,
       "max": 90,
@@ -62,7 +69,8 @@
       "type": "number",
       "title": {
         "en": "Longitude",
-        "no": "Lengdegrad"
+        "no": "Lengdegrad",
+        "sv": "Longitud"
       },
       "min": -180,
       "max": 180,
@@ -77,7 +85,8 @@
       "type": "number",
       "title": {
         "en": "Radius (meters)",
-        "no": "Radius (meter)"
+        "no": "Radius (meter)",
+        "sv": "Radie (meter)"
       },
       "min": 10,
       "max": 1000,
@@ -91,7 +100,8 @@
       "type": "number",
       "title": {
         "en": "Distance moved (m)",
-        "no": "Avstand kjørt (m)"
+        "no": "Avstand kjørt (m)",
+        "sv": "Körd sträcka (m)"
       },
       "example": 850
     }

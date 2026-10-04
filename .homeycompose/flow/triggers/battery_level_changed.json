@@ -1,10 +1,14 @@
 {
   "id": "battery_level_changed",
   "title": {
-    "en": "Battery level changed"
+    "en": "Battery level changed",
+    "no": "Batterinivået endret seg",
+    "sv": "Batterinivån ändrades"
   },
   "hint": {
-    "en": "Triggered when the vehicle's battery level changes"
+    "en": "Triggered when the vehicle's battery level changes",
+    "no": "Utløses når bilens batterinivå endrer seg",
+    "sv": "Utlöses när bilens batterinivå ändras"
   },
   "args": [
     {
@@ -18,7 +22,9 @@
       "name": "battery_level",
       "type": "number",
       "title": {
-        "en": "Battery Level"
+        "en": "Battery Level",
+        "no": "Batterinivå",
+        "sv": "Batterinivå"
       },
       "example": 75
     }

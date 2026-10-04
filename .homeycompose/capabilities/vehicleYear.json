@@ -1,6 +1,10 @@
 {
   "type": "number",
-  "title": { "en": "Vehicle Year" },
+  "title": {
+    "en": "Vehicle Year",
+    "no": "Årsmodell",
+    "sv": "Årsmodell"
+  },
   "readable": true,
   "writable": false,
   "getable": true,

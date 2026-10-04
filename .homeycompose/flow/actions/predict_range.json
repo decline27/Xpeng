@@ -1,9 +1,13 @@
 {
   "title": {
-    "en": "Predict Range"
+    "en": "Predict Range",
+    "no": "Beregn rekkevidde",
+    "sv": "Beräkna räckvidd"
   },
   "hint": {
-    "en": "Predict the range after charging to the charge limit, based on the km per battery % this car has achieved recently"
+    "en": "Predict the range after charging to the charge limit, based on the distance per battery % this car has achieved recently",
+    "no": "Beregn rekkevidden etter lading til ladegrensen, basert på hvor langt bilen har kjørt per batteriprosent i det siste",
+    "sv": "Beräkna räckvidden efter laddning till laddningsgränsen, baserat på hur långt bilen har kört per batteriprocent på sistone"
   },
   "args": [
     {
@@ -17,7 +21,9 @@
       "name": "predicted_range",
       "type": "number",
       "title": {
-        "en": "Predicted range at charge limit (km)"
+        "en": "Predicted range at charge limit",
+        "no": "Beregnet rekkevidde ved ladegrensen",
+        "sv": "Beräknad räckvidd vid laddningsgränsen"
       },
       "example": 250
     }

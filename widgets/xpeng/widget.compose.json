@@ -1,6 +1,8 @@
 {
   "name": {
-    "en": "XPENG Status"
+    "en": "XPENG Status",
+    "no": "XPENG-status",
+    "sv": "XPENG-status"
   },
   "height": 250,
   "devices": {
@@ -12,7 +14,9 @@
       "id": "refresh_interval",
       "type": "number",
       "label": {
-        "en": "Refresh interval"
+        "en": "Refresh interval",
+        "no": "Oppdateringsintervall",
+        "sv": "Uppdateringsintervall"
       },
       "value": 5,
       "min": 1,

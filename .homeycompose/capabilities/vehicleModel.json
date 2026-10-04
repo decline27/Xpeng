@@ -1,8 +1,12 @@
 {
-    "type": "string",
-    "title": { "en": "Vehicle Model" },
-    "getable": true,
-    "setable": false,
-    "icon": "assets/capabilities/car.svg",
-    "uiComponent": "sensor"
+  "type": "string",
+  "title": {
+    "en": "Vehicle Model",
+    "no": "Bilmodell",
+    "sv": "Bilmodell"
+  },
+  "getable": true,
+  "setable": false,
+  "icon": "assets/capabilities/car.svg",
+  "uiComponent": "sensor"
 }

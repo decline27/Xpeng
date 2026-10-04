@@ -1,13 +1,19 @@
 {
   "id": "charging_status_changed",
   "title": {
-    "en": "Charging status changed"
+    "en": "Charging status changed",
+    "no": "Ladestatus endret seg",
+    "sv": "Laddningsstatus ändrades"
   },
   "titleFormatted": {
-    "en": "Charging status changed to [[status]]"
+    "en": "Charging status changed to [[status]]",
+    "no": "Ladestatus endret til [[status]]",
+    "sv": "Laddningsstatus ändrades till [[status]]"
   },
   "hint": {
-    "en": "Triggered when the charging status changes to the selected status"
+    "en": "Triggered when the charging status changes to the selected status",
+    "no": "Utløses når ladestatus endres til valgt status",
+    "sv": "Utlöses när laddningsstatus ändras till vald status"
   },
   "args": [
     {
@@ -19,31 +25,41 @@
       "name": "status",
       "type": "dropdown",
       "title": {
-        "en": "Status"
+        "en": "Status",
+        "no": "Status",
+        "sv": "Status"
       },
       "values": [
         {
           "id": "charging",
           "title": {
-            "en": "Charging"
+            "en": "Charging",
+            "no": "Lader",
+            "sv": "Laddar"
           }
         },
         {
           "id": "not_charging",
           "title": {
-            "en": "Not Charging"
+            "en": "Not Charging",
+            "no": "Lader ikke",
+            "sv": "Laddar inte"
           }
         },
         {
           "id": "charging_complete",
           "title": {
-            "en": "Charging Complete"
+            "en": "Charging Complete",
+            "no": "Lading fullført",
+            "sv": "Laddning klar"
           }
         },
         {
           "id": "charging_error",
           "title": {
-            "en": "Error"
+            "en": "Error",
+            "no": "Feil",
+            "sv": "Fel"
           }
         }
       ]
@@ -54,7 +70,9 @@
       "name": "previous_status",
       "type": "string",
       "title": {
-        "en": "Previous Status"
+        "en": "Previous Status",
+        "no": "Forrige status",
+        "sv": "Föregående status"
       },
       "example": "Connected"
     },
@@ -62,7 +80,9 @@
       "name": "current_status",
       "type": "string",
       "title": {
-        "en": "Current Status"
+        "en": "Current Status",
+        "no": "Nåværende status",
+        "sv": "Nuvarande status"
       },
       "example": "Charging"
     }

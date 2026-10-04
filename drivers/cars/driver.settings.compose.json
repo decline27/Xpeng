@@ -2,14 +2,18 @@
   {
     "type": "group",
     "label": {
-      "en": "Updates"
+      "en": "Updates",
+      "no": "Oppdateringer",
+      "sv": "Uppdateringar"
     },
     "children": [
       {
         "id": "updateInterval",
         "type": "number",
         "label": {
-          "en": "Update interval"
+          "en": "Update interval",
+          "no": "Oppdateringsintervall",
+          "sv": "Uppdateringsintervall"
         },
         "value": 10,
         "min": 10,
@@ -18,7 +22,9 @@
           "en": "minutes"
         },
         "hint": {
-          "en": "How often to fetch vehicle data from Enode (10-60 minutes). While charging the app checks every 5 minutes."
+          "en": "How often to fetch vehicle data from Enode (10-60 minutes). While charging the app checks every 5 minutes.",
+          "no": "Hvor ofte bildata hentes fra Enode (10–60 minutter). Under lading sjekker appen hvert 5. minutt.",
+          "sv": "Hur ofta bildata hämtas från Enode (10–60 minuter). Under laddning kontrollerar appen var 5:e minut."
         }
       }
     ]
@@ -26,30 +32,40 @@
   {
     "type": "group",
     "label": {
-      "en": "Display"
+      "en": "Display",
+      "no": "Visning",
+      "sv": "Visning"
     },
     "children": [
       {
         "id": "distanceUnit",
         "type": "dropdown",
         "label": {
-          "en": "Distance unit"
+          "en": "Distance unit",
+          "no": "Avstandsenhet",
+          "sv": "Avståndsenhet"
         },
         "value": "km",
         "hint": {
-          "en": "Unit for range and odometer. Range thresholds in flows use this unit too."
+          "en": "Unit for range and odometer. Range thresholds in flows use this unit too.",
+          "no": "Enhet for rekkevidde og kilometerteller. Rekkeviddegrenser i flows bruker også denne enheten.",
+          "sv": "Enhet för räckvidd och mätarställning. Räckviddsgränser i flöden använder också denna enhet."
         },
         "values": [
           {
             "id": "km",
             "label": {
-              "en": "Kilometres"
+              "en": "Kilometres",
+              "no": "Kilometer",
+              "sv": "Kilometer"
             }
           },
           {
             "id": "mi",
             "label": {
-              "en": "Miles"
+              "en": "Miles",
+              "no": "Miles",
+              "sv": "Engelska mil (miles)"
             }
           }
         ]
@@ -59,14 +75,18 @@
   {
     "type": "group",
     "label": {
-      "en": "Vehicle information"
+      "en": "Vehicle information",
+      "no": "Bilinformasjon",
+      "sv": "Bilinformation"
     },
     "children": [
       {
         "id": "info_vehicle_id",
         "type": "label",
         "label": {
-          "en": "Enode vehicle ID"
+          "en": "Enode vehicle ID",
+          "no": "Enode-bil-ID",
+          "sv": "Enode-bil-ID"
         },
         "value": "-"
       },
@@ -82,7 +102,9 @@
         "id": "info_last_sync",
         "type": "label",
         "label": {
-          "en": "Last successful update"
+          "en": "Last successful update",
+          "no": "Siste vellykkede oppdatering",
+          "sv": "Senaste lyckade uppdatering"
         },
         "value": "-"
       }

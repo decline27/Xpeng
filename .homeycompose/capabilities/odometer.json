@@ -1,7 +1,9 @@
 {
   "type": "number",
   "title": {
-    "en": "Odometer"
+    "en": "Odometer",
+    "no": "Kilometerteller",
+    "sv": "Mätarställning"
   },
   "getable": true,
   "setable": false,

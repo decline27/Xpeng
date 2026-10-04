@@ -1,9 +1,13 @@
 {
   "title": {
-    "en": "Start Charging"
+    "en": "Start Charging",
+    "no": "Start lading",
+    "sv": "Starta laddning"
   },
   "hint": {
-    "en": "Start charging the vehicle if it is plugged in"
+    "en": "Start charging the vehicle if it is plugged in",
+    "no": "Start lading hvis bilen er koblet til",
+    "sv": "Starta laddning om bilen är ansluten"
   },
   "args": [
     {
@@ -12,5 +16,7 @@
       "filter": "driver_id=cars"
     }
   ],
-  "platforms": ["local"]
+  "platforms": [
+    "local"
+  ]
 }

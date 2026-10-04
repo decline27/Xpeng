@@ -22,6 +22,10 @@ describe('driver manifest', () => {
         expect(driver.capabilities).toContain(id);
     });
 
+    test('keeps settings only in driver.settings.compose.json (no stale copy here)', () => {
+        expect(driver.settings).toBeUndefined();
+    });
+
     test('has a repair flow so a re-linked car can be fixed without removing the device', () => {
         expect(Array.isArray(driver.repair)).toBe(true);
         expect(driver.repair.length).toBeGreaterThan(0);
