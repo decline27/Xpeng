@@ -190,5 +190,8 @@
   },
   "1.2.64": {
     "en": "bug fixes"
+  },
+  "1.3.0": {
+    "en": "Big reliability update: the car is no longer woken on every update, flow cards now work as described (battery/range low fire once, status and area cards respect your choices), the widget controls the right car and Stop works while charging, local time for Last Seen, km/miles setting, Homey Energy car support, Repair for reconnecting your car, and Norwegian and Swedish translations. Requires Homey 12.4.5 or newer."
   }
 }
