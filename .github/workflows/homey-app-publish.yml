@@ -5,7 +5,7 @@ on:
 jobs:
   publish-homey-app:
     name: Publish to Homey App Store
-    runs-on: ubuntu-24.04-latest  # More specific runner version
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4  # Pinned to latest stable version
@@ -24,14 +24,6 @@ jobs:
           echo "Application successfully published!" >> $GITHUB_STEP_SUMMARY
           echo "Manage your app at ${{ steps.publish-step.outputs.url }}" >> $GITHUB_STEP_SUMMARY
 
-      - name: Failure Notification
+      - name: Failure Summary
         if: ${{ failure() }}
-        uses: actions/github-script@v7
-        with:
-          script: |
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: "❌ Publication failed in workflow ${{ github.workflow }}"
-            })
+        run: echo "Publication failed. Check the Publish Application step log." >> $GITHUB_STEP_SUMMARY
