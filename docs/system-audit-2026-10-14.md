@@ -9,7 +9,7 @@ Release candidate: **1.3.2**. This audit covers the Homey Pro app, account selec
 - The updated discovery and deduplication code was also checked against the live read-only inventory: all 125 observed owner identities received exactly their own records. This checks filtering against real response shapes, not commands on each owner's Homey.
 - A live XPENG sample reported odometer and forced refresh unsupported; charging start/stop were supported. This is a sample, not a guarantee for every car. No charging command was sent.
 - The connected Homey reported an XPENG G6 with Last Seen on 14 October 2026. This observation was from the installed app, before this candidate was deployed.
-- No users were disconnected, no account was transferred, no extra seats were created, and no app update was installed or published during the audit.
+- No users were disconnected, no account was transferred, and no extra seats were created. The candidate was installed locally for the live checks below; public publication remains pending.
 
 ## Fixes in the candidate
 
@@ -34,8 +34,14 @@ The full development dependency audit still reports 19 moderate findings through
 - **Seats:** all five clients were at the stated 25-vehicle allowance. Adding a configuration key does not create capacity. No entitlement to a further free production account was established.
 - **Data delays:** a successful read can still contain old XPENG measurements, including independently stale charging fields. The app cannot manufacture newer data or enable an unsupported Enode wake capability. GPS is not a real-time garage-opening signal.
 - **Unsupported features:** the current app targets Homey Pro, not Homey Cloud. Odometer is hidden where unavailable. Charging-limit changes are not implemented.
-- **Production smoke test:** after candidate installation, verify startup, the selected widget car, a manual refresh, and existing Flow conditions. Test charging only with a consenting user and a plugged-in car. New-user pairing requires an available approved seat. A mock-based pass is not a live-car command test.
-- **Release:** candidate installation and public App Store publication remain pending. Version 1.3.2 is prepared in the source and changelog.
+- **Remaining production smoke tests:** live start/stop charging requires a consenting user and a plugged-in car; the test vehicle was unplugged. New-user pairing requires an available approved seat. Pairing/repair have automated regression coverage, but no live re-link was performed. Widget registration was confirmed; a browser session was unavailable for visual testing.
+- **Release:** version 1.3.2 is installed on the maintainer's Homey Pro. Public App Store publication remains pending. The source and changelog are prepared in [PR #10](https://github.com/decline27/Xpeng/pull/10).
+
+## Live Homey check
+
+On 14 October 2026, the existing local development installation was upgraded from 1.2.64 to 1.3.2 on Homey Pro 13.5.1, without a clean install. The app reported running, enabled, and not crashed. The G6 retained the same Homey device ID, its 16 capabilities, ten-minute interval, and kilometre unit. It remained available and populated its Last Sync setting with current API reads.
+
+The device's registered Flow cards were invoked through Homey's API: battery greater than zero returned true; is-charging returned false, consistent with the unplugged state; Refresh Vehicle Data completed without an error; Predict Range returned its numeric token. No start/stop charging command was issued. GitHub's lint/test/verified-validation checks passed on code commit `565d2c9`.
 
 ## Additional production account
 
