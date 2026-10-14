@@ -276,7 +276,10 @@ class XpengDriver extends Homey.Driver {
             name: vehicle.name || `XPENG ${model}${vin ? ` (${vin.slice(-6)})` : ''}`,
             // The VIN identifies the car; the Enode id can change when the car is re-linked
             data: { id: vin || vehicle.id, vehicleId: vehicle.id, vin: vin || null },
-            store: { vehicleId: vehicle.id }
+            store: {
+              vehicleId: vehicle.id,
+              ...(vehicle._clientId || vehicle._accountId ? { accountId: vehicle._clientId || vehicle._accountId } : {})
+            }
           };
         });
       } catch (error) {
@@ -355,13 +358,19 @@ class XpengDriver extends Homey.Driver {
 
     session.setHandler('get_link', async () => {
       try {
-        const userId = await resolveUserId(this.homey);
-        const linkUrl = await this.enodeApi.generateVehicleLink(userId);
+        const vehicles = await ownVehicles();
+        const current = vehicles.find(vehicle => vehicle.id === oldVehicleId)
+          || vehicles.find(vehicle => vehicle.information?.vin === vin);
+        // Reuse the legacy user as well as its client; changing either can consume a seat.
+        const userId = current?.userId || current?.user?.id || await resolveUserId(this.homey);
+        const clientId = current?._clientId || current?._accountId || device.getStoreValue('accountId');
+        const linkUrl = await this.enodeApi.generateVehicleLink(userId, clientId);
         linkCreatedAt = Date.now();
         return { linkUrl };
       } catch (error) {
         this.error('Failed to generate repair link:', error);
-        throw new Error(`Problem generating link: ${error.message}`);
+        const handled = ErrorHandler.translateError(error, 'repairLink');
+        throw new Error(`Problem generating link: ${handled.message} ${handled.suggestion}`);
       }
     });
 

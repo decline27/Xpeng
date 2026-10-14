@@ -5,7 +5,7 @@ Transform your XPENG electric vehicle into an integral part of your smart home e
 ## Key Features
 
 ### Comprehensive Vehicle Monitoring
-- **Battery Management**: Real-time battery level tracking with customizable alerts
+- **Battery Management**: Periodic battery level tracking with customizable alerts
 - **Charging Intelligence**: Monitor charging status, power delivery, and set charging notifications
 - **Location Awareness**: Keep track of your vehicle's location and create location-based automations
 - **Vehicle Analytics**: Access detailed information including range, odometer, and charging efficiency
@@ -24,8 +24,8 @@ Transform your XPENG electric vehicle into an integral part of your smart home e
 - **Range Monitoring**: Stay informed about your vehicle's current range
 
 ## Requirements
-- XPENG Electric Vehicle (Compatible with all models)
-- Homey Pro
+- XPENG electric vehicle supported by Enode
+- Homey Pro with Homey 12.4.5 or newer (Homey Cloud is not supported)
 
 ## Setup Guide
 1. Install the XPENG Car Manager app on your Homey
@@ -38,7 +38,7 @@ Transform your XPENG electric vehicle into an integral part of your smart home e
    - Your vehicle will be added automatically
 3. Configure your preferred monitoring settings and alerts
 
-> **Note for Developers**: The app uses pre-configured Enode API credentials that are securely encrypted and stored. End users don't need to create an Enode account or configure any credentials.
+> **Note for Developers**: The app uses pre-configured Enode API credentials that are provided through the Homey app environment. End users don't need to create an Enode account or configure any credentials.
 
 ## Project Improvements and Setup
 
@@ -64,7 +64,7 @@ Transform your XPENG electric vehicle into an integral part of your smart home e
 - Submit pull requests with a clear description of your changes.
 
 ## Troubleshooting & FAQ
-- Verify Node version (>=12.0.0).
+- Use Node.js 22 for development and CI.
 - Run `npm run lint` and `npm run test` before pushing code.
 - Report issues via [GitHub Issues](https://github.com/decline27/Xpeng/issues).
 
@@ -76,7 +76,7 @@ For questions, feature requests, or support:
 ## Privacy & Security
 - All credentials are securely stored within Homey
 - Enode API credentials are securely encrypted and stored by the Homey App Store
-- No personal data is collected or stored outside your Homey
+- Enode processes the vehicle connection and data; the widget sends rounded vehicle coordinates to OpenStreetMap Nominatim to show an address
 - Communication with XPENG servers is encrypted
 - OAuth2 authentication ensures each user only sees their own vehicles
 - Each user's vehicle data is isolated from other users, even though the app uses shared developer credentials
@@ -99,3 +99,9 @@ For questions, feature requests, or support:
 - Periodic health checks verify connectivity with your vehicle
 - Automatic recovery attempts if connection issues are detected
 - Notifications for persistent connectivity problems
+
+## Reliability and capacity
+
+See [Getting started](docs/getting-started.md) for repair steps and supported behavior, [account configuration](client-distribution-guide.md) for adding an approved production client, and the [14 October 2026 audit](docs/system-audit-2026-10-14.md) for validation and remaining release checks.
+
+Shared connection capacity and upstream XPENG/Enode data delays are external limits. Reinstalling the app does not add seats. Use Repair to reconnect an existing device while retaining its Flows and history.

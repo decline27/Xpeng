@@ -195,7 +195,7 @@
             el('battery-level-fill').style.width = `${Math.max(0, Math.min(100, data.batteryLevel))}%`;
           }
           if (typeof data.range === 'number') {
-            setText('range', `${Math.round(data.range)} km`);
+            setText('range', `${Math.round(data.range)} ${data.rangeUnit === 'mi' ? 'mi' : 'km'}`);
           }
           setText('charging-status', data.chargingStatus);
           setText('plugged-status', data.pluggedInStatus ? 'Yes' : 'No');

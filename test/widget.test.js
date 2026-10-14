@@ -196,3 +196,9 @@ describe('findDevice id matching', () => {
         expect(findDevice([a, b], 'a')).toBe(a);
     });
 });
+
+test('widget reports miles when the device uses miles', () => {
+    const { makeDevice } = require('./helpers/device-harness');
+    const { device } = makeDevice({ settings: { distanceUnit: 'mi' }, capabilities: { range: 100 } });
+    expect(buildWidgetData(device)).toMatchObject({ range: 100, rangeUnit: 'mi' });
+});

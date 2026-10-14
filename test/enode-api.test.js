@@ -186,13 +186,11 @@ describe('EnodeAPI', () => {
             expect(fetch).toHaveBeenCalledTimes(1);
         });
 
-        test('should return empty and log on invalid response format', async () => {
+        test('should report invalid response format rather than an empty garage', async () => {
             enodeApi.getAccessToken = jest.fn().mockResolvedValue('test-token');
             fetch.mockResolvedValue(okJson({ vehicles: [] })); // wrong shape (no data array)
 
-            const vehicles = await enodeApi.getVehicles(null, true, true);
-
-            expect(vehicles).toEqual([]);
+            await expect(enodeApi.getVehicles(null, true, true)).rejects.toThrow('Invalid response format');
             expect(homey.error).toHaveBeenCalled();
         });
     });

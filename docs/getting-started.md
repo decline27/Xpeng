@@ -1,90 +1,26 @@
-# Getting Started
+# Getting started
 
-This guide will help you set up and start using the Xpeng Homey integration.
+You need Homey Pro with Homey 12.4.5 or newer, a supported XPENG vehicle, and your XPENG login. Homey Cloud is not supported by this app. End users do not need developer credentials; the app's shared Enode connection capacity must have space for a new connection.
 
-## Prerequisites
+1. Install XPENG Car Manager from the Homey App Store.
+2. In Devices, choose Add Device, then XPENG Car Manager.
+3. Generate a connection link and sign in to XPENG on the Enode connection page.
+4. Return to Homey, press Continue, and choose your car.
+5. In the device settings, choose your distance unit and update interval. You can also add the XPENG dashboard widget and select the car it should show.
 
-1. A Homey Pro device
-2. An Xpeng vehicle
-3. Enode API credentials
-   - Client ID
-   - Client Secret
+Battery, range, location, charging status and charging controls depend on what XPENG supplies through Enode. Updates are periodic, not real-time. The idle interval is at least ten minutes; charging polls run every five minutes. A widget refresh displays the Homey device's stored values. The Refresh Vehicle Data Flow action requests the latest API data, but cannot guarantee newer measurements from the car.
 
-## Installation
+## Reconnect an existing car
 
-1. Install the app from Homey App Store
-2. Configure Enode credentials:
-   - Open Homey settings
-   - Navigate to the Xpeng app
-   - Enter your Enode Client ID and Secret
-
-## Initial Setup
-
-1. **Add Your Vehicle**
-   - Open the Homey mobile app
-   - Go to "Devices"
-   - Click "+" to add a new device
-   - Select "Xpeng"
-   - Follow the pairing process
-
-2. **Configure Settings**
-   - Set update frequency
-   - Configure notifications
-   - Set preferred units
-
-3. **Add Widgets**
-   - Open Homey dashboard
-   - Click "Add Widget"
-   - Select Xpeng widget
-   - Configure widget settings
-
-## Basic Usage
-
-### Vehicle Status
-- View battery level
-- Check charging status
-- Monitor range
-- View location
-
-### Control Functions
-- Start/Stop charging
-- Refresh vehicle data
-- Monitor vehicle status
-
-## Setting Up Flows
-
-1. **Create Basic Flows**
-   - Open Flow editor
-   - Add triggers (time, events, etc.)
-   - Add Xpeng actions
-   - Test your flow
-
-2. **Example Flows**
-   - Night charging automation
-   - Low battery alerts
-   - Charging status notifications
+Use the device's Repair option and follow the Enode connection link. This preserves the Homey device, its Flows, and its history. Keep the existing device rather than deleting it and attempting a new connection when capacity is full.
 
 ## Troubleshooting
 
-### Common Issues
-1. Connection Problems
-   - Check internet connectivity
-   - Verify Enode credentials
-   - Ensure vehicle is online
+- **Shared capacity is full:** a seat or another approved production account is needed. Repeated pairing attempts and reinstalling do not increase the allowance.
+- **Old readings:** compare Last Seen with the XPENG app. Enode can return old charging fields even when other fields update. XPENG vehicles observed in the audit do not support Enode's forced refresh capability.
+- **No odometer:** this capability is hidden when Enode reports it unsupported.
+- **Charging limit:** displayed when reported by Enode; setting it is not implemented. Use the XPENG app to change it.
+- **Homey Cloud download error:** this release supports Homey Pro only.
+- **Widget's selected car was removed:** select the correct car again. Charging commands will not fall back to a different car.
 
-2. Data Updates
-   - Check update frequency settings
-   - Verify API access
-   - Check for app updates
-
-### Getting Help
-- Check the documentation
-- Visit the community forums
-- Contact support
-
-## Next Steps
-
-1. Explore advanced features
-2. Set up automation flows
-3. Customize widgets
-4. Join the community
+For maintainers adding a production client, see the [account configuration guide](../client-distribution-guide.md). For support, see the [community topic](https://community.homey.app/t/app-pro-xpeng-car-manager-for-homey/123375) or [GitHub issues](https://github.com/decline27/Xpeng/issues).

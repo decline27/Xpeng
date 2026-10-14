@@ -196,5 +196,8 @@
   },
   "1.3.1": {
     "en": "bug fixes"
+  },
+  "1.3.2": {
+    "en": "Fixes discovering a second car, account routing and reconnecting older installations. Manual refresh reads fresh API data; unsupported wake requests are skipped. Clearer connection-capacity errors, safer duplicate cleanup, and widget fixes for car selection and miles. Existing Enode capacity limits still apply."
   }
 }
