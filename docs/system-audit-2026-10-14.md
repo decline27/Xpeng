@@ -25,7 +25,9 @@ Release candidate: **1.3.2**. This audit covers the Homey Pro app, account selec
 | Startup | Failure to read initial data leaves the device unavailable while polling retries continue. |
 | Widget | A missing selected car cannot redirect charging to another car. Range labels follow the chosen km/miles unit. |
 | Duplicate cleanup | Missing VINs protect the owner's other vehicles; missing ownership or incomplete pagination prevents cleanup. No live cleanup was executed. |
-| CI | Validation and publication workflows run lint and regression tests before their Homey action. |
+| CI | Validation and publication workflows run lint and regression tests before their Homey action. Removed unused conflicting lint packages so clean installs work, and updated Jest and the development lockfile. |
+
+The full development dependency audit still reports 19 moderate findings through the coverage toolchain (`sprintf-js` / `argparse` / `js-yaml`). The audit suggests a Jest downgrade rather than a compatible patched release for that chain; this was not applied. There are no remaining high/critical findings and no runtime findings. Development tooling is excluded from the Homey production dependencies.
 
 ## External limits and unresolved release checks
 
@@ -34,7 +36,6 @@ Release candidate: **1.3.2**. This audit covers the Homey Pro app, account selec
 - **Unsupported features:** the current app targets Homey Pro, not Homey Cloud. Odometer is hidden where unavailable. Charging-limit changes are not implemented.
 - **Production smoke test:** after candidate installation, verify startup, the selected widget car, a manual refresh, and existing Flow conditions. Test charging only with a consenting user and a plugged-in car. New-user pairing requires an available approved seat. A mock-based pass is not a live-car command test.
 - **Release:** candidate installation and public App Store publication remain pending. Version 1.3.2 is prepared in the source and changelog.
-- **Account offer:** the user authorized emailing the person who offered an account. Gmail access and the recipient thread must be available before sending; at the time of writing the integration was unconnected and no browser connection was available. No message has been sent.
 
 ## Additional production account
 
