@@ -202,5 +202,8 @@
   },
   "1.3.3": {
     "en": "Charging controls now wait for an actual Enode confirmation instead of treating old telemetry as a completed Stop command. Stale charging data no longer blocks Start locally. Includes the pairing, account routing, refresh, and widget improvements prepared in 1.3.2."
+  },
+  "1.3.4": {
+    "en": "More space for cars"
   }
 }
