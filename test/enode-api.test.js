@@ -186,13 +186,11 @@ describe('EnodeAPI', () => {
             expect(fetch).toHaveBeenCalledTimes(1);
         });
 
-        test('should return empty and log on invalid response format', async () => {
+        test('should report invalid response format rather than an empty garage', async () => {
             enodeApi.getAccessToken = jest.fn().mockResolvedValue('test-token');
             fetch.mockResolvedValue(okJson({ vehicles: [] })); // wrong shape (no data array)
 
-            const vehicles = await enodeApi.getVehicles(null, true, true);
-
-            expect(vehicles).toEqual([]);
+            await expect(enodeApi.getVehicles(null, true, true)).rejects.toThrow('Invalid response format');
             expect(homey.error).toHaveBeenCalled();
         });
     });
@@ -309,22 +307,13 @@ describe('EnodeAPI', () => {
         });
 
         test('should throw when the vehicle is not plugged in', async () => {
-            enodeApi.getVehicleData = jest.fn().mockResolvedValue({ chargeState: { isPluggedIn: false } });
+            enodeApi.getVehicleData = jest.fn().mockResolvedValue({ chargeState: { isPluggedIn: false, lastUpdated: new Date().toISOString() } });
             await expect(enodeApi.startCharging('vehicle-123')).rejects.toThrow('Vehicle is not plugged in');
         });
 
         test('should throw when trying to charge a full battery', async () => {
-            enodeApi.getVehicleData = jest.fn().mockResolvedValue({ chargeState: { isPluggedIn: true, batteryLevel: 100 } });
+            enodeApi.getVehicleData = jest.fn().mockResolvedValue({ chargeState: { isPluggedIn: true, batteryLevel: 100, lastUpdated: new Date().toISOString() } });
             await expect(enodeApi.startCharging('vehicle-123')).rejects.toThrow('Battery is already full');
-        });
-
-        test('should short-circuit STOP when already not charging', async () => {
-            enodeApi.getVehicleData = jest.fn().mockResolvedValue({ chargeState: { isPluggedIn: true, isCharging: false } });
-
-            const result = await enodeApi.stopCharging('vehicle-123');
-
-            expect(result.state).toBe('CONFIRMED');
-            expect(result.message).toContain('already not charging');
         });
 
         test('should send the charging command and wait for the action', async () => {

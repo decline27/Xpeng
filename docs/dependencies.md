@@ -1,62 +1,18 @@
 # Dependencies
 
-This document outlines the key dependencies used in the Xpeng Homey integration.
+Use Node.js 22 for development and CI; the package requires Node.js 18 or newer. The Homey app requires Homey 12.4.5 or newer and uses SDK v3 supplied by Homey.
 
-## Core Dependencies
+## Runtime
 
-### Homey SDK
-- **Purpose**: Core framework for Homey app development
-- **Version**: As specified in package.json
-- **Documentation**: [Homey Apps SDK](https://apps.developer.homey.app/)
-- **Usage**: Provides the foundation for device communication and app functionality
+`node-fetch` 2.x provides CommonJS HTTP requests. Node's built-in modules provide hashing and other utilities. Enode is an external production service, not an installed SDK; see its [platform documentation](https://platform.enode.com/docs).
 
-### Enode API
-- **Purpose**: Vehicle communication and control
-- **Integration**: Used for all vehicle-related operations
-- **Documentation**: [Enode API Documentation](https://docs.enode.io/)
-- **Features Used**:
-  - Vehicle authentication
-  - Status monitoring
-  - Command execution
-  - Real-time updates
+## Development
 
-## Development Dependencies
+- Jest 30 runs the regression suite. See the [Jest 30 upgrade guide](https://jestjs.io/docs/upgrading-to-jest30).
+- ESLint 8 uses `.eslintrc.json`. The unused Athom ESLint configuration and Homey ESLint plugin were removed because their peer dependencies conflicted with ESLint 8.
+- Homey SDK type definitions, Prettier, and rimraf support development and packaging.
+- The Homey CLI is installed separately for `homey app build` and validation. GitHub Actions uses the Homey validation/publication actions.
 
-### ESLint
-- **Purpose**: Code quality and style enforcement
-- **Configuration**: `.eslintrc.json`
-- **Usage**: Maintains consistent code style and catches potential issues
+`package-lock.json` pins the resolved dependency tree. Use `npm ci` for a clean installation, followed by `npm run ci` and `homey app validate --level verified`.
 
-## Runtime Dependencies
-
-These are specified in `package.json` and include:
-- Core Node.js modules
-- Homey-specific packages
-- Utility libraries
-
-## Security Notes
-
-- All dependencies are regularly updated for security
-- Version pinning is used for stability
-- Security audits are performed regularly
-
-## Updating Dependencies
-
-1. Review package.json for current versions
-2. Test updates in development environment
-3. Follow semantic versioning guidelines
-4. Document any breaking changes
-
-## Version Management
-
-- Dependencies are locked in package-lock.json
-- Major version updates require thorough testing
-- Security updates are prioritized
-
-## Troubleshooting
-
-If you encounter dependency-related issues:
-1. Check package versions
-2. Verify compatibility
-3. Review changelog for breaking changes
-4. Clear node_modules and reinstall if needed
+Run `npm audit --omit=dev` for shipped dependencies and `npm audit` for the complete development tree. The [system audit](system-audit-2026-10-14.md) records the results and remaining development-tool findings for this release. Do not use automatic major upgrades or downgrades without checking compatibility and rerunning the suite.

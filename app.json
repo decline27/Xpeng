@@ -1,7 +1,7 @@
 {
   "_comment": "This file is generated. Please edit .homeycompose/app.json instead.",
   "id": "com.xpeng.car",
-  "version": "1.3.1",
+  "version": "1.3.4",
   "compatibility": ">=12.4.5",
   "sdk": 3,
   "platforms": [
@@ -11,7 +11,7 @@
     "en": "XPENG Car Manager"
   },
   "description": {
-    "en": "Take control of your electric vehicle experience with real-time monitoring and smart automation. Track battery levels, manage charging sessions, and create location-based automations to seamlessly integrate your XPENG with your smart home."
+    "en": "Connect your drive to smarter home automation"
   },
   "category": [
     "tools"

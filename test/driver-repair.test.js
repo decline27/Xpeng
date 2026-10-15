@@ -47,7 +47,7 @@ describe('driver repair', () => {
         await driver.onRepair(session, makeDevice());
 
         await expect(session.handlers.get_link()).resolves.toEqual({ linkUrl: 'https://link.enode.io/abc' });
-        expect(driver.enodeApi.generateVehicleLink).toHaveBeenCalledWith('homey_stable');
+        expect(driver.enodeApi.generateVehicleLink).toHaveBeenCalledWith('homey_stable', 'secondary');
     });
 
     test('reports authenticated once the user\'s car is linked again', async () => {
@@ -106,4 +106,13 @@ describe('driver repair', () => {
 
         await expect(session.handlers.repair_complete()).rejects.toThrow(/not found/i);
     });
+});
+
+
+test('repair reuses the existing legacy user and its production client', async () => {
+    const driver = makeDriver([{ id: 'old-id', _clientId: 'client_5', userId: 'homey_legacy', information: { vin: 'VIN123' } }]);
+    const session = makeSession();
+    await driver.onRepair(session, makeDevice());
+    await session.handlers.get_link();
+    expect(driver.enodeApi.generateVehicleLink).toHaveBeenCalledWith('homey_legacy', 'client_5');
 });

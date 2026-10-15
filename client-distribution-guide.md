@@ -1,128 +1,33 @@
-# Client Distribution Implementation Guide
+# Enode account configuration
 
-## Overview
+The app supports several Enode production clients. Adding credentials does not grant production access or increase an account's plan limit. Capacity is enforced by Enode and shared across Homey installations.
 
-This document outlines the implementation of a sequential client distribution strategy for the Xpeng Homey integration. The goal is to fill each Enode client to its capacity (25 vehicles) before moving on to the next client in sequence.
+## How selection works
 
-## Current Issue
+- A returning user is linked through the client that already has their linked vendor. Empty users left by abandoned pairing attempts do not pin later attempts to that client.
+- Repair reuses the existing car's user ID and client where available, including legacy user IDs.
+- New users start with the configured default, or the first configured client, and try the other configured clients if link creation fails.
+- Vehicle IDs and VINs are mapped to their hosting client. These local mappings are not a count of the global fleet or of available seats.
+- A failed account lookup is not treated as proof that the user is new.
 
-The logs show that vehicles are not being properly distributed across available clients:
-- Primary client: 25 vehicles (at capacity)
-- Secondary client: 3 vehicles
-- Client 3: 0 vehicles
-- Client 4: 0 vehicles
+## Add an approved production client
 
-## Implementation Requirements
+1. Confirm that the owner is willing and authorized to grant access or transfer the account. Confirm the process with Enode, along with production access, XPENG support, connection allowance, existing usage, and any costs. Do not assume an existing free allowance transfers to another owner.
+2. Keep all existing credential pairs and their suffixes unchanged. Use the next unused suffix, for example `ENODE_CLIENT_ID_6` and `ENODE_CLIENT_SECRET_6`, in the private `env.json` used for the release. Never commit credentials.
+3. Run `npm run accounts:check -- 6`. This obtains a machine token and reads production vehicles, printing only the count and access result. It does not link or disconnect users, send charging commands, or verify the client's maximum allowance.
+4. Confirm the new credentials are also configured in the Homey App Store's environment for the next release. A local file alone does not update an already published app.
+5. Run `npm run ci` and `homey app validate --level verified`, then test pairing, repair, and charging using a consenting test user's vehicle before general release.
 
-Add a new method to the `ClientManager` class that implements a "fill-to-capacity" strategy for client selection.
+Numbered clients can have gaps and extend beyond client 10. Restarted installations reload credentials even if they have a previously saved default. Secrets stay in memory rather than the client registry; rotated credentials use a new token cache entry.
 
-## Code Changes
+`npm run accounts:check` checks all configured clients. A successful production read does not prove available seats, transfer approval, or charging permission for every car.
 
-### 1. Add a new method to `lib/client-manager.js`:
+## Capacity and cleanup
 
-```javascript
-/**
- * Get the best client for a new vehicle
- * This fills each client to 25 vehicles before moving to the next one
- * @returns {string} The client ID to use
- */
-getClientForNewVehicle() {
-  // Get all clients
-  const registry = this.homey.settings.get(this.SETTINGS_KEYS.CLIENT_REGISTRY) || { clients: [] };
-  const clients = registry.clients || [];
-  
-  if (clients.length === 0) {
-    return this.LEGACY_CLIENTS.PRIMARY;
-  }
-  
-  // Get vehicle-client mapping to count vehicles per client
-  const mapping = this.homey.settings.get(this.SETTINGS_KEYS.VEHICLE_CLIENT_MAPPING) || {};
-  
-  // Count vehicles per client
-  const vehicleCounts = {};
-  clients.forEach(client => {
-    vehicleCounts[client.id] = 0;
-  });
-  
-  // Count existing vehicles
-  Object.values(mapping).forEach(clientId => {
-    if (vehicleCounts[clientId] !== undefined) {
-      vehicleCounts[clientId]++;
-    }
-  });
-  
-  // Find the first client that isn't full (less than 25 vehicles)
-  const MAX_VEHICLES_PER_CLIENT = 25;
-  
-  // Sort clients to ensure we fill in order (primary, secondary, client_3, etc.)
-  const sortedClients = [...clients].sort((a, b) => {
-    // Primary first
-    if (a.id === this.LEGACY_CLIENTS.PRIMARY) return -1;
-    if (b.id === this.LEGACY_CLIENTS.PRIMARY) return 1;
-    // Secondary second
-    if (a.id === this.LEGACY_CLIENTS.SECONDARY) return -1;
-    if (b.id === this.LEGACY_CLIENTS.SECONDARY) return 1;
-    // Then by client ID (assuming format like client_3, client_4, etc.)
-    return a.id.localeCompare(b.id);
-  });
-  
-  for (const client of sortedClients) {
-    const count = vehicleCounts[client.id] || 0;
-    if (count < MAX_VEHICLES_PER_CLIENT) {
-      this.logger(`Selected client ${client.id} with ${count}/${MAX_VEHICLES_PER_CLIENT} vehicles for new vehicle`);
-      return client.id;
-    }
-  }
-  
-  // If all clients are full, use the last one as fallback
-  const lastClient = sortedClients[sortedClients.length - 1];
-  this.logger(`All clients are full, using ${lastClient.id} as fallback`);
-  return lastClient.id;
-}
-```
+The read-only audit on 14 October 2026 found five configured clients with 25 vehicles each, for 125 records. This is a snapshot, not a current availability promise.
 
-### 2. Update the `getDefaultClient` method in `lib/client-manager.js`:
+Automatic duplicate cleanup is limited to this Homey's own identities and only removes a user when all their vehicles are identified as stale duplicates. Incomplete ownership information or pagination stops cleanup; a vehicle without a VIN protects its owner's other vehicles. No production links were removed during the audit.
 
-```javascript
-/**
- * Get the default client for new vehicles
- * @returns {string} The default client ID
- */
-getDefaultClient() {
-  // Check if a default client is explicitly set in settings
-  const defaultClient = this.homey.settings.get(this.SETTINGS_KEYS.DEFAULT_CLIENT);
-  if (defaultClient) {
-    return defaultClient;
-  }
-  
-  // Otherwise, use the fill-to-capacity strategy
-  return this.getClientForNewVehicle();
-}
-```
+Deleting a Homey device currently stops its local polling; it does not by itself unlink the Enode user. Do not promise that deletion immediately frees a shared seat. A user-level unlink can affect multiple cars and requires checking ownership and all vehicles first.
 
-## Implementation Details
-
-1. **Vehicle Counting**: The implementation counts how many vehicles are currently assigned to each client using the vehicle-client mapping.
-
-2. **Client Sorting**: Clients are sorted in a specific order:
-   - Primary client first
-   - Secondary client second
-   - Additional clients in numerical order (client_3, client_4, etc.)
-
-3. **Selection Logic**: The first client in the sorted list that hasn't reached 25 vehicles is selected.
-
-4. **Fallback Mechanism**: If all clients are at capacity, the last client in the list is used as a fallback.
-
-5. **Logging**: The selection process is logged for debugging purposes.
-
-## Testing
-
-After implementing these changes, verify that:
-
-1. New vehicles are assigned to the primary client until it reaches 25 vehicles
-2. Once primary is full, new vehicles are assigned to the secondary client
-3. Once secondary is full, new vehicles are assigned to client_3, and so on
-
-## Expected Outcome
-
-With this implementation, vehicles should be distributed sequentially across clients, filling each to its 25-vehicle capacity before moving to the next one.
+Enode's public [contact form](https://enode.com/contact) accepts production-access requests. The public information reviewed does not guarantee a new free production account or permit account transfers automatically.

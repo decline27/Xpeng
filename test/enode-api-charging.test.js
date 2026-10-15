@@ -31,14 +31,35 @@ describe('EnodeAPI charging rules', () => {
     afterEach(() => api.destroy());
 
     const withState = (chargeState) => {
-        api.getVehicleData = jest.fn().mockResolvedValue({ id: 'v1', chargeState });
+        api.getVehicleData = jest.fn().mockResolvedValue({ id: 'v1', chargeState: { lastUpdated: new Date().toISOString(), ...chargeState } });
     };
 
-    test('STOP on an unplugged car succeeds without sending a command', async () => {
+    test('STOP reaches Enode even when telemetry says the car is unplugged', async () => {
         withState({ isPluggedIn: false, isCharging: false });
 
         await expect(api.stopCharging('v1')).resolves.toMatchObject({ state: 'CONFIRMED' });
-        expect(api.makeRequest).not.toHaveBeenCalled();
+        expect(api.makeRequest).toHaveBeenCalled();
+    });
+
+    test('stale unplugged telemetry does not block a requested START', async () => {
+        withState({ isPluggedIn: false, isCharging: false, lastUpdated: '2020-01-01T00:00:00Z' });
+        await api.startCharging('v1');
+        expect(api.makeRequest).toHaveBeenCalledWith(
+            expect.stringContaining('/vehicles/v1/charging'),
+            expect.objectContaining({ method: 'POST', body: JSON.stringify({ action: 'START' }) }),
+        );
+    });
+
+    test('STOP never claims success when Enode rejects the command', async () => {
+        withState({ isPluggedIn: false, isCharging: false, lastUpdated: '2020-01-01T00:00:00Z' });
+        api.makeRequest.mockRejectedValue(new Error('Vehicle unreachable'));
+        await expect(api.stopCharging('v1')).rejects.toThrow('Vehicle unreachable');
+    });
+
+    test('missing charging telemetry does not count as an already stopped car', async () => {
+        withState({ lastUpdated: null });
+        await api.stopCharging('v1');
+        expect(api.waitForAction).toHaveBeenCalled();
     });
 
     test('START on an unplugged car is still refused', async () => {

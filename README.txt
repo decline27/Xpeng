@@ -1,35 +1,3 @@
-XPENG Car Manager for Homey
+Connect your XPENG to your smart home with battery, range, location and charging information supplied through Enode. Use Homey Flows to react to changes, request the latest available data, and start or stop charging when supported. Add the dashboard widget to keep an eye on your car. Setup uses your XPENG login through Enode; no developer account is needed. Requires Homey Pro with Homey 12.4.5 or newer.
 
-This app allows you to integrate your XPENG electric vehicle with Homey, providing real-time monitoring and control of your car.
-
-Setup Instructions:
-1. Install the XPENG Car Manager app on your Homey
-2. Add your vehicle:
-   - Click "+ Add Device" in Homey
-   - Select "XPENG Car Manager"
-   - Click "Generate Connection Link"
-   - Open the link in your browser to connect your XPENG account
-   - Return to Homey and click "Continue"
-   - Your vehicle will be added automatically
-
-Features:
-- Real-time battery level monitoring
-- Charging status and control
-- Location tracking
-- Range monitoring
-- Plug status detection
-- Automated workflows with Homey Flow
-- VIN-based deduplication (prevents duplicate devices)
-- Adaptive polling based on vehicle state
-- Health monitoring and automatic recovery
-
-Advanced Features:
-- VIN-Based Deduplication: The app uses the vehicle's VIN to identify unique cars and prevent duplicates
-- OAuth2 Authentication: Secure token-based authentication ensures each user only sees their own vehicles
-- Adaptive Polling: More frequent updates when your car is charging, less frequent when idle
-- Health Monitoring: Automatic recovery attempts if connection issues are detected
-
-Note: The app uses Enode's API to securely communicate with your XPENG vehicle. All necessary credentials are pre-configured, and you don't need to create an Enode account. No personal data is shared with third parties.
-
-For support or questions, visit the Homey Community topic: https://community.homey.app/t/123375
-Or contact: decline27@gmail.com
+New connections depend on available shared Enode capacity. Reinstalling does not add seats; use Repair on an existing device to retain its Flows and history. Vehicle readings can be delayed by XPENG or Enode, and unavailable capabilities are hidden. The charging limit is read-only. Enode processes the vehicle connection and data, and the dashboard widget sends rounded coordinates to OpenStreetMap Nominatim to display an address.

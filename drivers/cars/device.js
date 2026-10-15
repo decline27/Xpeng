@@ -129,6 +129,10 @@ class XpengCarDevice extends Homey.Device {
       await this.pollVehicleData();
     } catch (error) {
       this.error('Initial data poll failed:', error.message);
+      const handled = ErrorHandler.translateError(error, 'initialPoll');
+      await this.setUnavailable(`${handled.message} ${handled.suggestion}`);
+      this.scheduleNextPoll();
+      return;
     }
     this.scheduleNextPoll();
 
@@ -148,7 +152,14 @@ class XpengCarDevice extends Homey.Device {
     }
 
     const vehicles = await this.enodeApi.getVehicles();
-    if (vehicles.find(v => v.id === this.vehicleId)) return;
+    const current = vehicles.find(v => v.id === this.vehicleId);
+    if (current) {
+      const clientId = current._clientId || current._accountId;
+      if (clientId && this.getStoreValue('accountId') !== clientId) {
+        await this.setVehicleId(current.id, clientId);
+      }
+      return;
+    }
 
     const vin = this.getData().vin;
     const byVin = vin ? vehicles.find(v => v.information?.vin === vin) : null;
@@ -295,7 +306,7 @@ class XpengCarDevice extends Homey.Device {
    * @returns {Promise<boolean>}
    * @throws when no data could be fetched
    */
-  async pollVehicleData() {
+  async pollVehicleData({ forceRefresh = false } = {}) {
     try {
       const vehicleId = this.vehicleId;
       if (!vehicleId) {
@@ -303,11 +314,14 @@ class XpengCarDevice extends Homey.Device {
       }
 
       // The refresh-hint wakes the car, so only use it when fresh data matters
-      const useRefresh = shouldUseRefreshHint({
+      const useRefresh = this.getStoreValue('refreshUnsupported') !== true && (forceRefresh || shouldUseRefreshHint({
         chargingStatus: this.getCapabilityValue('chargingStatus'),
-        lastDataUpdate: this.getStoreValue('lastDataUpdate'),
+        lastDataUpdate: this.getStoreValue('lastVehicleUpdate') ?? this.getStoreValue('lastDataUpdate'),
         now: Date.now()
-      });
+      }));
+      if (forceRefresh && this.enodeApi.requestCache) {
+        this.enodeApi.requestCache.clear(`vehicle_${vehicleId}`);
+      }
 
       const accountId = this.getStoreValue('accountId');
       let data = useRefresh
@@ -326,8 +340,15 @@ class XpengCarDevice extends Homey.Device {
         await this.setStoreValue('accountId', data._accountId);
       }
 
-      await this.markDataReceived();
       await this.applyVehicleCapabilities(data);
+      const refreshCapable = data.capabilities?.refreshState?.isCapable;
+      if (typeof refreshCapable === 'boolean') {
+        await this.setStoreValue('refreshUnsupported', !refreshCapable);
+      }
+      // API connectivity and the age of the car's data are different signals.
+      const timestamps = [data.lastSeen, data.chargeState?.lastUpdated]
+        .map(value => Date.parse(value)).filter(Number.isFinite);
+      await this.setStoreValue('lastVehicleUpdate', timestamps.length ? Math.min(...timestamps) : 0);
 
       // Enode's own estimate is better than one computed from charge power
       const remaining = data.chargeState?.chargeTimeRemaining;
@@ -344,6 +365,7 @@ class XpengCarDevice extends Homey.Device {
 
       await this.updateCapabilities(finalData);
       await this.updateInfoSettings(data);
+      await this.markDataReceived();
 
       // Learn the distance per battery % for range predictions
       const efficiency = updateEfficiency(this.getStoreValue('rangeEfficiency'), finalData);
@@ -572,7 +594,7 @@ class XpengCarDevice extends Homey.Device {
    */
   async refreshData() {
     try {
-      await this.pollVehicleData();
+      await this.pollVehicleData({ forceRefresh: true });
       return true;
     } catch (error) {
       const handled = ErrorHandler.translateError(error, 'refreshData');

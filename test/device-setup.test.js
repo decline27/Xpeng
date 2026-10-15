@@ -305,3 +305,12 @@ describe('live data follow-ups', () => {
         expect(store.chargeTimeRemaining).toBe(37);
     });
 });
+
+test('startup does not mark a car available when its first data poll fails', async () => {
+    const { device } = prepareInit(makeDevice());
+    device.pollVehicleData = jest.fn().mockRejectedValue(new Error('network down'));
+    await device.onInit();
+    expect(device.setUnavailable).toHaveBeenCalled();
+    expect(device.setAvailable).not.toHaveBeenCalled();
+    expect(device.pollTimeout).toBeTruthy();
+});

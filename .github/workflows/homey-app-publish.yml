@@ -10,6 +10,14 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4  # Pinned to latest stable version
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test -- --runInBand
+
       - name: Publish Application
         uses: athombv/github-action-homey-app-publish@master  # Using master branch; update to stable release if available
         id: publish-step

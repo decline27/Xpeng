@@ -175,3 +175,22 @@ describe('duplicate-reaper', () => {
         });
     });
 });
+
+test('cleanup preserves a user who also owns a vehicle whose VIN is unavailable', async () => {
+    const api = makeApi({
+        primary: [vehicle('old', 'owner', 'VIN1', '2020-01-01'), vehicle('no-vin', 'owner', null, null)],
+        secondary: [vehicle('new', 'new-owner', 'VIN1', '2026-01-01')],
+    });
+    const result = await DuplicateReaper.reapForVin(api, 'VIN1', { execute: true, ownerUserIds: ['owner'] });
+    expect(result.disconnected).toBe(0);
+    expect(api.disconnectUser).not.toHaveBeenCalled();
+});
+
+test('cleanup stops if vehicle ownership information is incomplete', async () => {
+    const api = makeApi({
+        primary: [vehicle('old', 'owner', 'VIN1', '2020-01-01'), vehicle('unknown-owner', null, 'VIN2', null)],
+        secondary: [vehicle('new', 'new-owner', 'VIN1', '2026-01-01')],
+    });
+    await expect(DuplicateReaper.reapAll(api, { execute: true })).rejects.toThrow('no owner ID');
+    expect(api.disconnectUser).not.toHaveBeenCalled();
+});
