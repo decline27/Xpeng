@@ -230,6 +230,20 @@ describe('device data freshness and account routing', () => {
         expect(device.enodeApi.refreshVehicleData).toHaveBeenCalledTimes(2);
     });
 
+    test('keeps waking a parked car that is plugged in, so charging flows stay quick', async () => {
+        const old = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString();
+        const { device } = makeDevice({
+            capabilities: { chargingStatus: 'Connected' },
+            vehicle: { id: 'vehicle-123', lastSeen: new Date().toISOString(),
+                chargeState: { isPluggedIn: true, isCharging: false, lastUpdated: old } },
+        });
+        await device.pollVehicleData();
+        await device.pollVehicleData();
+        await device.pollVehicleData();
+        await device.pollVehicleData();
+        expect(device.enodeApi.refreshVehicleData).toHaveBeenCalledTimes(4);
+    });
+
     test('counts the charge timestamp again once it changes', async () => {
         const old = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString();
         const older = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();

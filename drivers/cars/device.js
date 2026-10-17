@@ -370,12 +370,15 @@ class XpengCarDevice extends Homey.Device {
       const chargeUpdated = Date.parse(data.chargeState?.lastUpdated);
       // Enode only moves the charge timestamp when the charge state changes. If it is still
       // the same after a wake, stop counting it, or a parked car is woken on every poll.
-      if (useRefresh && Number.isFinite(chargeUpdated)
+      // Not while plugged in: charging flows need a quick "charging started", and the charger
+      // keeps the 12V battery topped up.
+      const pluggedIn = data.chargeState?.isPluggedIn === true;
+      if (!pluggedIn && useRefresh && Number.isFinite(chargeUpdated)
         && chargeUpdated === this.getStoreValue('lastChargeStateUpdate')) {
         await this.setStoreValue('ignoredChargeStateUpdate', chargeUpdated);
       }
       await this.setStoreValue('lastChargeStateUpdate', Number.isFinite(chargeUpdated) ? chargeUpdated : null);
-      const countCharge = chargeUpdated !== this.getStoreValue('ignoredChargeStateUpdate');
+      const countCharge = pluggedIn || chargeUpdated !== this.getStoreValue('ignoredChargeStateUpdate');
       const timestamps = [Date.parse(data.lastSeen), countCharge ? chargeUpdated : NaN]
         .filter(Number.isFinite);
       await this.setStoreValue('lastVehicleUpdate', timestamps.length ? Math.min(...timestamps) : 0);

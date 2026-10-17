@@ -214,5 +214,8 @@
   },
   "1.3.7": {
     "en": "More reliable car connection: linking no longer fails when one Enode service is having problems, and is retried automatically. A clear 'Your XPENG is connected' page after login replaces the confusing error page. Simpler pairing screen, cars already in Homey are no longer offered again, and Repair resumes updates right away. Parked cars are woken less often to save the 12V battery."
+  },
+  "1.3.8": {
+    "en": "More reliable car connection: linking no longer fails when one Enode service is having problems, and is retried automatically. A clear 'Your XPENG is connected' page after login replaces the confusing error page. Simpler pairing screen, cars already in Homey are no longer offered again, and Repair resumes updates right away. An unplugged parked car is woken less often to save the 12V battery, while charging flows stay just as quick when the car is plugged in."
   }
 }
