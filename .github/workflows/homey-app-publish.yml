@@ -7,6 +7,16 @@ jobs:
     name: Publish to Homey App Store
     runs-on: ubuntu-24.04
     steps:
+      # Without a token the Homey CLI waits for an interactive login until the step times out
+      - name: Check Homey token
+        env:
+          HOMEY_PAT: ${{ secrets.HOMEY_PAT }}
+        run: |
+          if [ -z "$HOMEY_PAT" ]; then
+            echo "::error::The HOMEY_PAT secret is missing. Create a personal access token at https://tools.developer.homey.app and add it under Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+
       - name: Checkout Code
         uses: actions/checkout@v4  # Pinned to latest stable version
 
