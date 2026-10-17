@@ -33,7 +33,7 @@ function makeDevice() {
         vehicleId: 'old-id',
         getStoreValue: jest.fn(),
         setVehicleId: jest.fn().mockResolvedValue(),
-        refreshData: jest.fn().mockResolvedValue(true),
+        resumeAfterRepair: jest.fn().mockResolvedValue(true),
         setAvailable: jest.fn().mockResolvedValue(),
     };
 }
@@ -67,7 +67,7 @@ describe('driver repair', () => {
 
         await expect(session.handlers.repair_complete()).resolves.toEqual({ success: true, vehicleId: 'new-id' });
         expect(device.setVehicleId).toHaveBeenCalledWith('new-id', 'secondary');
-        expect(device.refreshData).toHaveBeenCalled();
+        expect(device.resumeAfterRepair).toHaveBeenCalled();
     });
 
     test('repair_complete explains when the car is not linked yet', async () => {
@@ -93,7 +93,7 @@ describe('driver repair', () => {
         const driver = makeDriver([relinked]);
         const session = makeSession();
         const device = makeDevice();
-        device.refreshData.mockResolvedValue(false);
+        device.resumeAfterRepair.mockResolvedValue(false);
         await driver.onRepair(session, device);
 
         await expect(session.handlers.repair_complete()).rejects.toThrow(/could not/i);

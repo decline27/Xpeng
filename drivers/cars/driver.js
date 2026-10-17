@@ -415,11 +415,10 @@ class XpengDriver extends Homey.Driver {
       }
 
       await device.setVehicleId(vehicle.id, vehicle._clientId);
-      const refreshed = await device.refreshData();
-      if (!refreshed) {
+      const resumed = await device.resumeAfterRepair();
+      if (!resumed) {
         throw new Error('The car is connected, but Homey could not fetch its data yet. Wait a minute and press Finish again.');
       }
-      await device.setAvailable();
       this.log(`Repair completed for ${device.getName()}: now using vehicle ${vehicle.id}`);
       return { success: true, vehicleId: vehicle.id };
     });

@@ -188,6 +188,27 @@ class XpengCarDevice extends Homey.Device {
   }
 
   /**
+   * After a repair: fetch data for the new vehicle id and, if that works, restart regular
+   * polling and the health check. A device that needed repair is usually waiting in the
+   * setup-retry backoff, where nothing polls. On failure the pending retry is left in place.
+   * @returns {Promise<boolean>} whether data was fetched
+   */
+  async resumeAfterRepair() {
+    const refreshed = await this.refreshData();
+    if (!refreshed) return false;
+
+    if (this.initRetryTimeout) {
+      this.homey.clearTimeout(this.initRetryTimeout);
+      this.initRetryTimeout = null;
+    }
+    this.initAttempt = 0;
+    this.setupHealthCheck();
+    this.scheduleNextPoll();
+    await this.setAvailable();
+    return true;
+  }
+
+  /**
    * Backoff for setup retries: 1, 5, 15, 30, then every 60 minutes.
    * @param {number} attempt - zero-based retry number
    * @returns {number} ms
@@ -346,8 +367,17 @@ class XpengCarDevice extends Homey.Device {
         await this.setStoreValue('refreshUnsupported', !refreshCapable);
       }
       // API connectivity and the age of the car's data are different signals.
-      const timestamps = [data.lastSeen, data.chargeState?.lastUpdated]
-        .map(value => Date.parse(value)).filter(Number.isFinite);
+      const chargeUpdated = Date.parse(data.chargeState?.lastUpdated);
+      // Enode only moves the charge timestamp when the charge state changes. If it is still
+      // the same after a wake, stop counting it, or a parked car is woken on every poll.
+      if (useRefresh && Number.isFinite(chargeUpdated)
+        && chargeUpdated === this.getStoreValue('lastChargeStateUpdate')) {
+        await this.setStoreValue('ignoredChargeStateUpdate', chargeUpdated);
+      }
+      await this.setStoreValue('lastChargeStateUpdate', Number.isFinite(chargeUpdated) ? chargeUpdated : null);
+      const countCharge = chargeUpdated !== this.getStoreValue('ignoredChargeStateUpdate');
+      const timestamps = [Date.parse(data.lastSeen), countCharge ? chargeUpdated : NaN]
+        .filter(Number.isFinite);
       await this.setStoreValue('lastVehicleUpdate', timestamps.length ? Math.min(...timestamps) : 0);
 
       // Enode's own estimate is better than one computed from charge power

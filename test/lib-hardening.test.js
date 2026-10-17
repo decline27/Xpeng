@@ -59,6 +59,18 @@ describe('EnodeAPI.getVehicles', () => {
         expect(vehicles.map((v) => v.id)).toEqual(['mine']);
     });
 
+    test('prefers the copy under the stable user id, even before Enode has seen it', async () => {
+        homey._store.installation_id = 'inst';
+        respondWith({
+            primary: [{ id: 'old-link', userId: 'homey-homey-inst', lastSeen: '2026-10-04T00:00:00Z', information: { vin: 'VIN1' } }],
+            secondary: [{ id: 'new-link', userId: 'homey-homey-1', information: { vin: 'VIN1' } }],
+        });
+
+        const vehicles = await api.getVehicles();
+
+        expect(vehicles.map((v) => v.id)).toEqual(['new-link']);
+    });
+
     test('only maps this user\'s vehicles to clients, not the whole fleet', async () => {
         respondWith({
             primary: [{ id: 'mine', userId: 'homey-homey-1', information: { vin: 'VIN1' } }],

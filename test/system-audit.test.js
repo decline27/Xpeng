@@ -148,6 +148,18 @@ describe('API discovery and pairing', () => {
         expect(api.getAccessToken.mock.calls).toEqual([[null, 'primary'], [null, 'client_6']]);
     });
 
+    test('new users skip past a client that recently said it was full', async () => {
+        api.findClientForUser = jest.fn().mockResolvedValue(null);
+        fetch.mockResolvedValueOnce(failure(403, 'Connections limit reached'))
+            .mockResolvedValueOnce(ok({ linkUrl: 'https://link.enode.io/first' }))
+            .mockResolvedValueOnce(ok({ linkUrl: 'https://link.enode.io/second' }));
+        await api.generateVehicleLink('first');
+        api.getAccessToken.mockClear();
+
+        await expect(api.generateVehicleLink('second')).resolves.toBe('https://link.enode.io/second');
+        expect(api.getAccessToken.mock.calls).toEqual([[null, 'client_6']]);
+    });
+
     test('an explicitly selected repair account never rotates into another account', async () => {
         fetch.mockResolvedValue(failure(403, 'Connections limit reached'));
         await expect(api.generateVehicleLink('existing', 'client_6')).rejects.toThrow('Connections limit reached');
@@ -195,6 +207,61 @@ describe('device data freshness and account routing', () => {
         const { device, store } = makeDevice({ vehicle: { id: 'vehicle-123', lastSeen: new Date().toISOString(), chargeState: { lastUpdated: old } } });
         await device.pollVehicleData();
         expect(store.lastVehicleUpdate).toBe(Date.parse(old));
+    });
+
+    test('stops waking a parked car once a wake leaves the charge timestamp unchanged', async () => {
+        const old = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString();
+        const { device } = makeDevice({
+            capabilities: { chargingStatus: 'Not Connected' },
+            vehicle: { id: 'vehicle-123', lastSeen: new Date().toISOString(), chargeState: { lastUpdated: old } },
+        });
+        await device.pollVehicleData(); // nothing stored yet: wakes
+        await device.pollVehicleData(); // charge data old: wakes, timestamp doesn't move
+        await device.pollVehicleData();
+        await device.pollVehicleData();
+        expect(device.enodeApi.refreshVehicleData).toHaveBeenCalledTimes(2);
+    });
+
+    test('counts the charge timestamp again once it changes', async () => {
+        const old = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString();
+        const older = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();
+        const vehicle = { id: 'vehicle-123', lastSeen: new Date().toISOString(), chargeState: { lastUpdated: old } };
+        const { device, store } = makeDevice({ capabilities: { chargingStatus: 'Not Connected' }, vehicle });
+        await device.pollVehicleData();
+        await device.pollVehicleData();
+        expect(store.lastVehicleUpdate).toBe(Date.parse(vehicle.lastSeen));
+
+        vehicle.chargeState = { lastUpdated: older };
+        await device.pollVehicleData();
+        expect(store.lastVehicleUpdate).toBe(Date.parse(older));
+    });
+
+    test('a repair restarts polling that was waiting in the setup-retry backoff', async () => {
+        const { device, homey } = makeDevice();
+        device.scheduleInitRetry();
+        const retry = device.initRetryTimeout;
+
+        await expect(device.resumeAfterRepair()).resolves.toBe(true);
+
+        expect(homey.clearTimeout).toHaveBeenCalledWith(retry);
+        expect(device.initRetryTimeout).toBeNull();
+        expect(device.pollTimeout).toBeTruthy();
+        expect(device.healthCheckInterval).toBeTruthy();
+        expect(device.setAvailable).toHaveBeenCalled();
+    });
+
+    test('a repair that cannot fetch data leaves the setup retry in place', async () => {
+        const { device } = makeDevice({ enodeApi: {
+            refreshVehicleData: jest.fn().mockResolvedValue(null),
+            getVehicleData: jest.fn().mockRejectedValue(new Error('Enode down')),
+        } });
+        device.scheduleInitRetry();
+        const retry = device.initRetryTimeout;
+
+        await expect(device.resumeAfterRepair()).resolves.toBe(false);
+
+        expect(device.initRetryTimeout).toBe(retry);
+        expect(device.setAvailable).not.toHaveBeenCalled();
     });
 
     test('manual refresh attempts fresh data even when the previous poll succeeded recently', async () => {
