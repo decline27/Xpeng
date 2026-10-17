@@ -7,6 +7,9 @@
  * 
  * Usage:
  * node scripts/enode-cleanup.js [--dry-run] [--disconnect-inactive] [--disconnect-orphaned]
+ *     [--disconnect-empty]
+ *
+ * --disconnect-empty removes Enode users that own no vehicle and are older than 24 hours.
  */
 
 const fs = require('fs');
@@ -42,6 +45,7 @@ Module.prototype.require = function (moduleName) {
 
 const EnodeAPI = require('../lib/enode-api');
 const AccountCleanup = require('../lib/account-cleanup');
+const { findEmptyUsers, DEFAULT_MIN_AGE_HOURS } = require('../lib/empty-users');
 
 // Load credentials from env.json
 function loadCredentials() {
@@ -72,10 +76,11 @@ async function runCleanup() {
     const isDryRun = args.includes('--dry-run') || args.length === 0;
     const disconnectInactive = args.includes('--disconnect-inactive');
     const disconnectOrphaned = args.includes('--disconnect-orphaned');
+    const disconnectEmpty = args.includes('--disconnect-empty');
 
     if (isDryRun) {
         console.log('Mode: DRY RUN (no changes will be made)');
-        console.log('To execute changes, use: --disconnect-inactive and/or --disconnect-orphaned');
+        console.log('To execute changes, use: --disconnect-inactive, --disconnect-orphaned and/or --disconnect-empty');
     }
 
     // Initialize API
@@ -111,6 +116,18 @@ async function runCleanup() {
             });
         }
 
+        const emptyReport = await findEmptyUsers(api);
+        console.log(`\n--- Empty Users (no vehicle, older than ${DEFAULT_MIN_AGE_HOURS} hours) ---`);
+        Object.entries(emptyReport.byClient).forEach(([clientId, stats]) => {
+            console.log(`Client: ${clientId.padEnd(12)} | Users: ${stats.users.toString().padStart(2)} | With cars: ${stats.withCars.toString().padStart(2)} | Empty: ${stats.empty.toString().padStart(2)}`);
+        });
+        emptyReport.empty.forEach(u => {
+            console.log(`- User: ${u.userId} on ${u.clientId} (created ${u.createdAt})`);
+        });
+        if (emptyReport.skippedRecent > 0) {
+            console.log(`Skipped ${emptyReport.skippedRecent} empty user(s) created recently (may be linking right now).`);
+        }
+
         if (!isDryRun) {
             if (disconnectOrphaned) {
                 console.warn('\n!!! WARNING !!!');
@@ -127,6 +144,9 @@ async function runCleanup() {
             const toDisconnect = [];
             if (disconnectInactive) toDisconnect.push(...report.inactiveConnections);
             if (disconnectOrphaned) toDisconnect.push(...report.orphanedConnections);
+            if (disconnectEmpty) {
+                toDisconnect.push(...emptyReport.empty.map(u => ({ id: '(no vehicle)', userId: u.userId, clientId: u.clientId })));
+            }
 
             if (toDisconnect.length > 0) {
                 console.log(`\nDisconnecting ${toDisconnect.length} users...`);
