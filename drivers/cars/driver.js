@@ -397,7 +397,10 @@ class XpengDriver extends Homey.Driver {
           || vehicles.find(vehicle => vehicle.information?.vin === vin);
         // Reuse the legacy user as well as its client; changing either can consume a seat.
         const userId = current?.userId || current?.user?.id || await resolveUserId(this.homey);
-        const clientId = current?._clientId || current?._accountId || device.getStoreValue('accountId');
+        // Only pin to the client the car is still on. When the car is gone from Enode (link
+        // expired or cleaned up), its old client may be full: let link generation find the
+        // client the user is on, or one with room, like a new pairing does.
+        const clientId = current ? (current._clientId || current._accountId || null) : null;
         const linkUrl = await this.enodeApi.generateVehicleLink(userId, clientId);
         linkCreatedAt = Date.now();
         return { linkUrl };

@@ -110,6 +110,16 @@ describe('driver repair', () => {
 });
 
 
+test('repair of a car that is gone from Enode is not pinned to its old, possibly full client', async () => {
+    const driver = makeDriver([]);
+    const session = makeSession();
+    const device = makeDevice();
+    device.getStoreValue.mockImplementation((key) => (key === 'accountId' ? 'primary' : undefined));
+    await driver.onRepair(session, device);
+    await session.handlers.get_link();
+    expect(driver.enodeApi.generateVehicleLink).toHaveBeenCalledWith('homey_stable', null);
+});
+
 test('repair reuses the existing legacy user and its production client', async () => {
     const driver = makeDriver([{ id: 'old-id', _clientId: 'client_5', userId: 'homey_legacy', information: { vin: 'VIN123' } }]);
     const session = makeSession();
