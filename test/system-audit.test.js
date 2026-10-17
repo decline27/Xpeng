@@ -132,6 +132,14 @@ describe('API discovery and pairing', () => {
         await expect(api.findClientForUser('returning')).resolves.toBe('client_6');
     });
 
+    test('sends the browser to the "connected" page after the Enode login', async () => {
+        api.findClientForUser = jest.fn().mockResolvedValue('client_6');
+        fetch.mockResolvedValueOnce(ok({ linkUrl: 'https://link.enode.io/x' }));
+        await api.generateVehicleLink('returning');
+        expect(JSON.parse(fetch.mock.calls[0][1].body).redirectUri)
+            .toBe('https://decline27.github.io/Xpeng/linked.html');
+    });
+
     test('retries a link request after a temporary Enode error', async () => {
         api.findClientForUser = jest.fn().mockResolvedValue('client_6');
         fetch.mockResolvedValueOnce(failure(502, 'Bad gateway'))
