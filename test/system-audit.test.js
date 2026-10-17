@@ -108,6 +108,38 @@ describe('API discovery and pairing', () => {
         expect(fetch.mock.calls.some(([, options]) => options.method === 'POST')).toBe(false);
     });
 
+    test('a client with rejected credentials does not block linking for everyone', async () => {
+        api.getAccessToken = jest.fn(async (vehicleId, clientId) => {
+            if (clientId === 'primary') {
+                const error = new Error('Error fetching access token: status: 401 invalid_client');
+                error.status = 401;
+                throw error;
+            }
+            return 'token';
+        });
+        fetch.mockResolvedValueOnce(failure(404, 'Not found'))
+            .mockResolvedValueOnce(ok({ linkUrl: 'https://link.enode.io/extra' }));
+        await expect(api.generateVehicleLink('new')).resolves.toBe('https://link.enode.io/extra');
+    });
+
+    test('finds a returning user even when another client is rejecting credentials', async () => {
+        fetch.mockImplementation(async (url, options) => (
+            options.headers.Authorization === 'Bearer bad'
+                ? failure(403, 'Forbidden')
+                : ok({ linkedVendors: [{ vendor: 'XPENG' }] })
+        ));
+        api.getAccessToken = jest.fn(async (vehicleId, clientId) => (clientId === 'primary' ? 'bad' : 'token'));
+        await expect(api.findClientForUser('returning')).resolves.toBe('client_6');
+    });
+
+    test('retries a link request after a temporary Enode error', async () => {
+        api.findClientForUser = jest.fn().mockResolvedValue('client_6');
+        fetch.mockResolvedValueOnce(failure(502, 'Bad gateway'))
+            .mockResolvedValueOnce(ok({ linkUrl: 'https://link.enode.io/retry' }));
+        await expect(api.generateVehicleLink('returning')).resolves.toBe('https://link.enode.io/retry');
+        expect(fetch).toHaveBeenCalledTimes(2);
+    });
+
     test('new users try the additional account after a capacity rejection', async () => {
         api.findClientForUser = jest.fn().mockResolvedValue(null);
         fetch.mockResolvedValueOnce(failure(403, 'Connections limit reached'))

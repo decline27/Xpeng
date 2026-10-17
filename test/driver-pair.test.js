@@ -16,6 +16,7 @@ function makeDriver(vehicles) {
     driver.enodeApi = {
         getVehicles: jest.fn().mockResolvedValue(vehicles),
         requestCache: { clear: jest.fn() },
+        clearVehicleListCache: jest.fn(),
     };
     return driver;
 }
@@ -55,6 +56,29 @@ describe('driver pairing', () => {
     test('does not register the credential-saving handler the pairing page never calls', async () => {
         const handlers = await pair(makeDriver([car]));
         expect(handlers.save_credentials).toBeUndefined();
+    });
+
+    test('does not report a finished link while only the cars from before the link exist', async () => {
+        const driver = makeDriver([car]);
+        driver.enodeApi.generateVehicleLink = jest.fn().mockResolvedValue('https://link.enode.io/abc');
+        const handlers = await pair(driver);
+        await handlers.get_link();
+        await expect(handlers.check_auth_status())
+            .resolves.toMatchObject({ isAuthenticated: false, hasExistingVehicles: true });
+
+        const second = { ...car, id: 'enode-2', information: { vin: 'SECONDVIN', model: 'G9' } };
+        driver.enodeApi.getVehicles.mockResolvedValue([car, second]);
+        await expect(handlers.check_auth_status()).resolves.toMatchObject({ isAuthenticated: true });
+    });
+
+    test('reports a finished link for a first car', async () => {
+        const driver = makeDriver([]);
+        driver.enodeApi.generateVehicleLink = jest.fn().mockResolvedValue('https://link.enode.io/abc');
+        const handlers = await pair(driver);
+        await handlers.get_link();
+        driver.enodeApi.getVehicles.mockResolvedValue([car]);
+        await expect(handlers.check_auth_status())
+            .resolves.toMatchObject({ isAuthenticated: true, hasExistingVehicles: false });
     });
 
     test('only lists the user\'s own cars', async () => {

@@ -54,7 +54,7 @@
 
     <div id="waiting" class="status status-waiting">
         <strong id="waiting-title">Waiting for Enode...</strong>
-        <p id="waiting-text">Finish connecting your car in the browser. This page updates by itself.</p>
+        <p id="waiting-text">Finish connecting your car in the browser. This page updates by itself. If the browser then shows an error such as "Missing: code", that is expected: close it and come back here.</p>
     </div>
 
     <div id="success" class="status status-success">
@@ -89,6 +89,7 @@
     Homey.setTitle(t('repair.title', 'Reconnect your XPENG'));
 
     let pollTimer = null;
+    let pollRun = 0; // bumped on every new link, so a check from an older run can't reschedule
 
     function showError(message) {
         el('error').textContent = message;
@@ -103,18 +104,22 @@
         }
     }
 
-    async function checkLinked() {
+    // The next check is only scheduled after the previous one returns, so slow checks never pile up
+    async function checkLinked(run) {
+        if (run !== pollRun) return;
         try {
             const status = await Homey.emit('check_auth_status');
             if (status && status.isAuthenticated) {
-                clearInterval(pollTimer);
+                if (run !== pollRun) return;
                 el('waiting').style.display = 'none';
                 el('success').style.display = 'block';
                 el('finish').disabled = false;
+                return;
             }
         } catch (error) {
             // Keep polling; a temporary error should not stop the repair
         }
+        if (run === pollRun) pollTimer = setTimeout(() => checkLinked(run), 5000);
     }
 
     el('open-link').addEventListener('click', async () => {
@@ -124,9 +129,9 @@
             const { linkUrl } = await Homey.emit('get_link');
             openUrl(linkUrl);
             el('waiting').style.display = 'block';
-            clearInterval(pollTimer);
-            pollTimer = setInterval(checkLinked, 5000);
-            checkLinked();
+            clearTimeout(pollTimer);
+            pollRun++;
+            checkLinked(pollRun);
         } catch (error) {
             showError(error.message || t('repair.link_failed', 'Could not create the Enode link.'));
         } finally {

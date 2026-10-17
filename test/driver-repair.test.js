@@ -16,6 +16,7 @@ function makeDriver(vehicles) {
         getVehicles: jest.fn().mockResolvedValue(vehicles),
         generateVehicleLink: jest.fn().mockResolvedValue('https://link.enode.io/abc'),
         requestCache: { clear: jest.fn() },
+        clearVehicleListCache: jest.fn(),
     };
     return driver;
 }

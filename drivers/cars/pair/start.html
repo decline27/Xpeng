@@ -154,6 +154,7 @@
         <div id="auth-status" class="auth-status-waiting" style="margin-top: 20px; display: none;">
             <strong>Waiting for authentication...</strong>
             <p>Please complete the authentication process in your browser. This page will automatically update when complete.</p>
+            <p>After you log in, the browser may show an error such as <em>"Missing: code"</em>. That is expected: your car is still connected. Close the browser and come back here.</p>
             <div class="homey-loading" style="margin-top: 10px;">
                 <div class="homey-loading-circle"></div>
                 <div class="homey-loading-circle"></div>
@@ -223,19 +224,41 @@ function updateStepStatus(stepNumber, status) {
     step.classList.add(`step-${status}`);
 }
 
-// Poll for authentication status
-let authCheckInterval = null;
+// Poll for authentication status. The next check is only scheduled after the previous one
+// returns, so slow checks never pile up.
+let authPollTimer = null;
+let authPollRun = 0; // bumped on every start/stop, so a check from an older run can't reschedule
 const MAX_POLL_TIME = 300000; // 5 minutes
 const POLL_INTERVAL = 5000; // 5 seconds
+
+function stopAuthStatusPolling() {
+    authPollRun++;
+    clearTimeout(authPollTimer);
+    authPollTimer = null;
+}
+
+// The user already has cars in Enode (re-adding a car or adding a second one). Their re-link
+// may keep the same Enode id, so let them continue without waiting for a new car to show up.
+function allowContinueWithExistingCars() {
+    const continueBtn = document.getElementById('continue');
+    if (!continueBtn.disabled) return;
+    continueBtn.disabled = false;
+    document.getElementById('continue-hint').textContent =
+        'Cars you connected before were found. Finish connecting in the browser first, then click Continue.';
+}
 
 async function checkAuthStatus() {
     try {
         const status = await Homey.emit('check_auth_status');
         console.log('Auth status check:', status);
 
+        if (status && status.hasExistingVehicles) {
+            allowContinueWithExistingCars();
+        }
+
         if (status && status.isAuthenticated) {
             // Authentication successful
-            clearInterval(authCheckInterval);
+            stopAuthStatusPolling();
 
             // Update the auth status display
             const authStatusEl = document.getElementById('auth-status');
@@ -274,37 +297,37 @@ function startAuthStatusPolling() {
     updateStepStatus(1, 'completed');
     updateStepStatus(2, 'active');
 
-    // Clear any existing interval
-    if (authCheckInterval) {
-        clearInterval(authCheckInterval);
-    }
+    // Stop any earlier polling
+    stopAuthStatusPolling();
+    const run = authPollRun;
+    const pollStarted = Date.now();
 
-    // Set a timeout to stop polling after MAX_POLL_TIME
-    const pollTimeout = setTimeout(() => {
-        if (authCheckInterval) {
-            clearInterval(authCheckInterval);
+    const showTimedOut = () => {
+        stopAuthStatusPolling();
 
-            // Update the auth status display
-            const authStatusEl = document.getElementById('auth-status');
-            authStatusEl.className = 'auth-status-error';
-            authStatusEl.innerHTML = `
-                <strong>Authentication timed out</strong>
-                <p>The authentication process took too long. Please try again or refresh the page.</p>
-                <button onclick="location.reload()" class="homey-button-primary" style="margin-top: 10px;">Refresh Page</button>
-            `;
-        }
-    }, MAX_POLL_TIME);
+        // Update the auth status display
+        const authStatusEl = document.getElementById('auth-status');
+        authStatusEl.className = 'auth-status-error';
+        authStatusEl.innerHTML = `
+            <strong>Authentication timed out</strong>
+            <p>The authentication process took too long. Please try again or refresh the page.</p>
+            <button onclick="location.reload()" class="homey-button-primary" style="margin-top: 10px;">Refresh Page</button>
+        `;
+    };
 
-    // Start polling
-    authCheckInterval = setInterval(async () => {
+    const poll = async () => {
+        if (run !== authPollRun) return;
         const success = await checkAuthStatus();
-        if (success) {
-            clearTimeout(pollTimeout);
+        if (success || run !== authPollRun) return;
+        if (Date.now() - pollStarted >= MAX_POLL_TIME) {
+            showTimedOut();
+            return;
         }
-    }, POLL_INTERVAL);
+        authPollTimer = setTimeout(poll, POLL_INTERVAL);
+    };
 
-    // Do an immediate check
-    checkAuthStatus();
+    // Do an immediate check, then keep polling
+    poll();
 }
 
 document.getElementById('start-link').addEventListener('click', async () => {
