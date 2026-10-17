@@ -202,6 +202,14 @@ class XpengDriver extends Homey.Driver {
 
     const isOwnVehicle = (candidates) => (vehicle) =>
       candidates.includes(vehicle.userId) || (vehicle.user && candidates.includes(vehicle.user.id));
+    const ownVehicles = async () => {
+      const candidates = await getUserIdCandidates(this.homey);
+      return (await this.enodeApi.getVehicles()).filter(isOwnVehicle(candidates));
+    };
+
+    // Ids of the cars this Homey already had when the link was made. Only a car that isn't in
+    // this list proves the new link finished; null means the list couldn't be read.
+    let linkBaseline = null;
 
     // Credentials come from env.json; the page only needs to know they exist
     session.setHandler('get_stored_credentials', async () => {
@@ -210,16 +218,21 @@ class XpengDriver extends Homey.Driver {
     });
 
     session.setHandler('check_auth_status', async () => {
+      const hasExistingVehicles = !!linkBaseline && linkBaseline.size > 0;
       try {
-        if (this.enodeApi.requestCache) {
-          this.enodeApi.requestCache.clear();
-        }
-        const candidates = await getUserIdCandidates(this.homey);
-        const vehicles = (await this.enodeApi.getVehicles()).filter(isOwnVehicle(candidates));
-        return { isAuthenticated: vehicles.length > 0, vehicleCount: vehicles.length };
+        this.enodeApi.clearVehicleListCache();
+        const vehicles = await ownVehicles();
+        const newVehicles = linkBaseline
+          ? vehicles.filter(vehicle => !linkBaseline.has(vehicle.id))
+          : vehicles;
+        return {
+          isAuthenticated: newVehicles.length > 0,
+          vehicleCount: vehicles.length,
+          hasExistingVehicles,
+        };
       } catch (error) {
         this.error('Error checking authentication status:', error);
-        return { isAuthenticated: false, vehicleCount: 0 };
+        return { isAuthenticated: false, vehicleCount: 0, hasExistingVehicles };
       }
     });
 
@@ -227,7 +240,14 @@ class XpengDriver extends Homey.Driver {
       try {
         // Stable user id, so re-linking reuses the same Enode user instead of a duplicate
         const userId = await resolveUserId(this.homey);
-        const linkUrl = await this.enodeApi.generateVehicleLink(userId);
+        const [linkUrl, existing] = await Promise.all([
+          this.enodeApi.generateVehicleLink(userId),
+          ownVehicles().catch((error) => {
+            this.error('Could not read existing cars before linking:', error);
+            return null;
+          }),
+        ]);
+        linkBaseline = existing ? new Set(existing.map(vehicle => vehicle.id)) : null;
         return { linkUrl };
       } catch (error) {
         const handled = ErrorHandler.translateError(error, 'generateLink');
@@ -259,6 +279,20 @@ class XpengDriver extends Homey.Driver {
 
         this.rememberAuthorizedVins(vehicles);
 
+        // Leave out cars that are already a device here. Homey only hides exact matches of the
+        // device data, which includes the Enode id, so a re-linked car would show up as new.
+        const pairedVins = new Set(this.getDevices()
+          .map(device => device.getData().vin || device.getData().id)
+          .filter(Boolean));
+        const unpaired = vehicles.filter(vehicle => !pairedVins.has(vehicle.information?.vin));
+        if (unpaired.length === 0) {
+          throw new Error(
+            'This car is already added to Homey. If it stopped updating, open the device and '
+            + 'use Repair instead.'
+          );
+        }
+        vehicles = unpaired;
+
         // One entry per VIN: the most recently seen copy
         const byVin = new Map();
         for (const vehicle of vehicles) {
@@ -284,7 +318,7 @@ class XpengDriver extends Homey.Driver {
         });
       } catch (error) {
         this.error('Failed to list devices:', error);
-        if (error.message.includes('No XPENG vehicles')) throw error;
+        if (error.message.includes('No XPENG vehicles') || error.message.includes('already added')) throw error;
         const handled = ErrorHandler.translateError(error, 'listDevices');
         throw new Error(`${handled.message} ${handled.suggestion}`);
       }
@@ -376,9 +410,7 @@ class XpengDriver extends Homey.Driver {
 
     session.setHandler('check_auth_status', async () => {
       try {
-        if (this.enodeApi.requestCache) {
-          this.enodeApi.requestCache.clear();
-        }
+        this.enodeApi.clearVehicleListCache();
         const relinked = findRelinked(await ownVehicles());
         return { isAuthenticated: !!relinked, vehicleCount: relinked ? 1 : 0 };
       } catch (error) {
@@ -397,11 +429,10 @@ class XpengDriver extends Homey.Driver {
       }
 
       await device.setVehicleId(vehicle.id, vehicle._clientId);
-      const refreshed = await device.refreshData();
-      if (!refreshed) {
+      const resumed = await device.resumeAfterRepair();
+      if (!resumed) {
         throw new Error('The car is connected, but Homey could not fetch its data yet. Wait a minute and press Finish again.');
       }
-      await device.setAvailable();
       this.log(`Repair completed for ${device.getName()}: now using vehicle ${vehicle.id}`);
       return { success: true, vehicleId: vehicle.id };
     });

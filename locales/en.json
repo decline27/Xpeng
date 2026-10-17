@@ -4,7 +4,7 @@
     "intro": "Use this when your car stopped updating, for example after you reconnected it in Enode. Your flows and history are kept.",
     "open_link": "Open Enode to reconnect",
     "waiting_title": "Waiting for Enode...",
-    "waiting_text": "Finish connecting your car in the browser. This page updates by itself.",
+    "waiting_text": "Finish connecting your car in the browser. This page updates by itself. When the browser says your XPENG is connected, close it and come back here.",
     "success_title": "Car connected",
     "success_text": "Click Finish to update the device.",
     "finish": "Finish",

@@ -108,12 +108,64 @@ describe('API discovery and pairing', () => {
         expect(fetch.mock.calls.some(([, options]) => options.method === 'POST')).toBe(false);
     });
 
+    test('a client with rejected credentials does not block linking for everyone', async () => {
+        api.getAccessToken = jest.fn(async (vehicleId, clientId) => {
+            if (clientId === 'primary') {
+                const error = new Error('Error fetching access token: status: 401 invalid_client');
+                error.status = 401;
+                throw error;
+            }
+            return 'token';
+        });
+        fetch.mockResolvedValueOnce(failure(404, 'Not found'))
+            .mockResolvedValueOnce(ok({ linkUrl: 'https://link.enode.io/extra' }));
+        await expect(api.generateVehicleLink('new')).resolves.toBe('https://link.enode.io/extra');
+    });
+
+    test('finds a returning user even when another client is rejecting credentials', async () => {
+        fetch.mockImplementation(async (url, options) => (
+            options.headers.Authorization === 'Bearer bad'
+                ? failure(403, 'Forbidden')
+                : ok({ linkedVendors: [{ vendor: 'XPENG' }] })
+        ));
+        api.getAccessToken = jest.fn(async (vehicleId, clientId) => (clientId === 'primary' ? 'bad' : 'token'));
+        await expect(api.findClientForUser('returning')).resolves.toBe('client_6');
+    });
+
+    test('sends the browser to the "connected" page after the Enode login', async () => {
+        api.findClientForUser = jest.fn().mockResolvedValue('client_6');
+        fetch.mockResolvedValueOnce(ok({ linkUrl: 'https://link.enode.io/x' }));
+        await api.generateVehicleLink('returning');
+        expect(JSON.parse(fetch.mock.calls[0][1].body).redirectUri)
+            .toBe('https://decline27.github.io/Xpeng/linked.html');
+    });
+
+    test('retries a link request after a temporary Enode error', async () => {
+        api.findClientForUser = jest.fn().mockResolvedValue('client_6');
+        fetch.mockResolvedValueOnce(failure(502, 'Bad gateway'))
+            .mockResolvedValueOnce(ok({ linkUrl: 'https://link.enode.io/retry' }));
+        await expect(api.generateVehicleLink('returning')).resolves.toBe('https://link.enode.io/retry');
+        expect(fetch).toHaveBeenCalledTimes(2);
+    });
+
     test('new users try the additional account after a capacity rejection', async () => {
         api.findClientForUser = jest.fn().mockResolvedValue(null);
         fetch.mockResolvedValueOnce(failure(403, 'Connections limit reached'))
             .mockResolvedValueOnce(ok({ linkUrl: 'https://link.enode.io/extra' }));
         await expect(api.generateVehicleLink('new')).resolves.toBe('https://link.enode.io/extra');
         expect(api.getAccessToken.mock.calls).toEqual([[null, 'primary'], [null, 'client_6']]);
+    });
+
+    test('new users skip past a client that recently said it was full', async () => {
+        api.findClientForUser = jest.fn().mockResolvedValue(null);
+        fetch.mockResolvedValueOnce(failure(403, 'Connections limit reached'))
+            .mockResolvedValueOnce(ok({ linkUrl: 'https://link.enode.io/first' }))
+            .mockResolvedValueOnce(ok({ linkUrl: 'https://link.enode.io/second' }));
+        await api.generateVehicleLink('first');
+        api.getAccessToken.mockClear();
+
+        await expect(api.generateVehicleLink('second')).resolves.toBe('https://link.enode.io/second');
+        expect(api.getAccessToken.mock.calls).toEqual([[null, 'client_6']]);
     });
 
     test('an explicitly selected repair account never rotates into another account', async () => {
@@ -163,6 +215,61 @@ describe('device data freshness and account routing', () => {
         const { device, store } = makeDevice({ vehicle: { id: 'vehicle-123', lastSeen: new Date().toISOString(), chargeState: { lastUpdated: old } } });
         await device.pollVehicleData();
         expect(store.lastVehicleUpdate).toBe(Date.parse(old));
+    });
+
+    test('stops waking a parked car once a wake leaves the charge timestamp unchanged', async () => {
+        const old = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString();
+        const { device } = makeDevice({
+            capabilities: { chargingStatus: 'Not Connected' },
+            vehicle: { id: 'vehicle-123', lastSeen: new Date().toISOString(), chargeState: { lastUpdated: old } },
+        });
+        await device.pollVehicleData(); // nothing stored yet: wakes
+        await device.pollVehicleData(); // charge data old: wakes, timestamp doesn't move
+        await device.pollVehicleData();
+        await device.pollVehicleData();
+        expect(device.enodeApi.refreshVehicleData).toHaveBeenCalledTimes(2);
+    });
+
+    test('counts the charge timestamp again once it changes', async () => {
+        const old = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString();
+        const older = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();
+        const vehicle = { id: 'vehicle-123', lastSeen: new Date().toISOString(), chargeState: { lastUpdated: old } };
+        const { device, store } = makeDevice({ capabilities: { chargingStatus: 'Not Connected' }, vehicle });
+        await device.pollVehicleData();
+        await device.pollVehicleData();
+        expect(store.lastVehicleUpdate).toBe(Date.parse(vehicle.lastSeen));
+
+        vehicle.chargeState = { lastUpdated: older };
+        await device.pollVehicleData();
+        expect(store.lastVehicleUpdate).toBe(Date.parse(older));
+    });
+
+    test('a repair restarts polling that was waiting in the setup-retry backoff', async () => {
+        const { device, homey } = makeDevice();
+        device.scheduleInitRetry();
+        const retry = device.initRetryTimeout;
+
+        await expect(device.resumeAfterRepair()).resolves.toBe(true);
+
+        expect(homey.clearTimeout).toHaveBeenCalledWith(retry);
+        expect(device.initRetryTimeout).toBeNull();
+        expect(device.pollTimeout).toBeTruthy();
+        expect(device.healthCheckInterval).toBeTruthy();
+        expect(device.setAvailable).toHaveBeenCalled();
+    });
+
+    test('a repair that cannot fetch data leaves the setup retry in place', async () => {
+        const { device } = makeDevice({ enodeApi: {
+            refreshVehicleData: jest.fn().mockResolvedValue(null),
+            getVehicleData: jest.fn().mockRejectedValue(new Error('Enode down')),
+        } });
+        device.scheduleInitRetry();
+        const retry = device.initRetryTimeout;
+
+        await expect(device.resumeAfterRepair()).resolves.toBe(false);
+
+        expect(device.initRetryTimeout).toBe(retry);
+        expect(device.setAvailable).not.toHaveBeenCalled();
     });
 
     test('manual refresh attempts fresh data even when the previous poll succeeded recently', async () => {

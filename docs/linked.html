@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>XPENG connected</title>
+<style>
+    :root { --bg: #f5f6f8; --card: #ffffff; --text: #1d1d1f; --muted: #6e6e73; --ok: #2e7d32; --err: #c62828; }
+    @media (prefers-color-scheme: dark) {
+        :root { --bg: #000000; --card: #1c1c1e; --text: #f5f5f7; --muted: #a1a1a6; --ok: #66bb6a; --err: #ef5350; }
+    }
+    body {
+        margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
+        background: var(--bg); color: var(--text);
+        font: 17px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    main {
+        background: var(--card); border-radius: 20px; padding: 32px 24px; margin: 16px;
+        max-width: 420px; text-align: center;
+    }
+    .icon {
+        width: 64px; height: 64px; border-radius: 50%; margin: 0 auto 16px; display: flex;
+        align-items: center; justify-content: center; font-size: 34px; color: #fff; background: var(--ok);
+    }
+    .error .icon { background: var(--err); }
+    h1 { font-size: 22px; margin: 0 0 8px; }
+    p { margin: 0; color: var(--muted); }
+</style>
+</head>
+<body>
+<!-- Shown after the Enode link flow; the app sends the browser here instead of an OAuth callback. -->
+<main id="box">
+    <div class="icon" id="icon">✓</div>
+    <h1 id="title">Your XPENG is connected</h1>
+    <p id="text">You can close this window and go back to the Homey app.</p>
+</main>
+<script>
+(function () {
+    var texts = {
+        en: ['Your XPENG is connected', 'You can close this window and go back to the Homey app.',
+            'Connection not finished', 'Close this window, go back to the Homey app and try again.'],
+        no: ['XPENG-en din er tilkoblet', 'Du kan lukke dette vinduet og gå tilbake til Homey-appen.',
+            'Tilkoblingen ble ikke fullført', 'Lukk dette vinduet, gå tilbake til Homey-appen og prøv igjen.'],
+        sv: ['Din XPENG är ansluten', 'Du kan stänga det här fönstret och gå tillbaka till Homey-appen.',
+            'Anslutningen slutfördes inte', 'Stäng det här fönstret, gå tillbaka till Homey-appen och försök igen.']
+    };
+    var lang = (navigator.language || 'en').slice(0, 2).toLowerCase();
+    if (lang === 'nb' || lang === 'nn') lang = 'no';
+    var t = texts[lang] || texts.en;
+    // Enode adds error parameters when the user cancels or the link fails
+    var failed = /[?&](error|error_description)=/.test(location.search);
+    document.documentElement.lang = lang;
+    document.getElementById('title').textContent = failed ? t[2] : t[0];
+    document.getElementById('text').textContent = failed ? t[3] : t[1];
+    document.title = failed ? t[2] : t[0];
+    if (failed) {
+        document.getElementById('box').className = 'error';
+        document.getElementById('icon').textContent = '!';
+    }
+})();
+</script>
+</body>
+</html>

@@ -7,7 +7,8 @@ function vehicle(id, userId, vin, lastSeen) {
 function makeApi(clientVehicles, disconnectUser) {
     return {
         clientManager: {
-            getAllClients: () => Object.keys(clientVehicles).map((id) => ({ id })),
+            getAllClients: () => Object.keys(clientVehicles)
+                .map((id) => ({ id, enodeClientId: `${id}-id`, enodeClientSecret: `${id}-secret` })),
         },
         _getVehiclesForClient: async (id) => clientVehicles[id] || [],
         disconnectUser: disconnectUser || jest.fn().mockResolvedValue(true),
@@ -152,6 +153,30 @@ describe('duplicate-reaper', () => {
 
             expect(res.targets).toHaveLength(0);
             expect(disconnectUser).not.toHaveBeenCalled();
+        });
+
+        test('skips a client that was removed from the configuration instead of failing', async () => {
+            const disconnectUser = jest.fn().mockResolvedValue(true);
+            const api = makeApi({
+                clientA: [vehicle('v1', 'uOld', 'VIN1', '2020-01-01T00:00:00Z')],
+                clientB: [vehicle('v2', 'uNew', 'VIN1', '2026-01-01T00:00:00Z')],
+            }, disconnectUser);
+            const configured = api.clientManager.getAllClients();
+            api.clientManager.getAllClients = () => [
+                ...configured,
+                { id: 'removed', enodeClientId: 'removed-id' },
+            ];
+            api._getVehiclesForClient = jest.fn(async (id) => {
+                if (id === 'removed') throw new Error('Missing Enode API credentials');
+                return { clientA: [vehicle('v1', 'uOld', 'VIN1', '2020-01-01T00:00:00Z')],
+                    clientB: [vehicle('v2', 'uNew', 'VIN1', '2026-01-01T00:00:00Z')] }[id];
+            });
+
+            const res = await DuplicateReaper.reapForVin(api, 'VIN1', { execute: true, ownerUserIds: ['uOld', 'uNew'] });
+
+            expect(api._getVehiclesForClient).not.toHaveBeenCalledWith('removed');
+            expect(disconnectUser).toHaveBeenCalledWith('uOld', 'clientA');
+            expect(res.disconnected).toBe(1);
         });
 
         test('keeps the freshly linked copy even when Enode has no lastSeen for it yet', async () => {

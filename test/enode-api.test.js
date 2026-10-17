@@ -123,6 +123,21 @@ describe('EnodeAPI', () => {
             await expect(enodeApi.getAccessToken(null, 'primary')).rejects.toThrow('Error fetching access token');
         });
 
+        test('should retry a token request after a temporary error', async () => {
+            enodeApi.retryBaseDelayMs = 1;
+            fetch.mockResolvedValueOnce({ ok: false, status: 503, text: jest.fn().mockResolvedValue('Unavailable') })
+                .mockResolvedValueOnce(tokenResponse());
+
+            await expect(enodeApi.getAccessToken(null, 'primary')).resolves.toBe('test-token');
+            expect(fetch).toHaveBeenCalledTimes(2);
+        });
+
+        test('should keep the status of a rejected token request', async () => {
+            fetch.mockResolvedValue({ ok: false, status: 401, text: jest.fn().mockResolvedValue('invalid_client') });
+            await expect(enodeApi.getAccessToken(null, 'primary')).rejects.toMatchObject({ status: 401 });
+            expect(fetch).toHaveBeenCalledTimes(1);
+        });
+
         test('should re-request a token after the cache is cleared', async () => {
             fetch.mockResolvedValue(tokenResponse());
 

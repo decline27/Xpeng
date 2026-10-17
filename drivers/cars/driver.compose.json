@@ -37,10 +37,7 @@
   },
   "pair": [
     {
-      "id": "start",
-      "navigation": {
-        "next": "list_devices"
-      }
+      "id": "start"
     },
     {
       "id": "list_devices",

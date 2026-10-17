@@ -11,11 +11,13 @@ function makeDriver(vehicles) {
     Object.defineProperty(driver, 'homey', {
         value: { settings: { get: (k) => store[k], set: (k, v) => { store[k] = v; } } },
     });
+    driver.getDevices = jest.fn(() => []);
     driver.log = jest.fn();
     driver.error = jest.fn();
     driver.enodeApi = {
         getVehicles: jest.fn().mockResolvedValue(vehicles),
         requestCache: { clear: jest.fn() },
+        clearVehicleListCache: jest.fn(),
     };
     return driver;
 }
@@ -55,6 +57,45 @@ describe('driver pairing', () => {
     test('does not register the credential-saving handler the pairing page never calls', async () => {
         const handlers = await pair(makeDriver([car]));
         expect(handlers.save_credentials).toBeUndefined();
+    });
+
+    test('does not report a finished link while only the cars from before the link exist', async () => {
+        const driver = makeDriver([car]);
+        driver.enodeApi.generateVehicleLink = jest.fn().mockResolvedValue('https://link.enode.io/abc');
+        const handlers = await pair(driver);
+        await handlers.get_link();
+        await expect(handlers.check_auth_status())
+            .resolves.toMatchObject({ isAuthenticated: false, hasExistingVehicles: true });
+
+        const second = { ...car, id: 'enode-2', information: { vin: 'SECONDVIN', model: 'G9' } };
+        driver.enodeApi.getVehicles.mockResolvedValue([car, second]);
+        await expect(handlers.check_auth_status()).resolves.toMatchObject({ isAuthenticated: true });
+    });
+
+    test('reports a finished link for a first car', async () => {
+        const driver = makeDriver([]);
+        driver.enodeApi.generateVehicleLink = jest.fn().mockResolvedValue('https://link.enode.io/abc');
+        const handlers = await pair(driver);
+        await handlers.get_link();
+        driver.enodeApi.getVehicles.mockResolvedValue([car]);
+        await expect(handlers.check_auth_status())
+            .resolves.toMatchObject({ isAuthenticated: true, hasExistingVehicles: false });
+    });
+
+    test('does not offer a car that is already a device, even after a re-link', async () => {
+        const driver = makeDriver([{ ...car, id: 'enode-relinked' }]);
+        driver.getDevices.mockReturnValue([{ getData: () => ({ id: 'L1NAAAA6RB059538', vehicleId: 'enode-1', vin: 'L1NAAAA6RB059538' }) }]);
+        const handlers = await pair(driver);
+        await expect(handlers.list_devices()).rejects.toThrow(/already added/);
+    });
+
+    test('still offers a second car next to one that is already added', async () => {
+        const second = { ...car, id: 'enode-2', information: { vin: 'SECONDVIN', model: 'G9' } };
+        const driver = makeDriver([car, second]);
+        driver.getDevices.mockReturnValue([{ getData: () => ({ id: 'L1NAAAA6RB059538', vin: 'L1NAAAA6RB059538' }) }]);
+        const handlers = await pair(driver);
+        const devices = await handlers.list_devices();
+        expect(devices.map((d) => d.data.vin)).toEqual(['SECONDVIN']);
     });
 
     test('only lists the user\'s own cars', async () => {

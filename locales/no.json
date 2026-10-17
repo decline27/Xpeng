@@ -4,7 +4,7 @@
     "intro": "Bruk dette når bilen har sluttet å oppdatere seg, for eksempel etter at du koblet den til Enode på nytt. Flows og historikk beholdes.",
     "open_link": "Åpne Enode for å koble til",
     "waiting_title": "Venter på Enode...",
-    "waiting_text": "Fullfør tilkoblingen av bilen i nettleseren. Denne siden oppdateres av seg selv.",
+    "waiting_text": "Fullfør tilkoblingen av bilen i nettleseren. Denne siden oppdateres av seg selv. Når nettleseren sier at XPENG-en er tilkoblet, lukker du den og går tilbake hit.",
     "success_title": "Bilen er tilkoblet",
     "success_text": "Trykk Fullfør for å oppdatere enheten.",
     "finish": "Fullfør",

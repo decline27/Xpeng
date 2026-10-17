@@ -1,10 +1,17 @@
 <!-- Pair template -->
 <style>
-    .info-message {
-        background-color: #e3f2fd;
-        padding: 15px;
-        border-radius: 4px;
-        margin-bottom: 20px;
+    .intro {
+        margin: 0 0 15px;
+    }
+    .hint {
+        color: #9e9e9e;
+        font-size: 0.9em;
+        margin-top: 5px;
+    }
+    .link-container .homey-button-primary-full {
+        display: block;
+        text-align: center;
+        margin-bottom: 10px;
     }
     .error-message {
         color: #d32f2f;
@@ -37,7 +44,7 @@
         color: #c62828;
     }
     /* Style for disabled buttons */
-    .homey-button-primary:disabled {
+    .homey-button-primary-full:disabled {
         background-color: #e0e0e0 !important;
         color: #9e9e9e !important;
         cursor: not-allowed !important;
@@ -68,12 +75,15 @@
     }
     /* Step indicators */
     .step-container {
-        margin-bottom: 20px;
+        list-style: none;
+        padding: 0;
+        margin: 25px 0 0;
+        font-size: 0.9em;
     }
     .step {
         display: flex;
         align-items: center;
-        margin-bottom: 10px;
+        margin-bottom: 8px;
     }
     .step-number {
         width: 24px;
@@ -84,6 +94,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
+        flex-shrink: 0;
         margin-right: 10px;
         font-weight: bold;
     }
@@ -99,42 +110,13 @@
 </style>
 
 <div class="homey-form-group">
-    <h1 class="homey-title">Connect Your XPENG Vehicle</h1>
-    <p class="homey-subtitle">Connect your XPENG vehicle to Homey</p>
+    <p class="intro">Link your XPENG account through Enode. It takes about a minute.</p>
 
-    <div class="info-message">
-        <p><strong>Secure Connection</strong></p>
-        <p>This app uses Enode's secure API to connect to your XPENG vehicle. Your vehicle credentials are stored securely and are only used to communicate with your vehicle.</p>
-    </div>
-
-    <div id="credentials-status" class="credentials-status"></div>
+    <div id="credentials-status" class="credentials-status" style="display: none;"></div>
 
     <div class="error-message" id="error"></div>
 
-    <!-- Step indicators -->
-    <div class="step-container">
-        <div id="step1" class="step step-active">
-            <div class="step-number">1</div>
-            <div class="step-content">
-                <strong>Generate connection link</strong>
-                <p>Click the button below to start the connection process</p>
-            </div>
-        </div>
-        <div id="step2" class="step step-pending">
-            <div class="step-number">2</div>
-            <div class="step-content">
-                <strong>Connect your XPENG account</strong>
-                <p>Click the "Connect Vehicle" button and complete the authentication in your browser</p>
-            </div>
-        </div>
-        <div id="step3" class="step step-pending">
-            <div class="step-number">3</div>
-            <div class="step-content">
-                <strong>Continue to vehicle selection</strong>
-                <p>After authentication is complete, click "Continue" to select your vehicle</p>
-            </div>
-        </div>
-    </div>
+    <button id="start-link" class="homey-button-primary-full">Generate Connection Link</button>
 
     <div class="loading-spinner" id="loading">
         <div class="homey-loading">
@@ -146,31 +128,34 @@
     </div>
 
     <div class="link-container" id="link-container">
-        <p><strong>Step 2:</strong> Click the button below to open Enode's connection page in your browser:</p>
-        <a id="enode-link" class="homey-button-primary" target="_blank" rel="noopener noreferrer">
+        <a id="enode-link" class="homey-button-primary-full" target="_blank" rel="noopener noreferrer">
             Connect Vehicle
         </a>
 
-        <div id="auth-status" class="auth-status-waiting" style="margin-top: 20px; display: none;">
-            <strong>Waiting for authentication...</strong>
-            <p>Please complete the authentication process in your browser. This page will automatically update when complete.</p>
-            <div class="homey-loading" style="margin-top: 10px;">
-                <div class="homey-loading-circle"></div>
-                <div class="homey-loading-circle"></div>
-                <div class="homey-loading-circle"></div>
-            </div>
+        <div id="auth-status" class="auth-status-waiting" style="display: none;">
+            <strong>Waiting for you to log in...</strong>
+            <p>Log in to your XPENG account in the browser. This page updates by itself.</p>
+            <p>When the browser says your XPENG is connected, close it and come back here.</p>
         </div>
 
-        <div style="margin-top: 20px;">
-            <p><strong>Step 3:</strong> After connecting your vehicle, click continue:</p>
-            <button id="continue" class="homey-button-primary" disabled>Continue</button>
-            <p id="continue-hint" style="color: #9e9e9e; font-size: 0.9em; margin-top: 5px;">
-                The Continue button will be enabled once authentication is complete
-            </p>
-        </div>
+        <button id="continue" class="homey-button-primary-full" disabled>Continue</button>
+        <p id="continue-hint" class="hint">Continue unlocks once your car is connected.</p>
     </div>
 
-    <button id="start-link" class="homey-button-primary">Generate Connection Link</button>
+    <ol class="step-container">
+        <li id="step1" class="step step-active">
+            <span class="step-number">1</span>
+            <span><strong>Generate a link</strong> to Enode</span>
+        </li>
+        <li id="step2" class="step step-pending">
+            <span class="step-number">2</span>
+            <span><strong>Connect Vehicle</strong> and log in to XPENG</span>
+        </li>
+        <li id="step3" class="step step-pending">
+            <span class="step-number">3</span>
+            <span><strong>Continue</strong> and pick your car</span>
+        </li>
+    </ol>
 </div>
 
 <script type="text/javascript">
@@ -183,12 +168,12 @@ async function checkCredentials() {
         const statusElement = document.getElementById('credentials-status');
 
         if (credentials && credentials.hasCredentials) {
-            statusElement.textContent = 'Enode API credentials are configured and ready to use.';
-            statusElement.className = 'credentials-status credentials-valid';
+            statusElement.style.display = 'none';
             document.getElementById('start-link').disabled = false;
         } else {
             statusElement.textContent = 'Enode API credentials are not configured. Please contact the app developer.';
             statusElement.className = 'credentials-status credentials-invalid';
+            statusElement.style.display = 'block';
             document.getElementById('start-link').disabled = true;
         }
     } catch (error) {
@@ -223,19 +208,42 @@ function updateStepStatus(stepNumber, status) {
     step.classList.add(`step-${status}`);
 }
 
-// Poll for authentication status
-let authCheckInterval = null;
+// Poll for authentication status. The next check is only scheduled after the previous one
+// returns, so slow checks never pile up.
+let authPollTimer = null;
+let authPollRun = 0; // bumped on every start/stop, so a check from an older run can't reschedule
 const MAX_POLL_TIME = 300000; // 5 minutes
 const POLL_INTERVAL = 5000; // 5 seconds
+
+function stopAuthStatusPolling() {
+    authPollRun++;
+    clearTimeout(authPollTimer);
+    authPollTimer = null;
+}
+
+// The user already has cars in Enode (re-adding a car or adding a second one). Their re-link
+// may keep the same Enode id, so let them continue without waiting for a new car to show up.
+function allowContinueWithExistingCars() {
+    const continueBtn = document.getElementById('continue');
+    if (!continueBtn.disabled) return;
+    continueBtn.disabled = false;
+    document.getElementById('continue-hint').textContent =
+        'Cars you connected before were found. Finish connecting in the browser first, then click Continue. '
+        + 'To fix a car that is already in Homey, use Repair on that device instead.';
+}
 
 async function checkAuthStatus() {
     try {
         const status = await Homey.emit('check_auth_status');
         console.log('Auth status check:', status);
 
+        if (status && status.hasExistingVehicles) {
+            allowContinueWithExistingCars();
+        }
+
         if (status && status.isAuthenticated) {
             // Authentication successful
-            clearInterval(authCheckInterval);
+            stopAuthStatusPolling();
 
             // Update the auth status display
             const authStatusEl = document.getElementById('auth-status');
@@ -274,37 +282,37 @@ function startAuthStatusPolling() {
     updateStepStatus(1, 'completed');
     updateStepStatus(2, 'active');
 
-    // Clear any existing interval
-    if (authCheckInterval) {
-        clearInterval(authCheckInterval);
-    }
+    // Stop any earlier polling
+    stopAuthStatusPolling();
+    const run = authPollRun;
+    const pollStarted = Date.now();
 
-    // Set a timeout to stop polling after MAX_POLL_TIME
-    const pollTimeout = setTimeout(() => {
-        if (authCheckInterval) {
-            clearInterval(authCheckInterval);
+    const showTimedOut = () => {
+        stopAuthStatusPolling();
 
-            // Update the auth status display
-            const authStatusEl = document.getElementById('auth-status');
-            authStatusEl.className = 'auth-status-error';
-            authStatusEl.innerHTML = `
-                <strong>Authentication timed out</strong>
-                <p>The authentication process took too long. Please try again or refresh the page.</p>
-                <button onclick="location.reload()" class="homey-button-primary" style="margin-top: 10px;">Refresh Page</button>
-            `;
-        }
-    }, MAX_POLL_TIME);
+        // Update the auth status display
+        const authStatusEl = document.getElementById('auth-status');
+        authStatusEl.className = 'auth-status-error';
+        authStatusEl.innerHTML = `
+            <strong>Authentication timed out</strong>
+            <p>The authentication process took too long. Please try again or refresh the page.</p>
+            <button onclick="location.reload()" class="homey-button-primary" style="margin-top: 10px;">Refresh Page</button>
+        `;
+    };
 
-    // Start polling
-    authCheckInterval = setInterval(async () => {
+    const poll = async () => {
+        if (run !== authPollRun) return;
         const success = await checkAuthStatus();
-        if (success) {
-            clearTimeout(pollTimeout);
+        if (success || run !== authPollRun) return;
+        if (Date.now() - pollStarted >= MAX_POLL_TIME) {
+            showTimedOut();
+            return;
         }
-    }, POLL_INTERVAL);
+        authPollTimer = setTimeout(poll, POLL_INTERVAL);
+    };
 
-    // Do an immediate check
-    checkAuthStatus();
+    // Do an immediate check, then keep polling
+    poll();
 }
 
 document.getElementById('start-link').addEventListener('click', async () => {
