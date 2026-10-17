@@ -11,6 +11,7 @@ function makeDriver(vehicles) {
     Object.defineProperty(driver, 'homey', {
         value: { settings: { get: (k) => store[k], set: (k, v) => { store[k] = v; } } },
     });
+    driver.getDevices = jest.fn(() => []);
     driver.log = jest.fn();
     driver.error = jest.fn();
     driver.enodeApi = {
@@ -79,6 +80,22 @@ describe('driver pairing', () => {
         driver.enodeApi.getVehicles.mockResolvedValue([car]);
         await expect(handlers.check_auth_status())
             .resolves.toMatchObject({ isAuthenticated: true, hasExistingVehicles: false });
+    });
+
+    test('does not offer a car that is already a device, even after a re-link', async () => {
+        const driver = makeDriver([{ ...car, id: 'enode-relinked' }]);
+        driver.getDevices.mockReturnValue([{ getData: () => ({ id: 'L1NAAAA6RB059538', vehicleId: 'enode-1', vin: 'L1NAAAA6RB059538' }) }]);
+        const handlers = await pair(driver);
+        await expect(handlers.list_devices()).rejects.toThrow(/already added/);
+    });
+
+    test('still offers a second car next to one that is already added', async () => {
+        const second = { ...car, id: 'enode-2', information: { vin: 'SECONDVIN', model: 'G9' } };
+        const driver = makeDriver([car, second]);
+        driver.getDevices.mockReturnValue([{ getData: () => ({ id: 'L1NAAAA6RB059538', vin: 'L1NAAAA6RB059538' }) }]);
+        const handlers = await pair(driver);
+        const devices = await handlers.list_devices();
+        expect(devices.map((d) => d.data.vin)).toEqual(['SECONDVIN']);
     });
 
     test('only lists the user\'s own cars', async () => {

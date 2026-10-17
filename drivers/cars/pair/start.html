@@ -228,7 +228,8 @@ function allowContinueWithExistingCars() {
     if (!continueBtn.disabled) return;
     continueBtn.disabled = false;
     document.getElementById('continue-hint').textContent =
-        'Cars you connected before were found. Finish connecting in the browser first, then click Continue.';
+        'Cars you connected before were found. Finish connecting in the browser first, then click Continue. '
+        + 'To fix a car that is already in Homey, use Repair on that device instead.';
 }
 
 async function checkAuthStatus() {

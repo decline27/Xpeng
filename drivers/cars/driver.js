@@ -279,6 +279,20 @@ class XpengDriver extends Homey.Driver {
 
         this.rememberAuthorizedVins(vehicles);
 
+        // Leave out cars that are already a device here. Homey only hides exact matches of the
+        // device data, which includes the Enode id, so a re-linked car would show up as new.
+        const pairedVins = new Set(this.getDevices()
+          .map(device => device.getData().vin || device.getData().id)
+          .filter(Boolean));
+        const unpaired = vehicles.filter(vehicle => !pairedVins.has(vehicle.information?.vin));
+        if (unpaired.length === 0) {
+          throw new Error(
+            'This car is already added to Homey. If it stopped updating, open the device and '
+            + 'use Repair instead.'
+          );
+        }
+        vehicles = unpaired;
+
         // One entry per VIN: the most recently seen copy
         const byVin = new Map();
         for (const vehicle of vehicles) {
@@ -304,7 +318,7 @@ class XpengDriver extends Homey.Driver {
         });
       } catch (error) {
         this.error('Failed to list devices:', error);
-        if (error.message.includes('No XPENG vehicles')) throw error;
+        if (error.message.includes('No XPENG vehicles') || error.message.includes('already added')) throw error;
         const handled = ErrorHandler.translateError(error, 'listDevices');
         throw new Error(`${handled.message} ${handled.suggestion}`);
       }
